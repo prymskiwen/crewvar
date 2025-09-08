@@ -16,7 +16,7 @@ const Showcase = () => {
                             <p className="text-base md:text-black lg:text-[#069B93] md:text-lg lg:mb-[20px] mb-[15px] text-[#069B93] text-left">
                                 Because crew is family, wherever the sea takes us.
                             </p>
-                            <Link to="/products/shop" className="inline-block font-semibold text-sm bg-[#069B93] hover:bg-[#058A7A] transition-colors rounded-lg py-3 px-6 text-white">
+                            <Link to="/auth/signup" className="inline-block font-semibold text-sm bg-[#069B93] hover:bg-[#058A7A] transition-colors rounded-lg py-3 px-6 text-white">
                                 Join now — it's free for crew
                             </Link>
                         </div>

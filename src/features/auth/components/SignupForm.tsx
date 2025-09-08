@@ -43,7 +43,7 @@ const SignupForm = () => {
             };
         
             await signUp(credentials);
-            navigate("/");
+            navigate("/onboarding");
         } finally {
             setIsLoading(false);
         }
@@ -58,7 +58,7 @@ const SignupForm = () => {
                 firebaseId: userCredentials.user.uid || "",
             };
             registerWithGoogle(credentials);
-            navigate("/");
+            navigate("/onboarding");
         }
     };
 

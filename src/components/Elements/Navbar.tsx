@@ -35,7 +35,7 @@ const Navbar = () => {
                 </div>
 
                 {/* Desktop Menu */}
-                <div className="hidden lg:flex text-secondary text-lg items-center">
+                <div className="hidden lg:flex text-secondary text-lg items-auto">
                     {currentUser ? (
                         <>
                             <div className="font-medium text-sm text-dark relative ml-5">
@@ -65,13 +65,13 @@ const Navbar = () => {
                         <div className="flex items-center space-x-3">
                             <Link
                                 to="/auth/login"
-                                className="px-4 py-2 text-sm font-medium text-[#069B93] hover:text-primary transition-colors"
+                                className="px-4 py-2 text-sm font-medium text-[#00A59E] hover:text-primary transition-colors"
                             >
                                 Sign In
                             </Link>
                             <Link
                                 to="/auth/signup"
-                                className="px-4 py-2 text-sm font-medium text-[#069B93] hover:text-primary transition-colors"
+                                className="px-4 py-2 text-sm font-medium text-[#00A59E] hover:text-primary transition-colors"
                             >
                                 Sign Up
                             </Link>
@@ -92,33 +92,44 @@ const Navbar = () => {
 
             {/* Mobile Menu Dropdown */}
             {mobileMenuOpen && (
-                <div className="lg:hidden absolute top-full left-0 right-0 bg-white shadow-lg rounded-lg mt-2 mx-2">
-                    <div className="py-4">
+                <div className="lg:hidden absolute top-full right-0 mt-2 w-48 bg-[#B9F3DF] border border-[#069B93]/20 rounded-xl shadow-xl z-50">
+                    <div className="py-3">
                         {currentUser ? (
                             <div className="px-4 py-2">
-                                <div className="text-sm text-dark mb-2">
-                                    <div className="font-medium">{currentUser?.displayName}</div>
-                                    <div className="text-gray-600">{currentUser?.email}</div>
+                                <div className="flex items-center space-x-3 mb-3">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-[#00A59E] to-[#069B93] rounded-full flex items-center justify-center shadow-lg">
+                                        <span className="text-white font-semibold text-xs">
+                                            {currentUser?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                                        </span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-medium text-[#069B93] truncate">
+                                            {currentUser?.displayName || 'User'}
+                                        </div>
+                                        <div className="text-xs text-gray-600 truncate">
+                                            {currentUser?.email}
+                                        </div>
+                                    </div>
                                 </div>
                                 <button
                                     onClick={handleSignOut}
-                                    className="w-full text-left px-4 py-2 text-sm text-dark hover:bg-gray-100 rounded"
+                                    className="w-full text-left px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
                                 >
                                     Sign out
                                 </button>
                             </div>
                         ) : (
-                            <div className="px-4 space-y-2">
+                            <div className="px-4 py-2 space-y-2">
                                 <Link
                                     to="/auth/login"
-                                    className="block px-4 py-2 text-sm font-medium text-dark hover:bg-gray-100 rounded transition-colors"
+                                    className="block w-full px-3 py-2.5 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200 text-center"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     Sign In
                                 </Link>
                                 <Link
                                     to="/auth/signup"
-                                    className="block px-4 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                                    className="block w-full px-3 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#00A59E] to-[#069B93] hover:from-[#00A59E]/90 hover:to-[#069B93]/90 rounded-lg transition-all duration-200 text-center shadow-lg"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     Sign Up

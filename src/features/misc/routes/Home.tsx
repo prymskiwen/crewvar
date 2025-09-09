@@ -17,7 +17,7 @@ export const Home = () => {
                             Your home at sea
                         </h2>
                         <p className="text-base xs:text-lg sm:text-xl md:text-xl lg:text-2xl mb-9 text-[#20283D] text-left">
-                            With ShipOhana you can see who's
+                            With Crewvar you can see who's
                             sailing with you today. Check who's
                             on your ship and who's right next to
                             you in port. Old friends, new friends

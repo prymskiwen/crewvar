@@ -1,7 +1,14 @@
-// ShipOhana Onboarding Types
+// Crewvar Onboarding Types
+export interface ICruiseLine {
+    id: string;
+    name: string;
+    ships: IShip[];
+}
+
 export interface IShip {
     id: string;
     name: string;
+    cruiseLineId: string;
     port?: string;
     isActive: boolean;
 }

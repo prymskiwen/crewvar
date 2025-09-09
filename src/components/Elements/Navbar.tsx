@@ -6,15 +6,11 @@ import logo from "../../assets/images/logo.png";
 import { HiMenu, HiX } from "react-icons/hi";
 
 const Navbar = () => {
-    const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
     const { signOut, currentUser } = useAuth();
     const navigate = useNavigate();
-    const handleNavClick = () => {
-        setDropdownOpen(prevState => !prevState);
-    };
-
+    
     const handleSignOut = () => {
         signOut();
         navigate("/auth/login");
@@ -30,7 +26,7 @@ const Navbar = () => {
                 {/* Logo */}
                 <div className="font-bold">
                     <Link to="/">
-                        <img src={logo} alt="ShipOhana Logo" className="h-[30px] sm:h-[40px] md:h-[50px] lg:h-[60px] w-auto" />
+                        <img src={logo} alt="Crewvar Logo" className="h-[30px] sm:h-[40px] md:h-[50px] lg:h-[60px] w-auto" />
                     </Link>
                 </div>
 
@@ -38,27 +34,53 @@ const Navbar = () => {
                 <div className="hidden lg:flex text-secondary text-lg items-auto">
                     {currentUser ? (
                         <>
+                            <div className="flex items-center space-x-6 mr-6">
+                                <Link
+                                    to="/dashboard"
+                                    className="text-sm font-medium text-[#069B93] hover:text-[#058a7a] transition-colors"
+                                >
+                                    Dashboard
+                                </Link>
+                                <Link
+                                    to="/explore-ships"
+                                    className="text-sm font-medium text-[#069B93] hover:text-[#058a7a] transition-colors"
+                                >
+                                    Discover Who's On Board!
+                                </Link>
+                                <Link
+                                    to="/chat"
+                                    className="text-sm font-medium text-[#069B93] hover:text-[#058a7a] transition-colors"
+                                >
+                                    Messages
+                                </Link>
+                                <Link
+                                    to="/favorites"
+                                    className="text-sm font-medium text-[#069B93] hover:text-[#058a7a] transition-colors"
+                                >
+                                    Favorites
+                                </Link>
+                                <Link
+                                    to="/privacy"
+                                    className="text-sm font-medium text-[#069B93] hover:text-[#058a7a] transition-colors"
+                                >
+                                    Privacy
+                                </Link>
+                                <Link
+                                    to="/moderation"
+                                    className="text-sm font-medium text-[#069B93] hover:text-[#058a7a] transition-colors"
+                                >
+                                    Moderation
+                                </Link>
+                            </div>
                             <div className="font-medium text-sm text-dark relative ml-5">
-                                {dropdownOpen && (
-                                    <div className="z-10 transform animate-dropdown origin-top-right absolute mb-10 mt-4 right-0 bg-white divide-y divide-gray-100 rounded-lg shadow w-44">
-                                        {currentUser &&
-                                        <div className="px-4 py-3 text-sm text-dark">
-                                            <div>{currentUser?.displayName}</div>
-                                            <div className="font-medium truncate">
-                                                {currentUser?.email}
-                                            </div>
-                                        </div>
-                                        }
-                                        <div className="py-2">
-                                            <button
-                                                onClick={handleSignOut}
-                                                className="px-4 py-2 text-left hover:bg-gray-100 w-full text-sm text-dark"
-                                            >
-                                                Sign out
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
+                                <button className="flex items-center space-x-2">
+                                    <img
+                                        src={currentUser?.photoURL || "/default-avatar.png"}
+                                        alt="Profile"
+                                        className="w-8 h-8 rounded-full"
+                                    />
+                                    <span className="text-sm font-medium">{currentUser?.displayName}</span>
+                                </button>
                             </div>
                         </>
                     ) : (
@@ -111,6 +133,60 @@ const Navbar = () => {
                                         </div>
                                     </div>
                                 </div>
+                                
+                                {/* Mobile Navigation Links */}
+                                <div className="space-y-1 mb-3">
+                                    <Link
+                                        to="/dashboard"
+                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        Dashboard
+                                    </Link>
+                                    <Link
+                                        to="/explore-ships"
+                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        Discover Who's On Board!
+                                    </Link>
+                                    <Link
+                                        to="/chat"
+                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        Messages
+                                    </Link>
+                                    <Link
+                                        to="/favorites"
+                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        Favorites
+                                    </Link>
+                                    <Link
+                                        to="/privacy"
+                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        Privacy
+                                    </Link>
+                                    <Link
+                                        to="/moderation"
+                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        Moderation
+                                    </Link>
+                                    <Link
+                                        to="/port-connections"
+                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                    >
+                                        Port Connections
+                                    </Link>
+                                </div>
+                                
                                 <button
                                     onClick={handleSignOut}
                                     className="w-full text-left px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"

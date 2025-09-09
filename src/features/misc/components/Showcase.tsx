@@ -11,7 +11,7 @@ const Showcase = () => {
                         {/* Left side - Text and Button */}
                         <div className="w-full md:w-[60%] lg:w-[70%] mb-8 md:mb-0 md:pr-8">
                             <h1 className="font-bold text-3xl md:text-4xl lg:text-5xl mb-6 text-[#00374D] text-left">
-                                Welcome to<br />ShipOhana
+                                Welcome to<br />Crewvar
                             </h1>
                             <p className="text-base md:text-black lg:text-[#069B93] md:text-lg lg:mb-[20px] mb-[15px] text-[#069B93] text-left">
                                 Because crew is family, wherever the sea takes us.
@@ -29,7 +29,7 @@ const Showcase = () => {
             
             {/* Image positioned absolutely outside the container */}
             <div className="absolute right-0 bottom-0 md:w-[60%] lg:w-[40%] z-0">
-                <img src="/src/assets/images/Home/hero.png" alt="ShipOhana Crew" className="h-full w-full object-contain object-bottom object-center md:object-right" />
+                <img src="/src/assets/images/Home/hero.png" alt="Crewvar Crew" className="h-full w-full object-contain object-bottom object-center md:object-right" />
             </div>
         </div>
     );

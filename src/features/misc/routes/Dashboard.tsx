@@ -1,4 +1,7 @@
+import { ConnectionRequests } from "../../../components/ConnectionRequests";
+import { OnboardingProgress } from "../../../components/OnboardingProgress";
 import { useAuth } from "../../../context/AuthContext";
+import { useQuickCheckIn } from "../../../context/QuickCheckInContext";
 import { Link } from "react-router-dom";
 
 // Sample data for demonstration
@@ -123,6 +126,7 @@ const CrewMemberCard = ({ member, showRequestDate = false }: {
 
 export const Dashboard = () => {
     const { currentUser } = useAuth();
+    const { currentShip, setShowCheckInDialog } = useQuickCheckIn();
 
     const handleViewAll = (cardType: string) => {
         // In a real app, this would navigate to a full list page
@@ -135,23 +139,36 @@ export const Dashboard = () => {
                 {/* Header */}
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center space-x-4">
-                            <img 
-                                src="/src/assets/images/logo.png" 
-                                alt="ShipOhana Logo" 
-                                className="h-12 w-auto"
-                            />
-                            <div>
-                                <h1 className="text-3xl font-bold text-[#069B93]">
-                                    Welcome back, {currentUser?.displayName || 'Crew Member'}!
-                                </h1>
-                                <p className="text-gray-600">
-                                    Here's what's happening on your ship today.
-                                </p>
+                    <div className="flex items-center space-x-4">
+                        <img 
+                            src="/src/assets/images/logo.png" 
+                            alt="Crewvar Logo" 
+                            className="h-12 w-auto"
+                        />
+                        <div className="flex-1">
+                            <h1 className="text-3xl font-bold text-[#069B93]">
+                                Welcome back, {currentUser?.displayName || 'Crew Member'}!
+                            </h1>
+                            <p className="text-gray-600">
+                                Here's what's happening on your ship today.
+                            </p>
+                            
+                            {/* Current Ship Assignment */}
+                            <div className="mt-3 flex items-center space-x-3">
+                                <div className="flex items-center space-x-2 px-3 py-1 bg-[#069B93]/10 rounded-lg">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <span className="text-sm font-medium text-[#069B93]">
+                                        {currentShip ? `Today: ${currentShip.shipName}` : 'No ship assigned'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    </div>
                 </div>
+
+                {/* Onboarding Progress */}
+                <OnboardingProgress />
 
                 {/* Dashboard Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -196,8 +213,11 @@ export const Dashboard = () => {
                 {/* Quick Actions */}
                 <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
                     <h3 className="text-lg font-semibold text-[#069B93] mb-4">Quick Actions</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <button className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#069B93] hover:bg-[#B9F3DF] transition-colors">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <button 
+                            onClick={() => setShowCheckInDialog(true)}
+                            className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#069B93] hover:bg-[#B9F3DF] transition-colors"
+                        >
                             <h4 className="font-medium text-gray-900">Update Ship Location</h4>
                             <p className="text-sm text-gray-600">Confirm your current ship</p>
                         </button>
@@ -205,11 +225,38 @@ export const Dashboard = () => {
                             <h4 className="font-medium text-gray-900">Explore Ships & Categories</h4>
                             <p className="text-sm text-gray-600">Find crew on other ships and ports</p>
                         </Link>
-                        <button className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#069B93] hover:bg-[#B9F3DF] transition-colors">
-                            <h4 className="font-medium text-gray-900">My Connections</h4>
-                            <p className="text-sm text-gray-600">Manage your crew connections</p>
-                        </button>
+                        <Link to="/my-profile" className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#069B93] hover:bg-[#B9F3DF] transition-colors block">
+                            <h4 className="font-medium text-gray-900">My Profile</h4>
+                            <p className="text-sm text-gray-600">Edit your profile and privacy settings</p>
+                        </Link>
+                        <Link to="/chat" className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#069B93] hover:bg-[#B9F3DF] transition-colors block">
+                            <h4 className="font-medium text-gray-900">Messages</h4>
+                            <p className="text-sm text-gray-600">Chat with connected crewvar users</p>
+                        </Link>
+                        <Link to="/favorites" className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#069B93] hover:bg-[#B9F3DF] transition-colors block">
+                            <h4 className="font-medium text-gray-900">Favorites & Alerts</h4>
+                            <p className="text-sm text-gray-600">Manage favorites and get sailing alerts</p>
+                        </Link>
                     </div>
+                </div>
+
+                {/* Connection Requests Management */}
+                <div className="mt-8">
+                    <ConnectionRequests
+                        currentUserId="current_user"
+                        onAcceptRequest={(requestId) => {
+                            console.log(`Accepting request ${requestId}`);
+                            // TODO: Implement accept request logic
+                        }}
+                        onDeclineRequest={(requestId) => {
+                            console.log(`Declining request ${requestId}`);
+                            // TODO: Implement decline request logic
+                        }}
+                        onBlockUser={(userId) => {
+                            console.log(`Blocking user ${userId}`);
+                            // TODO: Implement block user logic
+                        }}
+                    />
                 </div>
             </div>
         </div>

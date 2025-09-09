@@ -2,12 +2,17 @@ import Navbar from "../../../components/Elements/Navbar";
 import { useState } from "react";
 import { sampleShips, sampleDepartments } from "../../../data/onboarding-data";
 import { IShip, IDepartment, ISubcategory } from "../../../types/onboarding";
+import { ConnectionRequest } from "../../../components/ConnectionRequest";
+import { sampleProfiles } from "../../../data/connections-data";
 
 export const ExploreShips = () => {
     const [selectedShip, setSelectedShip] = useState<string>("");
     const [selectedPort, setSelectedPort] = useState<string>("");
     const [selectedDepartment, setSelectedDepartment] = useState<string>("");
     const [showSubcategories, setShowSubcategories] = useState<boolean>(false);
+    const [showAllSubcategories, setShowAllSubcategories] = useState<boolean>(false);
+    const [connectionRequests, setConnectionRequests] = useState<{[key: string]: 'pending' | 'sent' | 'accepted' | 'declined' | 'blocked'}>({});
+    const [isLoading, setIsLoading] = useState<{[key: string]: boolean}>({});
 
     // Sample ports data
     const ports = [
@@ -22,68 +27,51 @@ export const ExploreShips = () => {
         "Copenhagen, Denmark"
     ];
 
-    // Sample crew data
-    const sampleCrew = [
-        {
-            id: "1",
-            name: "Sarah Johnson",
-            role: "Head Waiter",
-            department: "Food & Beverage",
-            subcategory: "Restaurant",
-            avatar: "/src/assets/images/default-avatar.webp",
-            shipName: "Royal Caribbean Symphony of the Seas",
-            port: "Miami, Florida"
-        },
-        {
-            id: "2",
-            name: "Mike Chen", 
-            role: "Restaurant Manager",
-            department: "Food & Beverage",
-            subcategory: "Management",
-            avatar: "/src/assets/images/default-avatar.webp",
-            shipName: "Carnival Mardi Gras",
-            port: "Port Canaveral, Florida"
-        },
-        {
-            id: "3",
-            name: "Emma Rodriguez",
-            role: "Maitre D'",
-            department: "Food & Beverage", 
-            subcategory: "Restaurant",
-            avatar: "/src/assets/images/default-avatar.webp",
-            shipName: "Norwegian Encore",
-            port: "Miami, Florida"
-        },
-        {
-            id: "4",
-            name: "David Elseword",
-            role: "Bartender",
-            department: "Food & Beverage",
-            subcategory: "Bar",
-            avatar: "/src/assets/images/default-avatar.webp", 
-            shipName: "Royal Caribbean Symphony of the Seas",
-            port: "Miami, Florida"
-        },
-        {
-            id: "5",
-            name: "Lisa Wang",
-            role: "Chef de Cuisine",
-            department: "Food & Beverage",
-            subcategory: "Kitchen",
-            avatar: "/src/assets/images/default-avatar.webp",
-            shipName: "Carnival Mardi Gras", 
-            port: "Port Canaveral, Florida"
+    // Connection request handlers
+    const handleSendRequest = async (profileId: string, message?: string) => {
+        setIsLoading(prev => ({ ...prev, [profileId]: true }));
+        
+        try {
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Update connection status
+            setConnectionRequests(prev => ({ ...prev, [profileId]: 'sent' }));
+            
+            console.log(`Connection request sent to ${profileId}`, message ? `with message: "${message}"` : '');
+        } catch (error) {
+            console.error('Failed to send connection request:', error);
+        } finally {
+            setIsLoading(prev => ({ ...prev, [profileId]: false }));
         }
-    ];
-
-    const handleRequestConnection = (crewId: string) => {
-        console.log(`Requesting connection with crew member ${crewId}`);
     };
 
-    const filteredCrew = sampleCrew.filter(crew => {
-        const matchesShip = !selectedShip || crew.shipName === selectedShip;
-        const matchesPort = !selectedPort || crew.port === selectedPort;
-        const matchesDepartment = !selectedDepartment || crew.department === selectedDepartment;
+    const handleCancelRequest = async (profileId: string) => {
+        setIsLoading(prev => ({ ...prev, [profileId]: true }));
+        
+        try {
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Remove connection request
+            setConnectionRequests(prev => {
+                const newState = { ...prev };
+                delete newState[profileId];
+                return newState;
+            });
+            
+            console.log(`Connection request cancelled for ${profileId}`);
+        } catch (error) {
+            console.error('Failed to cancel connection request:', error);
+        } finally {
+            setIsLoading(prev => ({ ...prev, [profileId]: false }));
+        }
+    };
+
+    const filteredCrew = sampleProfiles.filter(profile => {
+        const matchesShip = !selectedShip || profile.shipName === selectedShip;
+        const matchesPort = !selectedPort || profile.port === selectedPort;
+        const matchesDepartment = !selectedDepartment || profile.department === selectedDepartment;
         
         return matchesShip && matchesPort && matchesDepartment;
     });
@@ -96,10 +84,10 @@ export const ExploreShips = () => {
                     {/* Header */}
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold text-[#069B93] mb-4">
-                            Explore Ships & Categories
+                            Discover Who's On Board!
                         </h1>
                         <p className="text-lg text-gray-600">
-                            Select a ship or port to explore crew members by department
+                            Find your friends and connect with crewvar users from other ships
                         </p>
                     </div>
 
@@ -158,6 +146,7 @@ export const ExploreShips = () => {
                                     onClick={() => {
                                         setSelectedDepartment(dept.name);
                                         setShowSubcategories(true);
+                                        setShowAllSubcategories(false); // Reset to show limited view
                                     }}
                                     className={`p-4 rounded-lg border-2 transition-colors ${
                                         selectedDepartment === dept.name
@@ -196,19 +185,40 @@ export const ExploreShips = () => {
                             </div>
                             
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                {sampleDepartments.find((d: IDepartment) => d.name === selectedDepartment)?.subcategories?.map((sub: ISubcategory) => (
-                                    <button
-                                        key={sub.id}
-                                        className="p-3 border border-gray-200 rounded-lg hover:border-[#069B93] hover:bg-gray-50 transition-colors"
-                                    >
-                                        <p className="text-sm font-medium text-gray-700">{sub.name}</p>
-                                    </button>
-                                ))}
+                                {(() => {
+                                    const department = sampleDepartments.find((d: IDepartment) => d.name === selectedDepartment);
+                                    const subcategories = department?.subcategories || [];
+                                    const displaySubcategories = showAllSubcategories 
+                                        ? subcategories 
+                                        : subcategories.slice(0, 4);
+                                    
+                                    return displaySubcategories.map((sub: ISubcategory) => (
+                                        <button
+                                            key={sub.id}
+                                            className="p-3 border border-gray-200 rounded-lg hover:border-[#069B93] hover:bg-gray-50 transition-colors"
+                                        >
+                                            <p className="text-sm font-medium text-gray-700">{sub.name}</p>
+                                        </button>
+                                    ));
+                                })()}
                             </div>
                             
-                            <button className="px-4 py-2 text-sm font-medium text-[#069B93] border border-[#069B93] rounded-lg hover:bg-[#069B93] hover:text-white transition-colors">
-                                View All {selectedDepartment}
-                            </button>
+                            {(() => {
+                                const department = sampleDepartments.find((d: IDepartment) => d.name === selectedDepartment);
+                                const subcategories = department?.subcategories || [];
+                                const hasMoreThanFour = subcategories.length > 4;
+                                
+                                if (!hasMoreThanFour) return null;
+                                
+                                return (
+                                    <button 
+                                        onClick={() => setShowAllSubcategories(!showAllSubcategories)}
+                                        className="px-4 py-2 text-sm font-medium text-[#069B93] border border-[#069B93] rounded-lg hover:bg-[#069B93] hover:text-white transition-colors"
+                                    >
+                                        {showAllSubcategories ? 'Show Less' : `View All ${selectedDepartment} (${subcategories.length})`}
+                                    </button>
+                                );
+                            })()}
                         </div>
                     )}
 
@@ -227,37 +237,15 @@ export const ExploreShips = () => {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredCrew.map((crew) => (
-                                    <div key={crew.id} className="bg-gray-50 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                        <div className="flex items-center space-x-3 mb-3">
-                                            <img
-                                                src={crew.avatar}
-                                                alt={crew.name}
-                                                className="w-12 h-12 rounded-full object-cover"
-                                            />
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="font-semibold text-gray-900 truncate">{crew.name}</h3>
-                                                <p className="text-sm text-gray-600 truncate">{crew.role}</p>
-                                                <p className="text-xs text-gray-500 truncate">{crew.subcategory}</p>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="mb-3">
-                                            <p className="text-sm text-gray-700">
-                                                <span className="font-medium">Ship:</span> {crew.shipName}
-                                            </p>
-                                            <p className="text-sm text-gray-700">
-                                                <span className="font-medium">Port:</span> {crew.port}
-                                            </p>
-                                        </div>
-
-                                        <button
-                                            onClick={() => handleRequestConnection(crew.id)}
-                                            className="w-full px-4 py-2 text-sm font-medium text-white bg-[#069B93] hover:bg-[#058a7a] rounded-lg transition-colors"
-                                        >
-                                            Request to Connect
-                                        </button>
-                                    </div>
+                                {filteredCrew.map((profile) => (
+                                    <ConnectionRequest
+                                        key={profile.id}
+                                        profile={profile}
+                                        onSendRequest={handleSendRequest}
+                                        onCancelRequest={handleCancelRequest}
+                                        requestStatus={connectionRequests[profile.id]}
+                                        isLoading={isLoading[profile.id]}
+                                    />
                                 ))}
                             </div>
                         )}

@@ -2,9 +2,15 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useOnboardingGuard } from "../context/OnboardingGuardContext";
 import { Spinner } from "./Elements/Spinner";
-import { sampleShips, sampleDepartments, sampleRoles } from "../data/onboarding-data";
+import { sampleCruiseLines, sampleDepartments, sampleRoles } from "../data/onboarding-data";
+import { ShipSelection } from "./ShipSelection";
+import { AssignmentForm } from "./AssignmentForm";
+import { CalendarView } from "./CalendarView";
+import { MissingShipFeedback } from "./MissingShipFeedback";
 import { ISubcategory, IRole, ISuggestedProfile } from "../types/onboarding";
 
 const onboardingValidationSchema = yup.object({
@@ -22,12 +28,19 @@ const onboardingValidationSchema = yup.object({
 });
 
 const OnboardingForm = () => {
-    const { } = useAuth();
+    const navigate = useNavigate();
+    const { currentUser } = useAuth();
+    const { updateOnboardingProgress, markOnboardingComplete } = useOnboardingGuard();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [preview, setPreview] = useState<string | ArrayBuffer | null>(null);
     const [subcategories, setSubcategories] = useState<ISubcategory[]>([]);
     const [roles, setRoles] = useState<IRole[]>([]);
     const [suggestedProfiles, setSuggestedProfiles] = useState<ISuggestedProfile[]>([]);
+    const [onboardingComplete, setOnboardingComplete] = useState(false);
+    const [selectedCruiseLineId, setSelectedCruiseLineId] = useState<string>("");
+    const [showCalendar, setShowCalendar] = useState(false);
+    const [showAssignmentForm, setShowAssignmentForm] = useState(false);
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
     const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm({
         resolver: yupResolver(onboardingValidationSchema),
@@ -63,9 +76,21 @@ const OnboardingForm = () => {
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 2000));
             
+            // Update onboarding progress with completed fields
+            if (currentUser) {
+                await updateOnboardingProgress(currentUser.uid, {
+                    hasProfilePhoto: true,
+                    hasDisplayName: true,
+                    hasDepartment: true,
+                    hasRole: true,
+                    hasShipAssignment: true
+                });
+            }
+            
             // Generate suggested profiles based on selected ship and department
             const department = sampleDepartments.find(d => d.id === data.departmentId);
-            const ship = sampleShips.find(s => s.id === data.currentShipId);
+            const allShips = sampleCruiseLines.flatMap(cl => cl.ships);
+            const ship = allShips.find(s => s.id === data.currentShipId);
             
             if (department && ship) {
                 const suggestions: ISuggestedProfile[] = [
@@ -97,7 +122,24 @@ const OnboardingForm = () => {
                 setSuggestedProfiles(suggestions);
             }
             
-            console.log("Welcome to ShipOhana! Your profile is now active.");
+            console.log("Welcome to Crewvar! Your profile is now active.");
+            
+            // Mark onboarding as complete and redirect to dashboard
+            setOnboardingComplete(true);
+            
+            // Mark onboarding as complete in the guard system
+            if (currentUser) {
+                await markOnboardingComplete(currentUser.uid);
+            }
+            
+            // Set flag for Quick Check-In dialog to appear
+            localStorage.setItem('onboardingComplete', 'true');
+            
+            // Redirect to dashboard after a short delay to show success message
+            setTimeout(() => {
+                navigate('/dashboard');
+            }, 3000);
+            
         } catch (error) {
             console.error("Failed to complete onboarding. Please try again.");
             console.error("Onboarding error:", error);
@@ -255,21 +297,16 @@ const OnboardingForm = () => {
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                     <h2 className="text-xl font-bold text-[#069B93] mb-4">Current Ship</h2>
                     <div>
-                        <label htmlFor="currentShipId" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                             Which ship are you on today?
                         </label>
-                        <select
-                            {...register("currentShipId")}
-                            id="currentShipId"
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none"
-                        >
-                            <option value="">Select your current ship</option>
-                            {sampleShips.map((ship) => (
-                                <option key={ship.id} value={ship.id}>
-                                    {ship.name}
-                                </option>
-                            ))}
-                        </select>
+                        <ShipSelection
+                            selectedCruiseLineId={selectedCruiseLineId}
+                            selectedShipId={watch("currentShipId")}
+                            onCruiseLineChange={setSelectedCruiseLineId}
+                            onShipChange={(shipId) => setValue("currentShipId", shipId)}
+                            placeholder="Select your current ship"
+                        />
                         {errors.currentShipId && (
                             <p className="text-red-500 text-sm mt-1">{errors.currentShipId.message}</p>
                         )}
@@ -280,41 +317,75 @@ const OnboardingForm = () => {
                             <strong>Privacy Note:</strong> We'll only show today's ship to others. Your future assignments remain private.
                         </p>
                     </div>
-                </div>
-
-                {/* Contract Calendar Section */}
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
-                    <h2 className="text-xl font-bold text-[#069B93] mb-4">Contract Calendar (Optional)</h2>
-                    <p className="text-gray-600 mb-4">
-                        Upload your contract calendar to help us suggest connections when you're on the same ship or in the same port.
-                    </p>
                     
-                    <div className="space-y-4">
-                        <div>
-                            <label htmlFor="contractCalendar" className="block text-sm font-medium text-gray-700 mb-1">
-                                Upload Contract Calendar
-                            </label>
-                            <input
-                                {...register("contractCalendar")}
-                                type="file"
-                                id="contractCalendar"
-                                accept=".pdf,.doc,.docx,.xls,.xlsx,.csv"
-                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none"
-                            />
-                            <p className="text-sm text-gray-500 mt-1">
-                                Supported formats: PDF, Word, Excel, CSV
-                            </p>
-                            {errors.contractCalendar && (
-                                <p className="text-red-500 text-sm mt-1">{errors.contractCalendar.message}</p>
-                            )}
-                        </div>
-                        
-                        <div className="bg-yellow-50 p-4 rounded-lg">
-                            <p className="text-sm text-yellow-800">
-                                <strong>Note:</strong> This is optional. You can always add or update your contract calendar later in your profile settings.
-                            </p>
+                    {/* Missing Ship Feedback */}
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <span className="text-gray-600 text-sm">Can't find your ship?</span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowFeedbackModal(true)}
+                                className="text-[#069B93] hover:text-[#058a7a] text-sm font-medium underline transition-colors"
+                            >
+                                Missing a ship or position?
+                            </button>
                         </div>
                     </div>
+                </div>
+
+                {/* Cruise Schedule Section */}
+                <div className="bg-white p-6 rounded-lg shadow-sm border">
+                    <h2 className="text-xl font-bold text-[#069B93] mb-4">Cruise Schedule</h2>
+                    <p className="text-gray-600 mb-4">
+                        Add your cruise assignments to help us suggest connections when you're on the same ship or in the same port.
+                    </p>
+                    
+                    {!showCalendar ? (
+                        <div className="space-y-4">
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div className="flex items-start space-x-3">
+                                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <span className="text-white text-xs">ℹ</span>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-medium text-blue-900">Schedule Management</h4>
+                                        <p className="text-sm text-blue-700 mt-1">
+                                            Create your cruise assignments directly in Crewvar. No need to upload documents - 
+                                            just select your cruise line, ship, and dates.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button
+                                type="button"
+                                onClick={() => setShowCalendar(true)}
+                                className="w-full px-4 py-3 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors font-medium"
+                            >
+                                Manage My Cruise Schedule
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold text-gray-900">My Schedule</h3>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCalendar(false)}
+                                    className="text-gray-500 hover:text-gray-700 text-sm font-medium"
+                                >
+                                    Hide Calendar
+                                </button>
+                            </div>
+                            
+                            <CalendarView
+                                onAddAssignment={() => setShowAssignmentForm(true)}
+                                className="border-0 shadow-none"
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* Suggested Profiles Section */}
@@ -346,23 +417,49 @@ const OnboardingForm = () => {
 
                         <div className="bg-green-50 p-4 rounded-lg mt-4">
                             <p className="text-sm text-green-800">
-                                <strong>Welcome to ShipOhana!</strong> Your profile is now active and you can start connecting with your crew family.
+                                <strong>Welcome to Crewvar!</strong> Your profile is now active and you can start connecting with your crew family.
+                            </p>
+                            <p className="text-sm text-green-700 mt-2">
+                                Redirecting to your dashboard in 3 seconds...
                             </p>
                         </div>
                     </div>
                 )}
 
                 {/* Submit Button */}
-                <div className="text-center">
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="px-8 py-3 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors disabled:opacity-50 text-lg font-semibold"
-                    >
-                        {isSubmitting ? "Setting up your profile..." : "Complete Setup"}
-                    </button>
-                </div>
+                {!onboardingComplete && (
+                    <div className="text-center">
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="px-8 py-3 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors disabled:opacity-50 text-lg font-semibold"
+                        >
+                            {isSubmitting ? "Setting up your profile..." : "Complete Setup"}
+                        </button>
+                    </div>
+                )}
             </form>
+
+            {/* Assignment Form Modal */}
+            {showAssignmentForm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <AssignmentForm
+                            onClose={() => setShowAssignmentForm(false)}
+                            onSuccess={() => {
+                                setShowAssignmentForm(false);
+                                // Optionally refresh calendar data
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Missing Ship Feedback Modal */}
+            <MissingShipFeedback
+                isOpen={showFeedbackModal}
+                onClose={() => setShowFeedbackModal(false)}
+            />
         </div>
     );
 };

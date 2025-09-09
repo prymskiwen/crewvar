@@ -13,7 +13,7 @@ const Auth = () => {
                     <div className="flex justify-center mb-8">
                         <img 
                             src="/src/assets/images/logo.png" 
-                            alt="ShipOhana Logo" 
+                            alt="Crewvar Logo" 
                             className="h-16 w-auto"
                         />
                     </div>

@@ -1,9 +1,8 @@
 import { SearchBox } from "../../../components/Form";
 import { useState, ChangeEvent, useMemo } from "react";
 import { useDebounce } from "../../products/hooks/useDebounce";
-import { ships, departments } from "../../../data/onboarding-data";
-import { CrewMemberPreview } from "./CrewMemberPreview";
-import { Spinner } from "../../../components/Elements/Spinner";
+import { sampleShips, sampleDepartments } from "../../../data/onboarding-data";
+import CrewMemberPreview from "./CrewMemberPreview";
 
 // Sample ports data
 const ports = [
@@ -163,7 +162,7 @@ const ShipSelectBox = ({ selectedShip, handleSelectShip }: {
             className="px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none"
         >
             <option value="">All Ships</option>
-            {ships.map((ship) => (
+            {sampleShips.map((ship) => (
                 <option key={ship.id} value={ship.name}>
                     {ship.name}
                 </option>
@@ -205,7 +204,7 @@ const DepartmentSelectBox = ({ selectedDepartment, handleSelectDepartment }: {
             className="px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none"
         >
             <option value="">All Departments</option>
-            {departments.map((dept) => (
+            {sampleDepartments.map((dept) => (
                 <option key={dept.id} value={dept.name}>
                     {dept.name}
                 </option>

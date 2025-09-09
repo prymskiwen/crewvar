@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { IConnectionRequest, INotification } from "../types/connections";
+import { defaultAvatar } from "../utils/images";
 import { 
     getPendingRequestsForUser, 
     getSentRequestsForUser, 
@@ -157,7 +158,7 @@ export const ConnectionRequests = ({
                                 <div key={request.id} className="border border-gray-200 rounded-lg p-4">
                                     <div className="flex items-center space-x-3 mb-3">
                                         <img 
-                                            src={requesterProfile?.avatar || "/src/assets/images/default-avatar.webp"} 
+                                            src={requesterProfile?.avatar || defaultAvatar} 
                                             alt={requesterProfile?.displayName || "User"}
                                             className="w-10 h-10 rounded-full object-cover"
                                         />

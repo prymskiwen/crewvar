@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import logo from "../../assets/images/logo.png";
+import logo from "../../assets/images/Home/logo.png";
+import { defaultAvatar } from "../../utils/images";
 import { HiMenu, HiX } from "react-icons/hi";
 
 const Navbar = () => {
@@ -75,7 +76,7 @@ const Navbar = () => {
                             <div className="font-medium text-sm text-dark relative ml-5">
                                 <button className="flex items-center space-x-2">
                                     <img
-                                        src={currentUser?.photoURL || "/default-avatar.png"}
+                                        src={currentUser?.photoURL || defaultAvatar}
                                         alt="Profile"
                                         className="w-8 h-8 rounded-full"
                                     />

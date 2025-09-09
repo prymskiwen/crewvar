@@ -3,6 +3,8 @@ import { OnboardingProgress } from "../../../components/OnboardingProgress";
 import { useAuth } from "../../../context/AuthContext";
 import { useQuickCheckIn } from "../../../context/QuickCheckInContext";
 import { Link } from "react-router-dom";
+import logo from "../../../assets/images/Home/logo.png";
+import { defaultAvatar } from "../../../utils/images";
 
 // Sample data for demonstration
 const sampleCrewOnboard = [
@@ -11,7 +13,7 @@ const sampleCrewOnboard = [
         name: "Sarah Johnson",
         role: "Head Waiter",
         department: "Food & Beverage",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         shipName: "Royal Caribbean Symphony of the Seas"
     },
     {
@@ -19,7 +21,7 @@ const sampleCrewOnboard = [
         name: "Mike Chen",
         role: "Restaurant Manager",
         department: "Food & Beverage",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         shipName: "Royal Caribbean Symphony of the Seas"
     },
     {
@@ -27,7 +29,7 @@ const sampleCrewOnboard = [
         name: "Emma Rodriguez", 
         role: "Maitre D'",
         department: "Food & Beverage",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         shipName: "Royal Caribbean Symphony of the Seas"
     }
 ];
@@ -38,7 +40,7 @@ const sampleCrewInPort = [
         name: "David Elseword",
         role: "Bartender",
         department: "Food & Beverage", 
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         shipName: "Carnival Mardi Gras"
     },
     {
@@ -46,7 +48,7 @@ const sampleCrewInPort = [
         name: "Lisa Wang",
         role: "Chef de Cuisine",
         department: "Food & Beverage",
-        avatar: "/src/assets/images/default-avatar.webp", 
+        avatar: defaultAvatar, 
         shipName: "Norwegian Encore"
     }
 ];
@@ -57,7 +59,7 @@ const samplePendingConnections = [
         name: "Alex Thompson",
         role: "Activity Host",
         department: "Entertainment",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         shipName: "Royal Caribbean Symphony of the Seas",
         requestDate: "2 hours ago"
     },
@@ -66,7 +68,7 @@ const samplePendingConnections = [
         name: "Maria Garcia",
         role: "Guest Services Agent",
         department: "Guest Services",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         shipName: "Royal Caribbean Symphony of the Seas", 
         requestDate: "1 day ago"
     }
@@ -141,7 +143,7 @@ export const Dashboard = () => {
                     <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-4">
                         <img 
-                            src="/src/assets/images/logo.png" 
+                            src={logo} 
                             alt="Crewvar Logo" 
                             className="h-12 w-auto"
                         />

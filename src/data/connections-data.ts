@@ -1,11 +1,12 @@
 import { IConnectionRequest, IConnection, IUserProfile, INotification, IConnectionContext } from "../types/connections";
+import { defaultAvatar } from "../utils/images";
 
 // Sample User Profiles
 export const sampleProfiles: IUserProfile[] = [
     {
         id: "1",
         displayName: "Sarah Johnson",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         role: "Head Waiter",
         department: "Food & Beverage",
         subcategory: "Restaurant Service",
@@ -13,8 +14,8 @@ export const sampleProfiles: IUserProfile[] = [
         port: "Miami, Florida",
         bio: "Passionate about creating memorable dining experiences for our guests. Love connecting with fellow crew members!",
         photos: [
-            "/src/assets/images/default-avatar.webp",
-            "/src/assets/images/default-avatar.webp"
+            "/src/assets/images/Home/default-avatar.webp",
+            "/src/assets/images/Home/default-avatar.webp"
         ],
         contacts: {
             email: "sarah.johnson@crew.com",
@@ -26,7 +27,7 @@ export const sampleProfiles: IUserProfile[] = [
     {
         id: "2",
         displayName: "Mike Rodriguez",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         role: "Bartender",
         department: "Food & Beverage",
         subcategory: "Bar Service",
@@ -39,7 +40,7 @@ export const sampleProfiles: IUserProfile[] = [
     {
         id: "3",
         displayName: "Emma Thompson",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         role: "Cruise Director",
         department: "Entertainment",
         subcategory: "Activities",
@@ -47,7 +48,7 @@ export const sampleProfiles: IUserProfile[] = [
         port: "Seattle, Washington",
         bio: "Bringing joy and entertainment to every voyage. Let's make this cruise unforgettable together!",
         photos: [
-            "/src/assets/images/default-avatar.webp"
+            "/src/assets/images/Home/default-avatar.webp"
         ],
         isOnline: true,
         lastSeen: "Online now"

@@ -1,4 +1,5 @@
 import OnboardingForm from "../../../components/OnboardingForm";
+import logo from "../../../assets/images/Home/logo.png";
 
 export const Onboarding = () => {
     return (
@@ -8,7 +9,7 @@ export const Onboarding = () => {
                     <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
                         <div className="text-center mb-8">
                             <img 
-                                src="/src/assets/images/logo.png" 
+                                src={logo} 
                                 alt="Crewvar Logo" 
                                 className="h-16 w-auto mx-auto mb-4"
                             />

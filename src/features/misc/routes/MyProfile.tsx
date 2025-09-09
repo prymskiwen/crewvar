@@ -6,6 +6,7 @@ import { SocialMediaLinks } from "../../../components/SocialMediaLinks";
 import { SocialMediaDisplay } from "../../../components/SocialMediaDisplay";
 import { ProfileEdit } from "../../../components/ProfileEdit";
 import { sampleDepartments, sampleRoles } from "../../../data/onboarding-data";
+import { defaultAvatar } from "../../../utils/images";
 
 export const MyProfile = () => {
     const { currentUser } = useAuth();
@@ -159,7 +160,7 @@ export const MyProfile = () => {
                                 <div className="flex items-center space-x-4">
                                     <div className="relative">
                                         <img 
-                                            src="/src/assets/images/default-avatar.webp" 
+                                            src={defaultAvatar} 
                                             alt="Profile" 
                                             className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
                                         />

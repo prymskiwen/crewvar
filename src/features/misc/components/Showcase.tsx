@@ -1,5 +1,6 @@
 import Navbar from "../../../components/Elements/Navbar";
 import { Link } from "react-router-dom";
+import heroImage from "../../../assets/images/Home/hero.png";
 
 const Showcase = () => {
     return (
@@ -28,8 +29,17 @@ const Showcase = () => {
             </div>
             
             {/* Image positioned absolutely outside the container */}
-            <div className="absolute right-0 bottom-0 md:w-[60%] lg:w-[40%] z-0">
-                <img src="/src/assets/images/Home/hero.png" alt="Crewvar Crew" className="h-full w-full object-contain object-bottom object-center md:object-right" />
+            <div className="absolute right-0 bottom-0 md:w-[60%] lg:w-[40%] z-10">
+                <img 
+                    src={heroImage} 
+                    alt="Crewvar Crew" 
+                    className="h-full w-full object-contain object-bottom object-center md:object-right"
+                    onError={(e) => {
+                        console.error('Hero image failed to load, trying fallback:', e);
+                        e.currentTarget.src = '/hero.png';
+                    }}
+                    onLoad={() => console.log('Hero image loaded successfully')}
+                />
             </div>
         </div>
     );

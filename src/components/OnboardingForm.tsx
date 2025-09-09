@@ -8,6 +8,7 @@ import { useOnboardingGuard } from "../context/OnboardingGuardContext";
 import { Spinner } from "./Elements/Spinner";
 import { sampleCruiseLines, sampleDepartments, sampleRoles } from "../data/onboarding-data";
 import { ShipSelection } from "./ShipSelection";
+import { defaultAvatar } from "../utils/images";
 import { AssignmentForm } from "./AssignmentForm";
 import { CalendarView } from "./CalendarView";
 import { MissingShipFeedback } from "./MissingShipFeedback";
@@ -97,7 +98,7 @@ const OnboardingForm = () => {
                     {
                         id: "1",
                         displayName: "Sarah Johnson",
-                        avatar: "/src/assets/images/default-avatar.webp",
+                        avatar: defaultAvatar,
                         role: "Head Waiter",
                         shipName: ship.name,
                         department: department.name
@@ -105,7 +106,7 @@ const OnboardingForm = () => {
                     {
                         id: "2",
                         displayName: "Mike Chen",
-                        avatar: "/src/assets/images/default-avatar.webp",
+                        avatar: defaultAvatar,
                         role: "Restaurant Manager",
                         shipName: ship.name,
                         department: department.name
@@ -113,7 +114,7 @@ const OnboardingForm = () => {
                     {
                         id: "3",
                         displayName: "Emma Rodriguez",
-                        avatar: "/src/assets/images/default-avatar.webp",
+                        avatar: defaultAvatar,
                         role: "Maitre D'",
                         shipName: ship.name,
                         department: department.name
@@ -398,7 +399,7 @@ const OnboardingForm = () => {
                             {suggestedProfiles.map((profile) => (
                                 <div key={profile.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                                     <img
-                                        src={profile.avatar || "/src/assets/images/default-avatar.webp"}
+                                        src={profile.avatar || defaultAvatar}
                                         alt={profile.displayName}
                                         className="w-12 h-12 rounded-full object-cover"
                                     />

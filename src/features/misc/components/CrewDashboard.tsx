@@ -3,6 +3,7 @@ import { useState, ChangeEvent, useMemo } from "react";
 import { useDebounce } from "../../products/hooks/useDebounce";
 import { sampleShips, sampleDepartments } from "../../../data/onboarding-data";
 import CrewMemberPreview from "./CrewMemberPreview";
+import { defaultAvatar } from "../../../utils/images";
 
 // Sample ports data
 const ports = [
@@ -24,7 +25,7 @@ const sampleCrew = [
         name: "Sarah Johnson",
         role: "Head Waiter",
         department: "Food & Beverage",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         shipName: "Royal Caribbean Symphony of the Seas",
         port: "Miami, Florida"
     },
@@ -33,7 +34,7 @@ const sampleCrew = [
         name: "Mike Chen", 
         role: "Restaurant Manager",
         department: "Food & Beverage",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         shipName: "Carnival Mardi Gras",
         port: "Port Canaveral, Florida"
     },
@@ -42,7 +43,7 @@ const sampleCrew = [
         name: "Emma Rodriguez",
         role: "Maitre D'",
         department: "Food & Beverage", 
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         shipName: "Norwegian Encore",
         port: "Miami, Florida"
     },
@@ -51,7 +52,7 @@ const sampleCrew = [
         name: "David Elseword",
         role: "Bartender",
         department: "Food & Beverage",
-        avatar: "/src/assets/images/default-avatar.webp", 
+        avatar: defaultAvatar, 
         shipName: "Royal Caribbean Symphony of the Seas",
         port: "Miami, Florida"
     },
@@ -60,7 +61,7 @@ const sampleCrew = [
         name: "Lisa Wang",
         role: "Chef de Cuisine",
         department: "Food & Beverage",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         shipName: "Carnival Mardi Gras", 
         port: "Port Canaveral, Florida"
     },
@@ -69,7 +70,7 @@ const sampleCrew = [
         name: "Alex Thompson",
         role: "Activity Host",
         department: "Entertainment",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         shipName: "Royal Caribbean Symphony of the Seas",
         port: "Miami, Florida"
     },
@@ -78,7 +79,7 @@ const sampleCrew = [
         name: "Maria Garcia",
         role: "Guest Services Agent",
         department: "Guest Services",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         shipName: "Norwegian Encore",
         port: "Miami, Florida"
     },
@@ -87,7 +88,7 @@ const sampleCrew = [
         name: "John Smith",
         role: "Deck Officer",
         department: "Deck",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         shipName: "Carnival Mardi Gras",
         port: "Port Canaveral, Florida"
     }

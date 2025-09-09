@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 import SignupForm from "../components/SignupForm";
 import LoginForm from "../components/LoginForm";
+import logo from "../../../assets/images/Home/logo.png";
 
 const Auth = () => {
     const location = useLocation();
@@ -12,9 +13,14 @@ const Auth = () => {
                 <div className="mx-auto w-full xs:w-3/4 sm:w-2/3 md:w-[60%] lg:w-1/2 h-screen bg-white px-10 flex flex-col justify-center">
                     <div className="flex justify-center mb-8">
                         <img 
-                            src="/src/assets/images/logo.png" 
+                            src={logo} 
                             alt="Crewvar Logo" 
                             className="h-16 w-auto"
+                            onError={(e) => {
+                                console.error('Logo failed to load, trying fallback:', e);
+                                e.currentTarget.src = '/logo.png';
+                            }}
+                            onLoad={() => console.log('Logo loaded successfully')}
                         />
                     </div>
                     <h3 className="font-semibold text-2xl xs:text-3xl mb-6 text-[#069B93] text-center">

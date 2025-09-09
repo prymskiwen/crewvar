@@ -14,9 +14,9 @@ export default defineConfig({
                 "masked-icon.svg",
             ],
             manifest: {
-                name: "GoShop: Ecommerce App",
-                short_name: "GoShop",
-                description: "Online retail store for all your needs",
+                name: "Crewvar: Connect with Crew Members",
+                short_name: "Crewvar",
+                description: "Connect with crew members from cruise ships worldwide",
                 theme_color: "#fff",
                 start_url: "/",
                 icons: [

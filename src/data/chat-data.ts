@@ -1,25 +1,26 @@
 import { IChatMessage, IChatRoom, IChatUser } from "../types/chat";
+import { defaultAvatar } from "../utils/images";
 
 // Sample Chat Users
 export const sampleChatUsers: IChatUser[] = [
     {
         id: "1",
         displayName: "Sarah Johnson",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         isOnline: true,
         lastSeen: "Online now"
     },
     {
         id: "2",
         displayName: "Mike Rodriguez",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         isOnline: false,
         lastSeen: "1 hour ago"
     },
     {
         id: "3",
         displayName: "Emma Thompson",
-        avatar: "/src/assets/images/default-avatar.webp",
+        avatar: defaultAvatar,
         isOnline: true,
         lastSeen: "2 minutes ago"
     }

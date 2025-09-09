@@ -2,6 +2,7 @@ import { useState } from "react";
 import { usePortConnection } from "../context/PortConnectionContext";
 import { useQuickCheckIn } from "../context/QuickCheckInContext";
 import { getConnectionDuration } from "../data/port-connections-data";
+import { defaultAvatar } from "../utils/images";
 
 interface WhoInPortProps {
     portName: string;
@@ -107,7 +108,7 @@ export const WhoInPort = ({ portName, date, onConnect }: WhoInPortProps) => {
                             {/* Avatar */}
                             <div className="relative">
                                 <img 
-                                    src="/src/assets/images/default-avatar.webp" 
+                                    src={defaultAvatar} 
                                     alt={crewMember.userDisplayName}
                                     className="w-12 h-12 rounded-full object-cover"
                                 />

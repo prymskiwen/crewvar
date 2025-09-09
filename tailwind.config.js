@@ -25,10 +25,10 @@ export default {
             },
             backgroundImage: {
                 "customGradient": "linear-gradient(180deg, rgba(255, 255, 255, 0.08) 16.33%, rgba(0, 0, 0, 0.40) 100%)",
-                "auth": "url('/src/assets/images/Auth/auth-bg.webp')",
-                "showcase": "url('/src/assets/images/Home/hero.jpg')",
+                "auth": "url('/src/assets/images/Home/auth-bg.webp')",
+                "showcase": "url('/src/assets/images/Home/hero.png')",
                 "newArrivals": "url('/src/assets/images/Home/yourhomeatsea.png')",
-                "discounts": "url('/src/assets/images/Home/hero.jpg')"
+                "discounts": "url('/src/assets/images/Home/hero.png')"
             },
             backgroundColor: {
                 "black-cover": "rgba(10, 10, 10, 0.65)",

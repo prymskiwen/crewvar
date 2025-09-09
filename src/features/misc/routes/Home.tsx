@@ -5,7 +5,6 @@ import findAround from "../../../assets/images/Home/findaround.png";
 import connectShare from "../../../assets/images/Home/connectshare.png";
 import whyOhana from "../../../assets/images/Home/whyohana.png";
 
-
 export const Home = () => {
     return (
         <>

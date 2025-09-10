@@ -79,7 +79,7 @@ export const OnboardingProgress = () => {
                     <div className="flex items-center space-x-2">
                         <span className="text-yellow-600">⚠</span>
                         <p className="text-sm text-yellow-800">
-                            Complete your profile to access ship rosters and connect with other crew members.
+                            Complete your profile to connect with other crewvar members.
                         </p>
                     </div>
                 </div>

@@ -106,7 +106,7 @@ const Navbar = () => {
                 <div className="lg:hidden">
                     <button
                         onClick={toggleMobileMenu}
-                        className="text-white hover:text-primary transition-colors"
+                        className="text-orange-500 hover:text-orange-600 transition-colors"
                     >
                         {mobileMenuOpen ? <HiX className="w-6 h-6 sm:w-8 sm:h-8" /> : <HiMenu className="w-6 h-6 sm:w-8 sm:h-8" />}
                     </button>

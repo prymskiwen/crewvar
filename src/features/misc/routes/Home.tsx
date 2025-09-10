@@ -37,7 +37,9 @@ export const Home = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="text-center">
                             <div className="flex justify-center mb-4">
-                                <img src={createProfile} alt="Create Profile" className="min-w-[50%] max-w-[50%] h-auto object-contain" />
+                                <div className="w-48 h-48 flex items-center justify-center">
+                                    <img src={createProfile} alt="Create Profile" className="h-40 w-auto object-contain" />
+                                </div>
                             </div>
                             <h4 className="font-bold text-xl text-[#093A58] mb-4">1.Create your profile</h4>
                             <p className="text-[#093A58] text-sm leading-relaxed">
@@ -47,7 +49,9 @@ export const Home = () => {
 
                         <div className="text-center">
                             <div className="flex justify-center mb-4">
-                                <img src={findAround} alt="Find Around" className="min-w-[50%] max-w-[50%] h-auto object-contain" />
+                                <div className="w-48 h-48 flex items-center justify-center">
+                                    <img src={findAround} alt="Find Around" className="h-40 w-auto object-contain" />
+                                </div>
                             </div>
                             <h4 className="font-bold text-xl text-[#093A58] mb-4">2.Find who's around</h4>
                             <p className="text-[#093A58] text-sm leading-relaxed">
@@ -58,7 +62,9 @@ export const Home = () => {
                         {/* Step 3: Connect & Share */}
                         <div className="text-center">
                             <div className="flex justify-center mb-4">
-                                <img src={connectShare} alt="Connect Share" className="min-w-[50%] max-w-[50%] h-auto object-contain" />
+                                <div className="w-48 h-48 flex items-center justify-center">
+                                    <img src={connectShare} alt="Connect Share" className="h-40 w-auto object-contain" />
+                                </div>
                             </div>
                             <h4 className="font-bold text-xl text-[#093A58] mb-4">3.Connect & share</h4>
                             <p className="text-[#093A58] text-sm leading-relaxed">

@@ -225,7 +225,7 @@ export const Dashboard = () => {
                         </button>
                         <Link to="/explore-ships" className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#069B93] hover:bg-[#B9F3DF] transition-colors block">
                             <h4 className="font-medium text-gray-900">Discover who's with you today!</h4>
-                            <p className="text-sm text-gray-600">Find crew on other ships and ports</p>
+                            <p className="text-sm text-gray-600">Find crew on other cruise lines and ships</p>
                         </Link>
                         <Link to="/my-profile" className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#069B93] hover:bg-[#B9F3DF] transition-colors block">
                             <h4 className="font-medium text-gray-900">My Profile</h4>

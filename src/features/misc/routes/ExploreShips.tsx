@@ -84,7 +84,7 @@ export const ExploreShips = () => {
                     {/* Header */}
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold text-[#069B93] mb-4">
-                            Discover Who's On Board!
+                            Discover Who's with you today!
                         </h1>
                         <p className="text-lg text-gray-600">
                             Find your friends and connect with crewvar users from other ships
@@ -99,7 +99,7 @@ export const ExploreShips = () => {
                             {/* Ship Selection */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Select Ship
+                                    Cruise Line
                                 </label>
                                 <select
                                     value={selectedShip}
@@ -118,7 +118,7 @@ export const ExploreShips = () => {
                             {/* Port Selection */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Select Port
+                                    Ships
                                 </label>
                                 <select
                                     value={selectedPort}

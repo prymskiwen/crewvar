@@ -59,7 +59,7 @@ export const Privacy = () => {
                                 <div>
                                     <h3 className="font-medium text-gray-900 mb-2">🔒 Verification Required</h3>
                                     <p className="text-sm text-gray-600">
-                                        Only verified active profiles can see rosters and interact with other crew members. 
+                                        Only verified active profiles can see crew members and connect with others. 
                                         This ensures a safe environment for all users.
                                     </p>
                                 </div>

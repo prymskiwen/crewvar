@@ -46,7 +46,7 @@ const Navbar = () => {
                                     to="/explore-ships"
                                     className="text-sm font-medium text-[#069B93] hover:text-[#058a7a] transition-colors"
                                 >
-                                    Discover Who's On Board!
+                                    Discover who's with you today!
                                 </Link>
                                 <Link
                                     to="/chat"
@@ -149,7 +149,7 @@ const Navbar = () => {
                                         className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
                                         onClick={() => setMobileMenuOpen(false)}
                                     >
-                                        Discover Who's On Board!
+                                        Discover Who's with you today!
                                     </Link>
                                     <Link
                                         to="/chat"

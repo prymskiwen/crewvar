@@ -224,7 +224,7 @@ export const Dashboard = () => {
                             <p className="text-sm text-gray-600">Confirm your current ship</p>
                         </button>
                         <Link to="/explore-ships" className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#069B93] hover:bg-[#B9F3DF] transition-colors block">
-                            <h4 className="font-medium text-gray-900">Explore Ships & Categories</h4>
+                            <h4 className="font-medium text-gray-900">Discover who's with you today!</h4>
                             <p className="text-sm text-gray-600">Find crew on other ships and ports</p>
                         </Link>
                         <Link to="/my-profile" className="p-4 text-left border border-gray-200 rounded-lg hover:border-[#069B93] hover:bg-[#B9F3DF] transition-colors block">

@@ -241,7 +241,7 @@ export const PrivacySettings = () => {
                         <h4 className="font-medium text-blue-900">Privacy Protection</h4>
                         <p className="text-sm text-blue-700 mt-1">
                             These settings help protect your privacy and ensure a safe environment for all crew members. 
-                            Only verified active profiles can see rosters, and ship assignments are limited to today's information by default.
+                            Only verified active profiles can see other crew members, and ship assignments are limited to today's information by default.
                         </p>
                     </div>
                 </div>

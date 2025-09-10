@@ -112,7 +112,7 @@ export const ConnectionRequest = ({
                     <div className="flex items-center space-x-2">
                         <span className="text-yellow-600">🔒</span>
                         <p className="text-sm text-yellow-800">
-                            Profile not visible due to privacy settings. Only verified active profiles can see rosters.
+                            This profile is private. Complete your verification to connect with crew members.
                         </p>
                     </div>
                 </div>

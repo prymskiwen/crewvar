@@ -3,7 +3,7 @@ import newArrivals from "../../../assets/images/Home/yourhomeatsea.png";
 import createProfile from "../../../assets/images/Home/createprofile.png";
 import findAround from "../../../assets/images/Home/findaround.png";
 import connectShare from "../../../assets/images/Home/connectshare.png";
-import whyOhana from "../../../assets/images/Home/whyohana.png";
+import favi from "../../../assets/images/Home/favi.png";
 
 export const Home = () => {
     return (
@@ -90,14 +90,13 @@ export const Home = () => {
                             On every ship, there’s one place where the crew always ends up after a long day:
                                 <span className="relative">
                                     the crew bar.
-                                    <span className="absolute -top-1 left-0 w-full h-2 bg-gray-300 opacity-30 transform -skew-x-12"></span>
                                 </span> It’s where stories are shared, friendships are made, and laughs never end.
                             </p>
                         </div>
                         {/* Right side - Icon */}
                         <div className="w-full lg:w-[20%] md:w-[30%] flex justify-center md:justify-end">
-                            <div className="w-48 h-48 lg:w-56 lg:h-56 flex items-center justify-center">
-                                <img src={whyOhana} alt="Why Ohana" className="w-full h-full object-contain" />
+                            <div className="w-32 h-32 lg:w-40 lg:h-40 flex items-center justify-center">
+                                <img src={favi} alt="Why Ohana" className="w-full h-full object-contain" />
                             </div>
                         </div>
                     </div>

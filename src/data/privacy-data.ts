@@ -114,7 +114,7 @@ export const canUserSeeRoster = (userId: string, targetUserId: string): boolean 
     
     if (!userSettings || !targetSettings) return false;
     
-    // Only verified active profiles can see rosters
+    // Only verified active profiles can see other crew members
     if (!userSettings.isVerified || !userSettings.isActive) return false;
     if (!targetSettings.isVerified || !targetSettings.isActive) return false;
     

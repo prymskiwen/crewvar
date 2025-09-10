@@ -6,7 +6,7 @@ const Showcase = () => {
     return (
         <div className="bg-[#B9F3E0] mb-8 relative">
             <div className="w-full h-full">
-                <div className="container px-[20px] lg:px-[96px] md:px-[48px] sm:px-[24px] relative z-10">
+                <div className="container px-[20px] lg:px-[96px] md:px-[48px] sm:px-[24px] relative z-20">
                     <Navbar />
                     <div className="flex flex-col md:flex-row items-center">
                         {/* Left side - Text and Button */}
@@ -29,7 +29,7 @@ const Showcase = () => {
             </div>
             
             {/* Image positioned absolutely outside the container */}
-            <div className="absolute right-0 bottom-0 md:w-[60%] lg:w-[40%] z-10">
+            <div className="absolute right-0 bottom-0 md:w-[60%] lg:w-[40%] z-0 pointer-events-none">
                 <img 
                     src={heroImage} 
                     alt="Crewvar Crew" 

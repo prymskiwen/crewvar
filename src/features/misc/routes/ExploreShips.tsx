@@ -106,7 +106,7 @@ export const ExploreShips = () => {
                                     onChange={(e) => setSelectedShip(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none"
                                 >
-                                    <option value="">All Ships</option>
+                                    <option value="">All Cruise Lines</option>
                                     {sampleShips.map((ship: IShip) => (
                                         <option key={ship.id} value={ship.name}>
                                             {ship.name}
@@ -125,7 +125,7 @@ export const ExploreShips = () => {
                                     onChange={(e) => setSelectedPort(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none"
                                 >
-                                    <option value="">All Ports</option>
+                                    <option value="">All Ships</option>
                                     {ports.map((port) => (
                                         <option key={port} value={port}>
                                             {port}

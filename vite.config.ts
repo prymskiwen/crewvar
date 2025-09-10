@@ -4,6 +4,15 @@ import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
     envDir: "../.",
+    base: "/",
+    build: {
+        assetsDir: "assets",
+        rollupOptions: {
+            output: {
+                assetFileNames: "assets/[name]-[hash][extname]",
+            },
+        },
+    },
     plugins: [
         react(),
         VitePWA({

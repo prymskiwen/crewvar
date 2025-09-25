@@ -195,7 +195,7 @@ export const AuthProvider = ({ children }: Props) => {
 
         const handleUserUnbanned = (event: any) => {
             const data = event.detail;
-            // Account unbanned notification received
+            console.log('✅ Account unbanned notification received:', data);
             setIsBanned(false);
             setBanInfo(null);
             // Show success message or notification

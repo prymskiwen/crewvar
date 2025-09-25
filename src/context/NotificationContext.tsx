@@ -180,30 +180,18 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
         return location.pathname.startsWith('/chat');
     };
 
-    // Load notifications from API only when user is authenticated
     useEffect(() => {
-        console.log('🔔 NotificationContext initialized, currentUser:', !!currentUser);
         if (currentUser) {
-            console.log('🔔 User authenticated, loading notifications and preferences');
             loadNotifications();
             loadPreferences();
-        } else {
-            console.log('🔔 User not authenticated, skipping notification loading');
         }
     }, [currentUser]);
 
     // Set up WebSocket listeners for real-time notifications only when user is authenticated
     useEffect(() => {
         if (socket && currentUser) {
-            console.log('🔌 Setting up notification listeners, current path:', location.pathname);
-            console.log('🔌 Socket connected:', socket.connected);
-            console.log('🔌 Socket ID:', socket.id);
-            console.log('🔌 User authenticated:', !!currentUser);
-            
             // Listen for new notifications
             socket.on('new_notification', (notificationData: any) => {
-                console.log('🔔 Received new notification:', notificationData);
-                
                 const newNotification: INotification = {
                     id: notificationData.id,
                     type: notificationData.type,
@@ -239,8 +227,6 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
 
             // Listen for notification updates (e.g., marked as read)
             socket.on('notification_updated', (notificationData: any) => {
-                console.log('🔔 Notification updated:', notificationData);
-                
                 setNotifications(prev => 
                     prev.map(n => 
                         n.id === notificationData.id 
@@ -252,14 +238,8 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
 
             // Listen for new messages to create notifications when not on messages page
             socket.on('new_message', (messageData: any) => {
-                console.log('📨 Received new message:', messageData);
-                console.log('📨 Current path:', location.pathname);
-                console.log('📨 Is on messages page:', isOnMessagesPage());
-                
                 // Only create notification if user is NOT on messages page
                 if (!isOnMessagesPage()) {
-                    console.log('📨 User not on messages page, creating notification');
-                    
                     const messageNotification: INotification = {
                         id: `msg-${messageData.id}-${Date.now()}`, // Generate unique ID
                         type: 'message',
@@ -286,15 +266,11 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
                             draggable: true,
                         });
                     }
-                } else {
-                    console.log('📨 User is on messages page, skipping notification');
                 }
             });
 
             // Listen for admin messages
             socket.on('admin_message', (adminMessageData: any) => {
-                console.log('📧 Received admin message:', adminMessageData);
-                
                 const adminNotification: INotification = {
                     id: `admin-${Date.now()}-${Math.random()}`, // Generate unique ID
                     type: 'admin_message',

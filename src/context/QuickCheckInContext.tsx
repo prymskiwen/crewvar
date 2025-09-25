@@ -1,4 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useUpdateShipAssignment } from "../features/user/api/shipAssignmentApi";
+import { useUserProfile } from "../features/auth/api/userProfile";
+import { useAllShips } from "../features/cruise/api/cruiseData";
 
 interface ShipAssignment {
     shipId: string;
@@ -37,56 +40,95 @@ export const QuickCheckInProvider = ({ children }: QuickCheckInProviderProps) =>
     const [currentShip, setCurrentShip] = useState<ShipAssignment | null>(null);
     const [showCheckInDialog, setShowCheckInDialog] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const updateShipAssignmentMutation = useUpdateShipAssignment();
+    const { data: userProfile } = useUserProfile();
+    const { data: allShips = [] } = useAllShips();
 
     // Check if user needs to confirm ship assignment on login
     useEffect(() => {
-        // Simulate checking if user has confirmed today's ship
-        const today = new Date().toISOString().split('T')[0];
-        const lastConfirmedDate = localStorage.getItem('lastShipConfirmation');
-        const onboardingComplete = localStorage.getItem('onboardingComplete');
+        // Only check if user profile is loaded
+        if (!userProfile) return;
         
-        // Show check-in dialog if:
-        // 1. User hasn't confirmed today's ship, OR
-        // 2. User just completed onboarding (first time)
-        if (lastConfirmedDate !== today || onboardingComplete === 'true') {
-            setShowCheckInDialog(true);
-            // Clear onboarding flag after showing dialog
-            if (onboardingComplete === 'true') {
-                localStorage.removeItem('onboardingComplete');
+        // Check if onboarding is complete
+        const isOnboardingComplete = localStorage.getItem('onboardingComplete') === 'true';
+        
+        // Only show quick check-in for users who have completed onboarding
+        if (isOnboardingComplete) {
+            // Check if we've already shown quick check-in today
+            const today = new Date().toDateString(); // e.g., "Mon Dec 23 2024"
+            const lastCheckInDate = localStorage.getItem('lastQuickCheckInDate');
+            
+            if (lastCheckInDate !== today) {
+                console.log('First visit today, showing quick check-in');
+                setShowCheckInDialog(true);
+                // Mark that we've shown it today
+                localStorage.setItem('lastQuickCheckInDate', today);
+            } else {
+                console.log('Already shown quick check-in today, skipping');
+                setShowCheckInDialog(false);
             }
         } else {
-            // Load saved ship assignment
-            const savedShip = localStorage.getItem('currentShipAssignment');
-            if (savedShip) {
-                setCurrentShip(JSON.parse(savedShip));
+            console.log('User has not completed onboarding, skipping quick check-in');
+            setShowCheckInDialog(false);
+        }
+        
+        // Load saved ship assignment if available
+        const savedShip = localStorage.getItem('currentShipAssignment');
+        if (savedShip) {
+            setCurrentShip(JSON.parse(savedShip));
+        }
+    }, [userProfile]);
+
+    // Sync with user profile ship assignment
+    useEffect(() => {
+        if (userProfile?.current_ship_id && allShips.length > 0) {
+            const ship = allShips.find((s: any) => s.id === userProfile.current_ship_id);
+            if (ship) {
+                const today = new Date().toISOString().split('T')[0];
+                const profileShip: ShipAssignment = {
+                    shipId: userProfile.current_ship_id,
+                    shipName: ship.name,
+                    port: "Current Port", // This would come from ship data
+                    date: today,
+                    isConfirmed: true
+                };
+                
+                // Only set if we don't have a current ship or if it's different
+                if (!currentShip || currentShip.shipId !== profileShip.shipId) {
+                    setCurrentShip(profileShip);
+                    // Also save to localStorage for consistency
+                    localStorage.setItem('currentShipAssignment', JSON.stringify(profileShip));
+                }
             }
         }
-    }, []);
+    }, [userProfile?.current_ship_id, allShips, currentShip]);
 
     const confirmShipAssignment = async (shipId: string, shipName: string) => {
         setIsLoading(true);
         
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Update ship assignment in database
+            await updateShipAssignmentMutation.mutateAsync({
+                currentShipId: shipId
+            });
             
             const today = new Date().toISOString().split('T')[0];
             const shipAssignment: ShipAssignment = {
                 shipId,
                 shipName,
-                port: "Miami, Florida", // This would come from ship data
+                port: "Current Port", // This would come from ship data
                 date: today,
                 isConfirmed: true
             };
             
-            // Save to localStorage
+            // Save to localStorage for quick access
             localStorage.setItem('currentShipAssignment', JSON.stringify(shipAssignment));
             localStorage.setItem('lastShipConfirmation', today);
             
             setCurrentShip(shipAssignment);
             setShowCheckInDialog(false);
             
-            console.log(`Ship assignment confirmed: ${shipName} for ${today}`);
+            console.log(`Ship assignment updated in database: ${shipName} for ${today}`);
         } catch (error) {
             console.error('Failed to confirm ship assignment:', error);
         } finally {

@@ -169,7 +169,7 @@ export const SocialMediaLinks = ({
                         disabled={isSubmitting}
                         className="flex-1 px-4 py-2 text-white bg-[#069B93] hover:bg-[#058a7a] rounded-lg font-medium transition-colors disabled:opacity-50"
                     >
-                        {isSubmitting ? 'Saving...' : 'Save Social Media Links'}
+                        {isSubmitting ? 'Updating...' : 'Update'}
                     </button>
                 </div>
             </form>

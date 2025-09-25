@@ -1,256 +1,490 @@
-import Navbar from "../../../components/Elements/Navbar";
-import { useState } from "react";
-import { sampleShips, sampleDepartments } from "../../../data/onboarding-data";
-import { IShip, IDepartment, ISubcategory } from "../../../types/onboarding";
-import { ConnectionRequest } from "../../../components/ConnectionRequest";
-import { sampleProfiles } from "../../../data/connections-data";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useCruiseLines, useAllShips, useShipsByCruiseLine } from "../../cruise/api/cruiseData";
+import { useAllCrewQuery } from "../../connections/api/crewSearchApi";
+import { useSendConnectionRequest } from "../../connections/api/connectionApi";
+import { toast } from "react-toastify";
+import logo from "../../../assets/images/Home/logo.png";
+import { getProfilePhotoUrl } from "../../../utils/imageUtils";
 
-export const ExploreShips = () => {
-    const [selectedShip, setSelectedShip] = useState<string>("");
-    const [selectedPort, setSelectedPort] = useState<string>("");
-    const [selectedDepartment, setSelectedDepartment] = useState<string>("");
-    const [showSubcategories, setShowSubcategories] = useState<boolean>(false);
-    const [showAllSubcategories, setShowAllSubcategories] = useState<boolean>(false);
-    const [connectionRequests, setConnectionRequests] = useState<{[key: string]: 'pending' | 'sent' | 'accepted' | 'declined' | 'blocked'}>({});
-    const [isLoading, setIsLoading] = useState<{[key: string]: boolean}>({});
+// Custom Dropdown Component for Mobile-Friendly Selection
+interface CustomDropdownProps {
+    value: string;
+    onChange: (value: string) => void;
+    options: Array<{ id: string; name: string }>;
+    placeholder: string;
+    disabled?: boolean;
+    label: string;
+    maxHeight?: string;
+}
 
-    // Sample ports data
-    const ports = [
-        "Miami, Florida",
-        "Fort Lauderdale, Florida", 
-        "Port Canaveral, Florida",
-        "New York, New York",
-        "Los Angeles, California",
-        "Seattle, Washington",
-        "Barcelona, Spain",
-        "Southampton, UK",
-        "Copenhagen, Denmark"
-    ];
+const CustomDropdown = ({ 
+    value, 
+    onChange, 
+    options, 
+    placeholder, 
+    disabled = false, 
+    label,
+    maxHeight = "200px"
+}: CustomDropdownProps) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    // Connection request handlers
-    const handleSendRequest = async (profileId: string, message?: string) => {
-        setIsLoading(prev => ({ ...prev, [profileId]: true }));
-        
-        try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Update connection status
-            setConnectionRequests(prev => ({ ...prev, [profileId]: 'sent' }));
-            
-            console.log(`Connection request sent to ${profileId}`, message ? `with message: "${message}"` : '');
-        } catch (error) {
-            console.error('Failed to send connection request:', error);
-        } finally {
-            setIsLoading(prev => ({ ...prev, [profileId]: false }));
+    const selectedOption = options.find(option => option.name === value);
+
+    // Filter options based on search term
+    const filteredOptions = options.filter(option =>
+        option.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+                setSearchTerm("");
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Focus input when dropdown opens
+    useEffect(() => {
+        if (isOpen && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [isOpen]);
+
+    const handleOptionClick = (optionName: string) => {
+        onChange(optionName);
+        setIsOpen(false);
+        setSearchTerm("");
+    };
+
+    const handleInputClick = () => {
+        if (!disabled) {
+            setIsOpen(!isOpen);
+            if (!isOpen) {
+                setSearchTerm("");
+            }
         }
     };
 
-    const handleCancelRequest = async (profileId: string) => {
-        setIsLoading(prev => ({ ...prev, [profileId]: true }));
-        
-        try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            // Remove connection request
-            setConnectionRequests(prev => {
-                const newState = { ...prev };
-                delete newState[profileId];
-                return newState;
-            });
-            
-            console.log(`Connection request cancelled for ${profileId}`);
-        } catch (error) {
-            console.error('Failed to cancel connection request:', error);
-        } finally {
-            setIsLoading(prev => ({ ...prev, [profileId]: false }));
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            setIsOpen(false);
+            setSearchTerm("");
         }
     };
-
-    const filteredCrew = sampleProfiles.filter(profile => {
-        const matchesShip = !selectedShip || profile.shipName === selectedShip;
-        const matchesPort = !selectedPort || profile.port === selectedPort;
-        const matchesDepartment = !selectedDepartment || profile.department === selectedDepartment;
-        
-        return matchesShip && matchesPort && matchesDepartment;
-    });
 
     return (
-        <div className="container">
-            <Navbar />
-            <div className="min-h-screen" style={{ backgroundColor: '#B9F3DF' }}>
-                <div className="container mx-auto px-4 py-8">
-                    {/* Header */}
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-[#069B93] mb-4">
-                            Discover Who's with you today!
-                        </h1>
-                        <p className="text-lg text-gray-600">
-                            Find your friends and connect with crewvar users from other ships
-                        </p>
-                    </div>
+        <div className="relative" ref={dropdownRef}>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+                {label}
+            </label>
+            
+            {/* Input Field */}
+            <div 
+                className={`
+                    w-full px-3 py-3 border rounded-lg cursor-pointer
+                    ${disabled 
+                        ? 'bg-gray-100 cursor-not-allowed border-gray-200 text-gray-500' 
+                        : 'bg-white border-gray-300 hover:border-teal-500 focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500'
+                    }
+                    transition-colors
+                `}
+                onClick={handleInputClick}
+            >
+                <div className="flex items-center justify-between">
+                    <span className={`${selectedOption ? 'text-gray-900' : 'text-gray-500'}`}>
+                        {selectedOption ? selectedOption.name : placeholder}
+                    </span>
+                    <svg 
+                        className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
 
-                    {/* Search and Ship/Port Selection */}
-                    <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-                        <h2 className="text-xl font-semibold text-[#069B93] mb-4">Search & Filter</h2>
+            {/* Dropdown Menu */}
+            {isOpen && !disabled && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                    {/* Search Input */}
+                    <div className="p-2 border-b border-gray-200">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            placeholder="Search..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none"
+                        />
+                    </div>
+                    
+                    {/* Options List */}
+                    <div 
+                        className="overflow-y-auto"
+                        style={{ maxHeight }}
+                    >
+                        {/* All Option */}
+                        <div
+                            className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 transition-colors ${
+                                value === '' ? 'bg-teal-500 text-white hover:bg-teal-600' : 'text-gray-900'
+                            }`}
+                            onClick={() => handleOptionClick('')}
+                        >
+                            All {label}s
+                        </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            {/* Ship Selection */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Cruise Line
-                                </label>
-                                <select
-                                    value={selectedShip}
-                                    onChange={(e) => setSelectedShip(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none"
-                                >
-                                    <option value="">All Cruise Lines</option>
-                                    {sampleShips.map((ship: IShip) => (
-                                        <option key={ship.id} value={ship.name}>
-                                            {ship.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* Port Selection */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Ships
-                                </label>
-                                <select
-                                    value={selectedPort}
-                                    onChange={(e) => setSelectedPort(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none"
-                                >
-                                    <option value="">All Ships</option>
-                                    {ports.map((port) => (
-                                        <option key={port} value={port}>
-                                            {port}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Department Icons */}
-                    <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-                        <h2 className="text-xl font-semibold text-[#069B93] mb-4">Departments</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                            {sampleDepartments.map((dept: IDepartment) => (
-                                <button
-                                    key={dept.id}
-                                    onClick={() => {
-                                        setSelectedDepartment(dept.name);
-                                        setShowSubcategories(true);
-                                        setShowAllSubcategories(false); // Reset to show limited view
-                                    }}
-                                    className={`p-4 rounded-lg border-2 transition-colors ${
-                                        selectedDepartment === dept.name
-                                            ? 'border-[#069B93] bg-[#069B93]/5'
-                                            : 'border-gray-200 hover:border-[#069B93] hover:bg-gray-50'
-                                    }`}
-                                >
-                                    <div className="text-center">
-                                        <div className="w-12 h-12 bg-[#069B93] rounded-full flex items-center justify-center mx-auto mb-2">
-                                            <span className="text-white font-bold text-lg">
-                                                {dept.name.charAt(0)}
-                                            </span>
-                                        </div>
-                                        <p className="text-sm font-medium text-gray-700">
-                                            {dept.name}
-                                        </p>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Subcategories (when department is selected) */}
-                    {showSubcategories && selectedDepartment && (
-                        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-xl font-semibold text-[#069B93]">
-                                    {selectedDepartment} Subcategories
-                                </h2>
-                                <button
-                                    onClick={() => setShowSubcategories(false)}
-                                    className="text-gray-500 hover:text-gray-700"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                {(() => {
-                                    const department = sampleDepartments.find((d: IDepartment) => d.name === selectedDepartment);
-                                    const subcategories = department?.subcategories || [];
-                                    const displaySubcategories = showAllSubcategories 
-                                        ? subcategories 
-                                        : subcategories.slice(0, 4);
-                                    
-                                    return displaySubcategories.map((sub: ISubcategory) => (
-                                        <button
-                                            key={sub.id}
-                                            className="p-3 border border-gray-200 rounded-lg hover:border-[#069B93] hover:bg-gray-50 transition-colors"
-                                        >
-                                            <p className="text-sm font-medium text-gray-700">{sub.name}</p>
-                                        </button>
-                                    ));
-                                })()}
-                            </div>
-                            
-                            {(() => {
-                                const department = sampleDepartments.find((d: IDepartment) => d.name === selectedDepartment);
-                                const subcategories = department?.subcategories || [];
-                                const hasMoreThanFour = subcategories.length > 4;
-                                
-                                if (!hasMoreThanFour) return null;
-                                
-                                return (
-                                    <button 
-                                        onClick={() => setShowAllSubcategories(!showAllSubcategories)}
-                                        className="px-4 py-2 text-sm font-medium text-[#069B93] border border-[#069B93] rounded-lg hover:bg-[#069B93] hover:text-white transition-colors"
-                                    >
-                                        {showAllSubcategories ? 'Show Less' : `View All ${selectedDepartment} (${subcategories.length})`}
-                                    </button>
-                                );
-                            })()}
-                        </div>
-                    )}
-
-                    {/* Crew Results */}
-                    <div className="bg-white rounded-lg shadow-sm border p-6">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-semibold text-[#069B93]">
-                                Crew Members ({filteredCrew.length})
-                            </h2>
-                        </div>
-
-                        {filteredCrew.length === 0 ? (
-                            <div className="text-center py-12">
-                                <p className="text-gray-500 text-lg">No crew members found matching your criteria.</p>
-                                <p className="text-gray-400 text-sm mt-2">Try selecting a ship, port, or department.</p>
+                        {filteredOptions.length === 0 ? (
+                            <div className="px-3 py-2 text-sm text-gray-500">
+                                No options found
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredCrew.map((profile) => (
-                                    <ConnectionRequest
-                                        key={profile.id}
-                                        profile={profile}
-                                        onSendRequest={handleSendRequest}
-                                        onCancelRequest={handleCancelRequest}
-                                        requestStatus={connectionRequests[profile.id]}
-                                        isLoading={isLoading[profile.id]}
-                                    />
-                                ))}
-                            </div>
+                            filteredOptions.map((option) => (
+                                <div
+                                    key={option.id}
+                                    className={`
+                                        px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 transition-colors
+                                        ${value === option.name ? 'bg-teal-500 text-white hover:bg-teal-600' : 'text-gray-900'}
+                                    `}
+                                    onClick={() => handleOptionClick(option.name)}
+                                >
+                                    {option.name}
+                                </div>
+                            ))
                         )}
                     </div>
                 </div>
+            )}
+        </div>
+    );
+};
+
+export const ExploreShips = () => {
+    const navigate = useNavigate();
+    const [selectedCruiseLine, setSelectedCruiseLine] = useState<string>("");
+    const [selectedShip, setSelectedShip] = useState<string>("");
+    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+    const observerRef = useRef<HTMLDivElement>(null);
+    
+    // Connection request mutation
+    const sendConnectionRequestMutation = useSendConnectionRequest();
+
+    // Fetch real data
+    const { data: cruiseLines, isLoading: cruiseLinesLoading } = useCruiseLines();
+    const { data: allShips, isLoading: shipsLoading } = useAllShips();
+    
+    // Get the cruise line ID from the selected name
+    const selectedCruiseLineId = cruiseLines?.find(cl => cl.name === selectedCruiseLine)?.id || '';
+    const { data: shipsByCruiseLine, isLoading: shipsByCruiseLineLoading } = useShipsByCruiseLine(selectedCruiseLineId);
+    
+    const {
+        data: crewData,
+        isLoading: crewLoading,
+        isFetchingNextPage,
+        hasNextPage,
+        fetchNextPage
+    } = useAllCrewQuery();
+
+    // Connection request handler
+    const handleConnect = async (memberId: string, memberName: string) => {
+        try {
+            setLoadingStates(prev => ({ ...prev, [memberId]: true }));
+            
+            await sendConnectionRequestMutation.mutateAsync({
+                receiverId: memberId,
+                message: `Hi ${memberName}! I'd like to connect with you.`
+            });
+            
+            toast.success(`Connection request sent to ${memberName}!`);
+        } catch (error: any) {
+            console.error('Failed to send connection request:', error);
+            toast.error(error.response?.data?.error || 'Failed to send connection request');
+        } finally {
+            setLoadingStates(prev => ({ ...prev, [memberId]: false }));
+        }
+    };
+
+    // View profile handler
+    const handleViewProfile = (memberId: string) => {
+        // Navigate to member's profile page
+        window.location.href = `/crew/${memberId}`;
+    };
+
+
+    // Get available ships based on selected cruise line
+    const availableShips = useMemo(() => {
+        if (selectedCruiseLine && shipsByCruiseLine) {
+            return shipsByCruiseLine;
+        }
+        // If no cruise line selected, show all ships
+        if (!selectedCruiseLine && allShips) {
+            return allShips;
+        }
+        return [];
+    }, [selectedCruiseLine, shipsByCruiseLine, allShips]);
+
+    // Flatten all crew data from all pages
+    const allCrew = useMemo(() => {
+        if (!crewData?.pages) return [];
+        return crewData.pages.flatMap(page => page.crew);
+    }, [crewData]);
+
+    // Filter crew members based on selections (client-side filtering)
+    const filteredCrew = useMemo(() => {
+        if (!allCrew) return [];
+        
+        return allCrew.filter(member => {
+            const matchesCruiseLine = !selectedCruiseLine || member.cruise_line_name === selectedCruiseLine;
+            const matchesShip = !selectedShip || member.ship_name === selectedShip;
+            const matchesSearch = !searchQuery || 
+                member.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                member.department_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                member.role_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                member.ship_name.toLowerCase().includes(searchQuery.toLowerCase());
+            
+            return matchesCruiseLine && matchesShip && matchesSearch;
+        });
+    }, [allCrew, selectedCruiseLine, selectedShip, searchQuery]);
+
+    // Infinite scroll observer
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (observerRef.current) {
+            observer.observe(observerRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+    // Reset ship selection when cruise line changes
+    const handleCruiseLineChange = (cruiseLineName: string) => {
+        setSelectedCruiseLine(cruiseLineName);
+        setSelectedShip(""); // Reset ship selection
+    };
+
+    // Debug logging
+    console.log('ExploreShips Debug:', {
+        cruiseLines: cruiseLines?.length || 0,
+        allShips: allShips?.length || 0,
+        crewData: allCrew.length || 0,
+        crewDataFull: crewData,
+        crewLoading,
+        selectedCruiseLine,
+        selectedCruiseLineId,
+        availableShips: availableShips?.length || 0,
+        shipsByCruiseLine: shipsByCruiseLine?.length || 0
+    });
+
+    return (
+        <div className="min-h-screen bg-gray-50">
+            {/* Mobile Header */}
+            <div className="bg-teal-600 text-white p-3 sm:p-4 sticky top-0 z-10">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="p-2 hover:bg-teal-700 rounded-lg transition-colors"
+                        >
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <div>
+                            <h1 className="text-base sm:text-lg font-bold">Explore Ships</h1>
+                            <p className="text-xs text-teal-100">Find friends</p>
+                        </div>
+                    </div>
+                    <Link to="/dashboard" className="flex items-center hover:bg-teal-700 rounded-lg px-2 sm:px-3 py-2 transition-colors">
+                        <img 
+                            src={logo} 
+                            alt="Crewvar Logo" 
+                            className="h-5 sm:h-6 w-auto brightness-0 invert"
+                            style={{ filter: 'brightness(0) invert(1)' }}
+                        />
+                    </Link>
+                </div>
+            </div>
+
+            <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+                {/* Search Section */}
+                <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-4">
+                    <h2 className="text-base sm:text-lg font-semibold text-teal-600 mb-3">Search & Filter</h2>
+                    
+                    <div className="space-y-3">
+                        {/* Search Input */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Search Friends
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Search by name, department, role, or ship..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none text-base"
+                            />
+                        </div>
+
+                        {/* Cruise Line Selection */}
+                        <CustomDropdown
+                            value={selectedCruiseLine}
+                            onChange={handleCruiseLineChange}
+                            options={cruiseLines || []}
+                            placeholder="All Cruise Lines"
+                            disabled={cruiseLinesLoading}
+                            label="Cruise Line"
+                            maxHeight="250px"
+                        />
+
+                        {/* Ship Selection */}
+                        <CustomDropdown
+                            value={selectedShip}
+                            onChange={setSelectedShip}
+                            options={availableShips || []}
+                            placeholder="All Ships"
+                            disabled={shipsLoading || shipsByCruiseLineLoading}
+                            label="Ship"
+                            maxHeight="250px"
+                        />
+                    </div>
+                </div>
+
+                {/* Loading State */}
+                {(cruiseLinesLoading || shipsLoading || crewLoading) && (
+                    <div className="bg-white rounded-lg shadow-sm border p-4">
+                        <div className="flex items-center justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+                            <span className="ml-3 text-gray-600">Loading friends data...</span>
+                        </div>
+                    </div>
+                )}
+
+
+                {/* Crew Results */}
+                {!crewLoading && (
+                    <div className="bg-white rounded-lg shadow-sm border p-4">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-lg font-semibold text-teal-600">
+                                Possible friends ({filteredCrew.length})
+                            </h2>
+                            <div className="text-sm text-gray-500">
+                                {allCrew.length} total loaded
+                            </div>
+                        </div>
+
+                        {filteredCrew.length === 0 ? (
+                            <div className="text-center py-8">
+                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                </div>
+                                <p className="text-gray-500 text-base">No matching results found</p>
+                                <p className="text-gray-400 text-sm mt-1">
+                                    {searchQuery || selectedCruiseLine || selectedShip 
+                                        ? "Try adjusting your search or filters" 
+                                        : "No friends data available"}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3 sm:space-y-4">
+                                {filteredCrew.map((member) => (
+                                    <div key={member.id} className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-teal-300 transition-colors">
+                                        <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
+                                            {/* Avatar and Info */}
+                                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                                {/* Avatar */}
+                                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden flex-shrink-0">
+                                                    <img 
+                                                        src={getProfilePhotoUrl(member.profile_photo)} 
+                                                        alt={member.display_name}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            // Fallback to letter avatar if image fails to load
+                                                            const target = e.target as HTMLImageElement;
+                                                            target.style.display = 'none';
+                                                            const parent = target.parentElement;
+                                                            if (parent) {
+                                                                parent.innerHTML = `
+                                                                    <div class="w-full h-full bg-teal-500 flex items-center justify-center">
+                                                                        <span class="text-white font-bold text-sm sm:text-lg">${member.display_name.charAt(0)}</span>
+                                                                    </div>
+                                                                `;
+                                                            }
+                                                        }}
+                                                    />
+                                                </div>
+                                                
+                                                {/* Member Info */}
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="text-sm sm:text-base font-semibold text-gray-900 truncate">
+                                                        {member.display_name}
+                                                    </h3>
+                                                    <p className="text-xs sm:text-sm text-gray-600 truncate">
+                                                        {member.role_name || 'Friend'}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 truncate">
+                                                        {member.department_name} • {member.ship_name}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Action Buttons */}
+                                            <div className="flex space-x-2 sm:flex-shrink-0">
+                                                <button
+                                                    onClick={() => handleConnect(member.id, member.display_name)}
+                                                    disabled={loadingStates[member.id] || sendConnectionRequestMutation.isLoading}
+                                                    className="flex-1 sm:flex-none px-3 py-2 bg-[#069B93] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#058a7a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                >
+                                                    {loadingStates[member.id] ? 'Sending...' : 'Connect'}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleViewProfile(member.id)}
+                                                    className="flex-1 sm:flex-none px-3 py-2 border border-gray-300 text-gray-700 text-xs sm:text-sm rounded-lg hover:border-[#069B93] hover:text-[#069B93] hover:bg-[#069B93]/5 transition-colors font-medium"
+                                                >
+                                                    View Profile
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                
+                                {/* Infinite scroll loading indicator */}
+                                {isFetchingNextPage && (
+                                    <div className="flex justify-center py-4">
+                                        <div className="flex items-center space-x-2 text-teal-600">
+                                            <div className="w-4 h-4 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+                                            <span className="text-sm font-medium">Loading more friends...</span>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Infinite scroll trigger */}
+                                <div ref={observerRef} className="h-4"></div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -1,13 +1,15 @@
 import Showcase from "../components/Showcase";
+import Navbar from "../../../components/Elements/Navbar";
 import newArrivals from "../../../assets/images/Home/yourhomeatsea.png";
 import createProfile from "../../../assets/images/Home/createprofile.png";
 import findAround from "../../../assets/images/Home/findaround.png";
 import connectShare from "../../../assets/images/Home/connectshare.png";
-import favi from "../../../assets/images/Home/favi.png";
+import homefooter from "../../../assets/images/Home/homefooter.png";
 
 export const Home = () => {
     return (
         <>
+            <Navbar />
             <Showcase />
             <div className="container px-[20px] lg:px-[96px] md:px-[48px] sm:px-[24px]">
                 <div className="flex flex-col md:flex-row rounded-lg overflow-hidden">
@@ -96,7 +98,7 @@ export const Home = () => {
                         {/* Right side - Icon */}
                         <div className="w-full lg:w-[20%] md:w-[30%] flex justify-center md:justify-end">
                             <div className="w-32 h-32 lg:w-40 lg:h-40 flex items-center justify-center">
-                                <img src={favi} alt="Why Ohana" className="w-full h-full object-contain" />
+                                <img src={homefooter} alt="Why Crewvar" className="w-full h-full object-contain" />
                             </div>
                         </div>
                     </div>

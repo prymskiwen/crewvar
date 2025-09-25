@@ -28,7 +28,7 @@ export interface ISubcategory {
 export interface IRole {
     id: string;
     name: string;
-    subcategoryId: string;
+    department_id?: string;
 }
 
 export interface IContractCalendar {
@@ -50,7 +50,6 @@ export interface IOnboardingData {
     displayName: string;
     profilePhoto: File | string;
     departmentId: string;
-    subcategoryId: string;
     roleId: string;
     currentShipId: string;
     contractCalendar?: IContractCalendar[];

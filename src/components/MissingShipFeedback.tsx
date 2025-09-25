@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { api } from "../app/api";
+import { toast } from "react-toastify";
 
 interface FeedbackFormData {
     type: 'ship' | 'position' | 'department' | 'other';
@@ -45,21 +47,34 @@ export const MissingShipFeedback = ({ isOpen, onClose }: MissingShipFeedbackProp
         setIsSubmitting(true);
         
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.log('📧 Submitting feedback:', data);
             
-            console.log('Feedback submitted:', data);
-            setIsSubmitted(true);
+            const response = await api.post('/feedback', data);
             
-            // Reset form after 2 seconds
-            setTimeout(() => {
-                setIsSubmitted(false);
-                reset();
-                onClose();
-            }, 2000);
+            if (response.data.success) {
+                toast.success('Feedback submitted successfully! We\'ll review it and add the missing information.');
+                setIsSubmitted(true);
+                
+                // Reset form after 2 seconds
+                setTimeout(() => {
+                    setIsSubmitted(false);
+                    reset();
+                    onClose();
+                }, 2000);
+            } else {
+                throw new Error(response.data.message || 'Failed to submit feedback');
+            }
             
-        } catch (error) {
-            console.error('Failed to submit feedback:', error);
+        } catch (error: any) {
+            console.error('❌ Failed to submit feedback:', error);
+            
+            if (error.response?.data?.error) {
+                toast.error(`Failed to submit feedback: ${error.response.data.error}`);
+            } else if (error.message) {
+                toast.error(`Failed to submit feedback: ${error.message}`);
+            } else {
+                toast.error('Failed to submit feedback. Please try again.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -113,7 +128,7 @@ export const MissingShipFeedback = ({ isOpen, onClose }: MissingShipFeedbackProp
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none"
                                 >
                                     <option value="ship">Ship</option>
-                                    <option value="position">Position/Role</option>
+                                    <option value="position">Position</option>
                                     <option value="department">Department</option>
                                     <option value="other">Other</option>
                                 </select>

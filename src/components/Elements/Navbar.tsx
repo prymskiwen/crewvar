@@ -1,25 +1,9 @@
 import { Link } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import logo from "../../assets/images/Home/logo.png";
-import { defaultAvatar } from "../../utils/images";
-import { HiMenu, HiX } from "react-icons/hi";
 
 const Navbar = () => {
-    const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
-
-    const { signOut, currentUser } = useAuth();
-    const navigate = useNavigate();
-    
-    const handleSignOut = () => {
-        signOut();
-        navigate("/auth/login");
-    };
-
-    const toggleMobileMenu = () => {
-        setMobileMenuOpen(prevState => !prevState);
-    };
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
         <div className="px-2 xs:px-6 py-5 justify-between rounded-xl items-center relative z-30">
@@ -31,188 +15,63 @@ const Navbar = () => {
                     </Link>
                 </div>
 
-                {/* Desktop Menu */}
-                <div className="hidden lg:flex text-secondary text-lg items-auto">
-                    {currentUser ? (
-                        <>
-                            <div className="flex items-center space-x-6 mr-6">
-                                <Link
-                                    to="/dashboard"
-                                    className="text-sm font-medium text-[#069B93] hover:text-[#058a7a] transition-colors"
-                                >
-                                    Dashboard
-                                </Link>
-                                <Link
-                                    to="/explore-ships"
-                                    className="text-sm font-medium text-[#069B93] hover:text-[#058a7a] transition-colors"
-                                >
-                                    Discover who's with you today!
-                                </Link>
-                                <Link
-                                    to="/chat"
-                                    className="text-sm font-medium text-[#069B93] hover:text-[#058a7a] transition-colors"
-                                >
-                                    Messages
-                                </Link>
-                                <Link
-                                    to="/favorites"
-                                    className="text-sm font-medium text-[#069B93] hover:text-[#058a7a] transition-colors"
-                                >
-                                    Favorites
-                                </Link>
-                                <Link
-                                    to="/privacy"
-                                    className="text-sm font-medium text-[#069B93] hover:text-[#058a7a] transition-colors"
-                                >
-                                    Privacy
-                                </Link>
-                                <Link
-                                    to="/moderation"
-                                    className="text-sm font-medium text-[#069B93] hover:text-[#058a7a] transition-colors"
-                                >
-                                    Moderation
-                                </Link>
-                            </div>
-                            <div className="font-medium text-sm text-dark relative ml-5">
-                                <button className="flex items-center space-x-2">
-                                    <img
-                                        src={currentUser?.photoURL || defaultAvatar}
-                                        alt="Profile"
-                                        className="w-8 h-8 rounded-full"
-                                    />
-                                    <span className="text-sm font-medium">{currentUser?.displayName}</span>
-                                </button>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="flex items-center space-x-3">
-                            <Link
-                                to="/auth/login"
-                                className="px-4 py-2 text-sm font-medium text-[#00A59E] hover:text-primary transition-colors"
-                            >
-                                Sign In
-                            </Link>
-                            <Link
-                                to="/auth/signup"
-                                className="px-4 py-2 text-sm font-medium text-[#00A59E] hover:text-primary transition-colors"
-                            >
-                                Sign Up
-                            </Link>
-                        </div>
-                    )}
+                {/* Desktop Menu - Sign In/Sign Up buttons */}
+                <div className="hidden lg:flex items-center space-x-4">
+                    <Link 
+                        to="/auth/login" 
+                        className="font-semibold text-sm text-[#069B93] hover:text-[#058A7A] transition-colors px-4 py-2"
+                    >
+                        Sign In
+                    </Link>
+                    <Link 
+                        to="/auth/signup" 
+                        className="font-semibold text-sm bg-[#069B93] hover:bg-[#058A7A] transition-colors rounded-lg py-2 px-4 text-white"
+                    >
+                        Sign Up
+                    </Link>
                 </div>
 
-                {/* Mobile Hamburger Menu */}
-                <div className="lg:hidden">
-                    <button
-                        onClick={toggleMobileMenu}
-                        className="text-orange-500 hover:text-orange-600 transition-colors"
+                {/* Mobile Hamburger Menu Button */}
+                <button
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    aria-label="Toggle mobile menu"
+                >
+                    <svg 
+                        className="w-6 h-6" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                        style={{ color: '#FF8C00' }} // Orange color
                     >
-                        {mobileMenuOpen ? <HiX className="w-6 h-6 sm:w-8 sm:h-8" /> : <HiMenu className="w-6 h-6 sm:w-8 sm:h-8" />}
-                    </button>
-                </div>
+                        <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} 
+                        />
+                    </svg>
+                </button>
             </div>
 
-            {/* Mobile Menu Dropdown */}
-            {mobileMenuOpen && (
-                <div className="lg:hidden absolute top-full right-0 mt-2 w-48 bg-[#B9F3DF] border border-[#069B93]/20 rounded-xl shadow-xl z-50">
-                    <div className="py-3">
-                        {currentUser ? (
-                            <div className="px-4 py-2">
-                                <div className="flex items-center space-x-3 mb-3">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-[#00A59E] to-[#069B93] rounded-full flex items-center justify-center shadow-lg">
-                                        <span className="text-white font-semibold text-xs">
-                                            {currentUser?.displayName?.charAt(0)?.toUpperCase() || 'U'}
-                                        </span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-medium text-[#069B93] truncate">
-                                            {currentUser?.displayName || 'User'}
-                                        </div>
-                                        <div className="text-xs text-gray-600 truncate">
-                                            {currentUser?.email}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                {/* Mobile Navigation Links */}
-                                <div className="space-y-1 mb-3">
-                                    <Link
-                                        to="/dashboard"
-                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                    >
-                                        Dashboard
-                                    </Link>
-                                    <Link
-                                        to="/explore-ships"
-                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                    >
-                                        Discover Who's with you today!
-                                    </Link>
-                                    <Link
-                                        to="/chat"
-                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                    >
-                                        Messages
-                                    </Link>
-                                    <Link
-                                        to="/favorites"
-                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                    >
-                                        Favorites
-                                    </Link>
-                                    <Link
-                                        to="/privacy"
-                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                    >
-                                        Privacy
-                                    </Link>
-                                    <Link
-                                        to="/moderation"
-                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                    >
-                                        Moderation
-                                    </Link>
-                                    <Link
-                                        to="/port-connections"
-                                        className="block w-full px-3 py-2 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200"
-                                        onClick={() => setMobileMenuOpen(false)}
-                                    >
-                                        Port Connections
-                                    </Link>
-                                </div>
-                                
-                                <button
-                                    onClick={handleSignOut}
-                                    className="w-full text-left px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
-                                >
-                                    Sign out
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="px-4 py-2 space-y-2">
-                                <Link
-                                    to="/auth/login"
-                                    className="block w-full px-3 py-2.5 text-sm font-medium text-[#069B93] hover:text-[#00A59E] hover:bg-white/50 rounded-lg transition-all duration-200 text-center"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                >
-                                    Sign In
-                                </Link>
-                                <Link
-                                    to="/auth/signup"
-                                    className="block w-full px-3 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#00A59E] to-[#069B93] hover:from-[#00A59E]/90 hover:to-[#069B93]/90 rounded-lg transition-all duration-200 text-center shadow-lg"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                >
-                                    Sign Up
-                                </Link>
-                            </div>
-                        )}
+            {/* Mobile Menu */}
+            {isMobileMenuOpen && (
+                <div className="lg:hidden absolute top-full left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
+                    <div className="px-4 py-4 space-y-3">
+                        <Link 
+                            to="/auth/login" 
+                            className="block font-semibold text-sm text-[#069B93] hover:text-[#058A7A] transition-colors py-2 px-4 rounded-lg hover:bg-gray-50"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            Sign In
+                        </Link>
+                        <Link 
+                            to="/auth/signup" 
+                            className="block font-semibold text-sm bg-[#069B93] hover:bg-[#058A7A] transition-colors rounded-lg py-2 px-4 text-white text-center"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            Sign Up
+                        </Link>
                     </div>
                 </div>
             )}

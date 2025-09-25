@@ -159,79 +159,79 @@ export const sampleDepartments: IDepartment[] = [
 // Sample Roles Data
 export const sampleRoles: IRole[] = [
     // Food & Beverage - Restaurant Service
-    { id: "1", name: "Waiter/Waitress", subcategoryId: "1" },
-    { id: "2", name: "Head Waiter", subcategoryId: "1" },
-    { id: "3", name: "Restaurant Manager", subcategoryId: "1" },
-    { id: "4", name: "Maitre D'", subcategoryId: "1" },
+    { id: "1", name: "Waiter/Waitress", department_id: "dept-9" },
+    { id: "2", name: "Head Waiter", department_id: "dept-9" },
+    { id: "3", name: "Restaurant Manager", department_id: "dept-9" },
+    { id: "4", name: "Maitre D'", department_id: "dept-9" },
     
     // Food & Beverage - Bar Service
-    { id: "5", name: "Bartender", subcategoryId: "2" },
-    { id: "6", name: "Bar Manager", subcategoryId: "2" },
-    { id: "7", name: "Sommelier", subcategoryId: "2" },
+    { id: "5", name: "Bartender", department_id: "dept-9" },
+    { id: "6", name: "Bar Manager", department_id: "dept-9" },
+    { id: "7", name: "Sommelier", department_id: "dept-9" },
     
     // Food & Beverage - Culinary
-    { id: "8", name: "Chef de Cuisine", subcategoryId: "3" },
-    { id: "9", name: "Sous Chef", subcategoryId: "3" },
-    { id: "10", name: "Line Cook", subcategoryId: "3" },
-    { id: "11", name: "Pastry Chef", subcategoryId: "3" },
+    { id: "8", name: "Chef de Cuisine", department_id: "dept-3" },
+    { id: "9", name: "Sous Chef", department_id: "dept-3" },
+    { id: "10", name: "Line Cook", department_id: "dept-3" },
+    { id: "11", name: "Pastry Chef", department_id: "dept-3" },
     
     // Entertainment - Production Shows
-    { id: "12", name: "Dancer", subcategoryId: "9" },
-    { id: "13", name: "Singer", subcategoryId: "9" },
-    { id: "14", name: "Show Director", subcategoryId: "9" },
-    { id: "15", name: "Stage Manager", subcategoryId: "9" },
+    { id: "12", name: "Dancer", department_id: "dept-5" },
+    { id: "13", name: "Singer", department_id: "dept-5" },
+    { id: "14", name: "Show Director", department_id: "dept-7" },
+    { id: "15", name: "Stage Manager", department_id: "dept-8" },
     
     // Entertainment - Live Music
-    { id: "16", name: "Musician", subcategoryId: "10" },
-    { id: "17", name: "DJ", subcategoryId: "10" },
-    { id: "18", name: "Music Director", subcategoryId: "10" },
+    { id: "16", name: "Musician", department_id: "dept-5" },
+    { id: "17", name: "DJ", department_id: "dept-5" },
+    { id: "18", name: "Music Director", department_id: "dept-7" },
     
     // Entertainment - Activities
-    { id: "19", name: "Activity Host", subcategoryId: "11" },
-    { id: "20", name: "Cruise Director", subcategoryId: "11" },
-    { id: "21", name: "Social Host", subcategoryId: "11" },
+    { id: "19", name: "Activity Host", department_id: "dept-7" },
+    { id: "20", name: "Cruise Director", department_id: "dept-7" },
+    { id: "21", name: "Social Host", department_id: "dept-7" },
     
     // Guest Services - Front Desk
-    { id: "22", name: "Guest Services Agent", subcategoryId: "9" },
-    { id: "23", name: "Guest Services Manager", subcategoryId: "9" },
-    { id: "24", name: "Purser", subcategoryId: "9" },
+    { id: "22", name: "Guest Services Agent", department_id: "dept-1" },
+    { id: "23", name: "Guest Services Manager", department_id: "dept-1" },
+    { id: "24", name: "Purser", department_id: "dept-1" },
     
     // Guest Services - Housekeeping
-    { id: "25", name: "Stateroom Attendant", subcategoryId: "11" },
-    { id: "26", name: "Housekeeping Supervisor", subcategoryId: "11" },
-    { id: "27", name: "Housekeeping Manager", subcategoryId: "11" },
+    { id: "25", name: "Stateroom Attendant", department_id: "dept-10" },
+    { id: "26", name: "Housekeeping Supervisor", department_id: "dept-10" },
+    { id: "27", name: "Housekeeping Manager", department_id: "dept-10" },
     
     // Marine Operations - Navigation
-    { id: "28", name: "Captain", subcategoryId: "13" },
-    { id: "29", name: "Chief Officer", subcategoryId: "13" },
-    { id: "30", name: "Navigation Officer", subcategoryId: "13" },
+    { id: "28", name: "Captain", department_id: "dept-17" },
+    { id: "29", name: "Chief Officer", department_id: "dept-17" },
+    { id: "30", name: "Navigation Officer", department_id: "dept-17" },
     
     // Marine Operations - Engineering
-    { id: "31", name: "Chief Engineer", subcategoryId: "14" },
-    { id: "32", name: "Engineer", subcategoryId: "14" },
-    { id: "33", name: "Electrician", subcategoryId: "14" },
+    { id: "31", name: "Chief Engineer", department_id: "dept-17" },
+    { id: "32", name: "Engineer", department_id: "dept-17" },
+    { id: "33", name: "Electrician", department_id: "dept-17" },
     
     // Marine Operations - Deck Operations
-    { id: "34", name: "Bosun", subcategoryId: "15" },
-    { id: "35", name: "Able Seaman", subcategoryId: "15" },
-    { id: "36", name: "Deck Hand", subcategoryId: "15" },
+    { id: "34", name: "Bosun", department_id: "dept-17" },
+    { id: "35", name: "Able Seaman", department_id: "dept-17" },
+    { id: "36", name: "Deck Hand", department_id: "dept-17" },
     
     // Marine Operations - Safety & Security
-    { id: "37", name: "Security Officer", subcategoryId: "16" },
-    { id: "38", name: "Safety Officer", subcategoryId: "16" },
-    { id: "39", name: "Fire Safety Officer", subcategoryId: "16" },
+    { id: "37", name: "Security Officer", department_id: "dept-17" },
+    { id: "38", name: "Safety Officer", department_id: "dept-17" },
+    { id: "39", name: "Fire Safety Officer", department_id: "dept-17" },
     
     // Retail & Services - Shops
-    { id: "40", name: "Sales Associate", subcategoryId: "17" },
-    { id: "41", name: "Shop Manager", subcategoryId: "17" },
-    { id: "42", name: "Jewelry Specialist", subcategoryId: "17" },
+    { id: "40", name: "Sales Associate", department_id: "dept-14" },
+    { id: "41", name: "Shop Manager", department_id: "dept-14" },
+    { id: "42", name: "Jewelry Specialist", department_id: "dept-14" },
     
     // Retail & Services - Photography
-    { id: "43", name: "Photographer", subcategoryId: "18" },
-    { id: "44", name: "Photo Manager", subcategoryId: "18" },
+    { id: "43", name: "Photographer", department_id: "dept-13" },
+    { id: "44", name: "Photo Manager", department_id: "dept-13" },
     
     // Youth Programs
-    { id: "45", name: "Youth Counselor", subcategoryId: "21" },
-    { id: "46", name: "Youth Director", subcategoryId: "21" },
-    { id: "47", name: "Teen Counselor", subcategoryId: "22" },
+    { id: "45", name: "Youth Counselor", department_id: "dept-7" },
+    { id: "46", name: "Youth Director", department_id: "dept-7" },
+    { id: "47", name: "Teen Counselor", department_id: "dept-7" },
 ];

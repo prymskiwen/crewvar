@@ -4,13 +4,14 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useCalendar } from "../context/CalendarContext";
 import { ShipSelection } from "./ShipSelection";
-import { IAssignmentFormData } from "../types/calendar";
+import { IAssignmentFormData, ICruiseAssignment } from "../types/calendar";
 
 interface AssignmentFormProps {
     onClose: () => void;
     onSuccess?: () => void;
     initialDate?: string;
     className?: string;
+    editingAssignment?: ICruiseAssignment | null;
 }
 
 const assignmentValidationSchema = yup.object({
@@ -25,22 +26,73 @@ export const AssignmentForm = ({
     onClose, 
     onSuccess,
     initialDate,
-    className = ""
+    className = "",
+    editingAssignment = null
 }: AssignmentFormProps) => {
-    const { addAssignment } = useCalendar();
+    const { addAssignment, updateAssignment } = useCalendar();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedCruiseLineId, setSelectedCruiseLineId] = useState<string>("");
 
-    const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<IAssignmentFormData>({
+    const isEditing = !!editingAssignment;
+    
+    // Debug component lifecycle
+    useEffect(() => {
+        console.log('🚨 AssignmentForm MOUNTED - isEditing:', isEditing);
+        return () => {
+            console.log('🚨 AssignmentForm UNMOUNTING');
+        };
+    }, [isEditing]);
+
+    const { register, handleSubmit, formState: { errors }, watch, setValue, reset } = useForm<IAssignmentFormData>({
         resolver: yupResolver(assignmentValidationSchema),
         defaultValues: {
-            startDate: initialDate || new Date().toISOString().split('T')[0],
-            endDate: initialDate || new Date().toISOString().split('T')[0]
+            cruiseLineId: editingAssignment?.cruiseLineId || "",
+            shipId: editingAssignment?.shipId || "",
+            startDate: editingAssignment?.startDate || initialDate || new Date().toISOString().split('T')[0],
+            endDate: editingAssignment?.endDate || initialDate || new Date().toISOString().split('T')[0],
+            description: editingAssignment?.description || ""
         }
     });
 
     const watchedStartDate = watch("startDate");
     const watchedEndDate = watch("endDate");
+    
+    // Debug validation errors
+    useEffect(() => {
+        if (Object.keys(errors).length > 0) {
+            console.log('🚨 VALIDATION ERRORS:', errors);
+        }
+    }, [errors]);
+
+    // Reset form when editingAssignment changes
+    useEffect(() => {
+        if (editingAssignment) {
+            // Convert ISO dates to yyyy-MM-dd format for HTML date inputs
+            const formatDateForInput = (isoDate: string) => {
+                if (!isoDate) return new Date().toISOString().split('T')[0];
+                return new Date(isoDate).toISOString().split('T')[0];
+            };
+            
+            const formData = {
+                cruiseLineId: editingAssignment.cruiseLineId || "",
+                shipId: editingAssignment.shipId || "",
+                startDate: formatDateForInput(editingAssignment.startDate),
+                endDate: formatDateForInput(editingAssignment.endDate),
+                description: editingAssignment.description || ""
+            };
+            reset(formData);
+            setSelectedCruiseLineId(editingAssignment.cruiseLineId || "");
+        } else {
+            reset({
+                cruiseLineId: "",
+                shipId: "",
+                startDate: initialDate || new Date().toISOString().split('T')[0],
+                endDate: initialDate || new Date().toISOString().split('T')[0],
+                description: ""
+            });
+            setSelectedCruiseLineId("");
+        }
+    }, [editingAssignment, reset, initialDate]);
 
     // Update end date when start date changes (minimum 1 day duration)
     useEffect(() => {
@@ -57,22 +109,37 @@ export const AssignmentForm = ({
     }, [watchedStartDate, watchedEndDate, setValue]);
 
     const onSubmit = async (data: IAssignmentFormData) => {
+        console.log('🚨 FORM SUBMITTED! This should not happen automatically!', data);
+        console.log('🚨 isEditing:', isEditing, 'editingAssignment:', editingAssignment);
         setIsSubmitting(true);
         
         try {
-            await addAssignment({
-                userId: "current_user",
-                cruiseLineId: data.cruiseLineId,
-                shipId: data.shipId,
-                startDate: data.startDate,
-                endDate: data.endDate,
-                status: 'upcoming'
-            });
+            if (isEditing && editingAssignment) {
+                // Update existing assignment
+                await updateAssignment(editingAssignment.id, {
+                    cruiseLineId: data.cruiseLineId,
+                    shipId: data.shipId,
+                    startDate: data.startDate,
+                    endDate: data.endDate,
+                    status: editingAssignment.status // Keep existing status
+                });
+            } else {
+                // Create new assignment
+                await addAssignment({
+                    cruiseLineId: data.cruiseLineId,
+                    shipId: data.shipId,
+                    startDate: data.startDate,
+                    endDate: data.endDate,
+                    status: 'upcoming'
+                });
+            }
             
+            console.log('🚨 FORM SUCCESS - Calling onSuccess and onClose');
             onSuccess?.();
             onClose();
         } catch (error) {
-            console.error('Failed to add assignment:', error);
+            console.error(`Failed to ${isEditing ? 'update' : 'add'} assignment:`, error);
+            // Don't close the form on error, let user see the error
         } finally {
             setIsSubmitting(false);
         }
@@ -90,9 +157,14 @@ export const AssignmentForm = ({
     return (
         <div className={`bg-white rounded-lg shadow-sm border p-6 ${className}`}>
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-[#069B93]">Add Cruise Assignment</h2>
+                <h2 className="text-xl font-bold text-[#069B93]">
+                    {isEditing ? 'Edit Cruise Assignment' : 'Add Cruise Assignment'}
+                </h2>
                 <button
-                    onClick={onClose}
+                    onClick={() => {
+                        console.log('🚨 CLOSE BUTTON CLICKED');
+                        onClose();
+                    }}
                     className="text-gray-400 hover:text-gray-600 text-2xl"
                 >
                     ×
@@ -210,11 +282,26 @@ export const AssignmentForm = ({
                         Cancel
                     </button>
                     <button
-                        type="submit"
+                        type="button"
+                        onClick={() => {
+                            console.log('Manual submit button clicked');
+                            const formData = {
+                                cruiseLineId: watch("cruiseLineId"),
+                                shipId: watch("shipId"),
+                                startDate: watch("startDate"),
+                                endDate: watch("endDate"),
+                                description: watch("description")
+                            };
+                            console.log('Form data:', formData);
+                            onSubmit(formData);
+                        }}
                         disabled={isSubmitting}
-                        className="flex-1 px-4 py-2 text-white bg-[#069B93] hover:bg-[#058a7a] rounded-lg font-medium transition-colors disabled:opacity-50"
+                        className="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors disabled:opacity-50"
                     >
-                        {isSubmitting ? 'Adding Assignment...' : 'Add Assignment'}
+                        {isSubmitting 
+                            ? (isEditing ? 'Updating Assignment...' : 'Adding Assignment...') 
+                            : (isEditing ? 'Update Assignment' : 'Add Assignment')
+                        }
                     </button>
                 </div>
             </form>

@@ -1,7 +1,8 @@
 import { useCalendar } from "../context/CalendarContext";
 import { ICruiseAssignment } from "../types/calendar";
-import { sampleCruiseLines } from "../data/onboarding-data";
 import { formatDateRange, getDaysDifference } from "../data/calendar-data";
+import { useCruiseLines, useAllShips } from "../features/cruise/api/cruiseData";
+import { HiPencil, HiCalendar } from "react-icons/hi";
 
 interface CalendarViewProps {
     onAddAssignment?: () => void;
@@ -14,34 +15,9 @@ export const CalendarView = ({
     onEditAssignment,
     className = ""
 }: CalendarViewProps) => {
-    const { assignments, currentView } = useCalendar();
-
-    // Get assignments for the current month
-    const getAssignmentsForMonth = () => {
-        const currentDate = new Date(currentView.currentDate);
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        
-        const startOfMonth = new Date(year, month, 1);
-        const endOfMonth = new Date(year, month + 1, 0);
-        
-        return assignments.filter(assignment => {
-            const assignmentStart = new Date(assignment.startDate);
-            const assignmentEnd = new Date(assignment.endDate);
-            
-            return assignmentStart <= endOfMonth && assignmentEnd >= startOfMonth;
-        });
-    };
-
-    const getAssignmentsForDate = (date: string) => {
-        return assignments.filter(assignment => {
-            const assignmentStart = new Date(assignment.startDate);
-            const assignmentEnd = new Date(assignment.endDate);
-            const checkDate = new Date(date);
-            
-            return checkDate >= assignmentStart && checkDate <= assignmentEnd;
-        });
-    };
+    const { assignments } = useCalendar();
+    const { data: cruiseLines = [] } = useCruiseLines();
+    const { data: allShips = [] } = useAllShips();
 
     const getStatusColor = (status: ICruiseAssignment['status']) => {
         switch (status) {
@@ -54,180 +30,121 @@ export const CalendarView = ({
     };
 
     const getShipName = (assignment: ICruiseAssignment) => {
-        const cruiseLine = sampleCruiseLines.find(cl => cl.id === assignment.cruiseLineId);
-        const ship = cruiseLine?.ships.find(s => s.id === assignment.shipId);
+        const ship = allShips.find(s => s.id === assignment.shipId);
         return ship?.name || 'Unknown Ship';
     };
 
     const getCruiseLineName = (assignment: ICruiseAssignment) => {
-        const cruiseLine = sampleCruiseLines.find(cl => cl.id === assignment.cruiseLineId);
+        const cruiseLine = cruiseLines.find(cl => cl.id === assignment.cruiseLineId);
         return cruiseLine?.name || 'Unknown Cruise Line';
     };
 
-    // Generate calendar days for current month
-    const generateCalendarDays = () => {
-        const currentDate = new Date(currentView.currentDate);
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
+    // Sort assignments by start date (upcoming first, then current, then completed)
+    const sortedAssignments = [...assignments].sort((a, b) => {
+        // Current assignments first
+        if (a.status === 'current' && b.status !== 'current') return -1;
+        if (b.status === 'current' && a.status !== 'current') return 1;
         
-        const firstDay = new Date(year, month, 1);
-        const startDate = new Date(firstDay);
-        startDate.setDate(startDate.getDate() - firstDay.getDay()); // Start from Sunday
+        // Then upcoming assignments
+        if (a.status === 'upcoming' && b.status === 'completed') return -1;
+        if (b.status === 'upcoming' && a.status === 'completed') return 1;
         
-        const days = [];
-        const currentDay = new Date(startDate);
-        
-        for (let i = 0; i < 42; i++) { // 6 weeks * 7 days
-            const dateString = currentDay.toISOString().split('T')[0];
-            const isCurrentMonth = currentDay.getMonth() === month;
-            const isToday = dateString === new Date().toISOString().split('T')[0];
-            const dayAssignments = getAssignmentsForDate(dateString);
-            
-            days.push({
-                date: dateString,
-                day: currentDay.getDate(),
-                isCurrentMonth,
-                isToday,
-                assignments: dayAssignments
-            });
-            
-            currentDay.setDate(currentDay.getDate() + 1);
-        }
-        
-        return days;
-    };
-
-    const calendarDays = generateCalendarDays();
-    const monthAssignments = getAssignmentsForMonth();
+        // Within same status, sort by start date
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+    });
 
     return (
         <div className={`bg-white rounded-lg shadow-sm border ${className}`}>
-            {/* Calendar Header */}
-            <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xl font-bold text-[#069B93]">My Cruise Schedule</h2>
-                        <p className="text-sm text-gray-600 mt-1">
-                            Manage your cruise assignments and see your schedule
-                        </p>
+            {/* Header */}
+            <div className="p-4 sm:p-6 border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-[#069B93] rounded-lg">
+                            <HiCalendar className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg sm:text-xl font-bold text-[#069B93]">My Cruise Schedule</h2>
+                            <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                                Your upcoming and current cruise assignments
+                            </p>
+                        </div>
                     </div>
                     <button
+                        type="button"
                         onClick={onAddAssignment}
-                        className="px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors font-medium"
+                        className="w-full sm:w-auto px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors font-medium text-sm sm:text-base"
                     >
                         + Add Assignment
                     </button>
                 </div>
             </div>
 
-            {/* Calendar Grid */}
-            <div className="p-6">
-                {/* Month Navigation */}
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                        {new Date(currentView.currentDate).toLocaleDateString('en-US', { 
-                            month: 'long', 
-                            year: 'numeric' 
-                        })}
-                    </h3>
-                    <div className="flex space-x-2">
-                        <button className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg">
-                            ←
-                        </button>
-                        <button className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg">
-                            →
-                        </button>
+            {/* Assignments List */}
+            <div className="p-4 sm:p-6">
+                {sortedAssignments.length === 0 ? (
+                    <div className="text-center py-12">
+                        <HiCalendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
+                        <p className="text-gray-500">Add your first cruise assignment to get started</p>
                     </div>
-                </div>
-
-                {/* Calendar Days */}
-                <div className="grid grid-cols-7 gap-1 mb-4">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                        <div key={day} className="p-2 text-center text-sm font-medium text-gray-500">
-                            {day}
-                        </div>
-                    ))}
-                </div>
-
-                <div className="grid grid-cols-7 gap-1">
-                    {calendarDays.map((day, index) => (
-                        <div
-                            key={index}
-                            className={`min-h-[100px] p-2 border border-gray-200 ${
-                                day.isCurrentMonth ? 'bg-white' : 'bg-gray-50'
-                            } ${day.isToday ? 'ring-2 ring-[#069B93]' : ''}`}
-                        >
-                            <div className={`text-sm font-medium mb-1 ${
-                                day.isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
-                            } ${day.isToday ? 'text-[#069B93]' : ''}`}>
-                                {day.day}
-                            </div>
-                            
-                            <div className="space-y-1">
-                                {day.assignments.slice(0, 2).map(assignment => (
-                                    <div
-                                        key={assignment.id}
-                                        onClick={() => onEditAssignment?.(assignment)}
-                                        className={`text-xs p-1 rounded border cursor-pointer hover:opacity-80 ${getStatusColor(assignment.status)}`}
-                                        title={`${getShipName(assignment)} - ${formatDateRange(assignment.startDate, assignment.endDate)}`}
-                                    >
-                                        <div className="truncate font-medium">
-                                            {getShipName(assignment)}
-                                        </div>
-                                        <div className="truncate opacity-75">
-                                            {getCruiseLineName(assignment)}
-                                        </div>
-                                    </div>
-                                ))}
-                                {day.assignments.length > 2 && (
-                                    <div className="text-xs text-gray-500 text-center">
-                                        +{day.assignments.length - 2} more
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Assignments Summary */}
-            {monthAssignments.length > 0 && (
-                <div className="p-6 border-t border-gray-200 bg-gray-50">
-                    <h4 className="font-medium text-gray-900 mb-3">This Month's Assignments</h4>
-                    <div className="space-y-2">
-                        {monthAssignments.map(assignment => (
+                ) : (
+                    <div className="space-y-4">
+                        {sortedAssignments.map(assignment => (
                             <div
                                 key={assignment.id}
-                                className="flex items-center justify-between p-3 bg-white rounded-lg border"
+                                className="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
                             >
-                                <div className="flex-1">
-                                    <div className="font-medium text-gray-900">
-                                        {getShipName(assignment)}
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    {/* Assignment Info */}
+                                    <div className="flex-1">
+                                        <div className="flex items-center space-x-3 mb-2">
+                                            <h3 className="text-lg font-semibold text-gray-900">
+                                                {getShipName(assignment)}
+                                            </h3>
+                                            <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(assignment.status)}`}>
+                                                {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="text-sm text-gray-600 mb-2">
+                                            {getCruiseLineName(assignment)}
+                                        </div>
+                                        
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-500">
+                                            <div className="flex items-center space-x-1">
+                                                <span className="font-medium">Dates:</span>
+                                                <span>{formatDateRange(assignment.startDate, assignment.endDate)}</span>
+                                            </div>
+                                            <div className="flex items-center space-x-1">
+                                                <span className="font-medium">Duration:</span>
+                                                <span>{getDaysDifference(assignment.startDate, assignment.endDate)} days</span>
+                                            </div>
+                                        </div>
+                                        
+                                        {assignment.description && (
+                                            <div className="mt-2 text-sm text-gray-600">
+                                                <span className="font-medium">Notes:</span> {assignment.description}
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="text-sm text-gray-600">
-                                        {getCruiseLineName(assignment)}
+                                    
+                                    {/* Edit Button */}
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => onEditAssignment?.(assignment)}
+                                            className="flex items-center space-x-2 px-3 py-2 text-[#069B93] hover:text-[#058a7a] hover:bg-white rounded-lg transition-colors"
+                                        >
+                                            <HiPencil className="w-4 h-4" />
+                                            <span className="text-sm font-medium">Edit</span>
+                                        </button>
                                     </div>
-                                    <div className="text-xs text-gray-500">
-                                        {formatDateRange(assignment.startDate, assignment.endDate)} 
-                                        ({getDaysDifference(assignment.startDate, assignment.endDate)} days)
-                                    </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(assignment.status)}`}>
-                                        {assignment.status}
-                                    </span>
-                                    <button
-                                        onClick={() => onEditAssignment?.(assignment)}
-                                        className="text-[#069B93] hover:text-[#058a7a] text-sm font-medium"
-                                    >
-                                        Edit
-                                    </button>
                                 </div>
                             </div>
                         ))}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };

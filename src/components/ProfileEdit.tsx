@@ -1,17 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { sampleCruiseLines, sampleDepartments, sampleRoles } from "../data/onboarding-data";
-import { ShipSelection } from "./ShipSelection";
-import { MissingShipFeedback } from "./MissingShipFeedback";
+import { useDepartments, useRolesByDepartment } from "../features/auth/api/jobDataHooks";
 
 interface ProfileEditData {
     displayName: string;
     departmentId: string;
-    subcategoryId: string;
     roleId: string;
-    currentShipId: string;
     phoneNumber: string;
     bio: string;
 }
@@ -23,12 +19,163 @@ interface ProfileEditProps {
     className?: string;
 }
 
+// Custom Dropdown Component for Department, Subcategory, and Role
+interface CustomDropdownProps {
+    value: string;
+    onChange: (value: string) => void;
+    options: Array<{ id: string; name: string }>;
+    placeholder: string;
+    disabled?: boolean;
+    label: string;
+    maxHeight?: string;
+}
+
+const CustomDropdown = ({ 
+    value, 
+    onChange, 
+    options, 
+    placeholder, 
+    disabled = false, 
+    label,
+    maxHeight = "200px"
+}: CustomDropdownProps) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const selectedOption = options.find(option => option.id === value);
+
+    // Filter options based on search term
+    const filteredOptions = options.filter(option =>
+        option.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+                setSearchTerm("");
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Focus input when dropdown opens
+    useEffect(() => {
+        if (isOpen && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [isOpen]);
+
+    const handleOptionClick = (optionId: string) => {
+        onChange(optionId);
+        setIsOpen(false);
+        setSearchTerm("");
+    };
+
+    const handleInputClick = () => {
+        if (!disabled) {
+            setIsOpen(!isOpen);
+            if (!isOpen) {
+                setSearchTerm("");
+            }
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            setIsOpen(false);
+            setSearchTerm("");
+        }
+    };
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+                {label}
+            </label>
+            
+            {/* Input Field */}
+            <div 
+                className={`
+                    w-full px-3 py-2 border rounded-lg cursor-pointer
+                    ${disabled 
+                        ? 'bg-gray-100 cursor-not-allowed border-gray-200' 
+                        : 'border-gray-300 hover:border-[#069B93] focus-within:border-[#069B93] focus-within:ring-1 focus-within:ring-[#069B93]'
+                    }
+                    transition-colors
+                `}
+                onClick={handleInputClick}
+            >
+                <div className="flex items-center justify-between">
+                    <span className={selectedOption ? 'text-gray-900' : 'text-gray-500'}>
+                        {selectedOption ? selectedOption.name : placeholder}
+                    </span>
+                    <svg 
+                        className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
+
+            {/* Dropdown */}
+            {isOpen && !disabled && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                    {/* Search Input */}
+                    <div className="p-2 border-b border-gray-200">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            placeholder={`Search ${label.toLowerCase()}...`}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            className="w-full px-2 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93]"
+                        />
+                    </div>
+
+                    {/* Options List */}
+                    <div 
+                        className="overflow-y-auto"
+                        style={{ maxHeight }}
+                    >
+                        {filteredOptions.length === 0 ? (
+                            <div className="px-3 py-2 text-sm text-gray-500">
+                                No options found
+                            </div>
+                        ) : (
+                            filteredOptions.map((option) => (
+                                <div
+                                    key={option.id}
+                                    className={`
+                                        px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 transition-colors
+                                        ${value === option.id ? 'bg-[#069B93] text-white hover:bg-[#058a7a]' : 'text-gray-900'}
+                                    `}
+                                    onClick={() => handleOptionClick(option.id)}
+                                >
+                                    {option.name}
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const profileEditValidationSchema = yup.object({
     displayName: yup.string().required("Display name is required").min(2, "Display name must be at least 2 characters"),
     departmentId: yup.string().required("Department is required"),
-    subcategoryId: yup.string().required("Subcategory is required"),
     roleId: yup.string().required("Role is required"),
-    currentShipId: yup.string().required("Current ship is required"),
     phoneNumber: yup.string().optional(),
     bio: yup.string().optional()
 }) as yup.ObjectSchema<ProfileEditData>;
@@ -40,53 +187,40 @@ export const ProfileEdit = ({
     className = ""
 }: ProfileEditProps) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [selectedCruiseLineId, setSelectedCruiseLineId] = useState<string>("");
-    const [subcategories, setSubcategories] = useState<any[]>([]);
-    const [roles, setRoles] = useState<any[]>([]);
-    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
-    const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<ProfileEditData>({
+    // Get real data from API
+    const { data: departments = [] } = useDepartments();
+
+    console.log('ProfileEdit: Available departments:', departments);
+    console.log('ProfileEdit: Initial departmentId:', initialData.departmentId);
+    console.log('ProfileEdit: Initial roleId:', initialData.roleId);
+    
+    // Check if department ID format matches
+    const matchingDept = departments.find(d => d.id === initialData.departmentId);
+    console.log('ProfileEdit: Matching department:', matchingDept);
+    console.log('ProfileEdit: Department ID format check - input:', initialData.departmentId, 'available IDs:', departments.map(d => d.id));
+
+    const { register, handleSubmit, formState: { errors }, watch, setValue, reset } = useForm<ProfileEditData>({
         resolver: yupResolver(profileEditValidationSchema),
         defaultValues: initialData
     });
 
     const watchedDepartmentId = watch("departmentId");
-    const watchedSubcategoryId = watch("subcategoryId");
+    
+    const { data: roles = [] } = useRolesByDepartment(watchedDepartmentId);
 
-    // Load subcategories when department changes
+    // Reset form when initialData changes
     useEffect(() => {
-        if (watchedDepartmentId) {
-            const department = sampleDepartments.find(d => d.id === watchedDepartmentId);
-            if (department) {
-                setSubcategories(department.subcategories);
-                setValue("subcategoryId", "");
-                setValue("roleId", "");
-            }
-        }
-    }, [watchedDepartmentId, setValue]);
+        console.log('ProfileEdit: Resetting form with initialData:', initialData);
+        reset(initialData);
+    }, [initialData, reset]);
 
-    // Load roles when subcategory changes
+    // Reset role when department changes (but not on initial load)
     useEffect(() => {
-        if (watchedSubcategoryId) {
-            const subcategory = subcategories.find(s => s.id === watchedSubcategoryId);
-            if (subcategory) {
-                const subcategoryRoles = sampleRoles.filter(r => r.subcategoryId === watchedSubcategoryId);
-                setRoles(subcategoryRoles);
-                setValue("roleId", "");
-            }
+        if (watchedDepartmentId && watchedDepartmentId !== initialData.departmentId) {
+            setValue("roleId", "");
         }
-    }, [watchedSubcategoryId, subcategories, setValue]);
-
-    // Set initial cruise line
-    useEffect(() => {
-        if (initialData.currentShipId) {
-            const allShips = sampleCruiseLines.flatMap(cl => cl.ships);
-            const ship = allShips.find(s => s.id === initialData.currentShipId);
-            if (ship) {
-                setSelectedCruiseLineId(ship.cruiseLineId);
-            }
-        }
-    }, [initialData.currentShipId]);
+    }, [watchedDepartmentId, setValue, initialData.departmentId]);
 
     const onSubmit = async (data: ProfileEditData) => {
         setIsSubmitting(true);
@@ -131,151 +265,68 @@ export const ProfileEdit = ({
 
                 {/* Department Selection */}
                 <div>
-                    <label htmlFor="departmentId" className="block text-sm font-medium text-gray-700 mb-2">
-                        Department
-                    </label>
-                    <select
-                        {...register("departmentId")}
-                        id="departmentId"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none"
-                    >
-                        <option value="">Select department</option>
-                        {sampleDepartments.map(department => (
-                            <option key={department.id} value={department.id}>
-                                {department.name}
-                            </option>
-                        ))}
-                    </select>
+                    <CustomDropdown
+                        value={watch("departmentId")}
+                        onChange={(value) => setValue("departmentId", value)}
+                        options={departments}
+                        placeholder="Select department"
+                        label="Department"
+                        maxHeight="200px"
+                    />
                     {errors.departmentId && (
                         <p className="text-red-500 text-sm mt-1">{errors.departmentId.message}</p>
                     )}
                 </div>
 
-                {/* Subcategory Selection */}
-                <div>
-                    <label htmlFor="subcategoryId" className="block text-sm font-medium text-gray-700 mb-2">
-                        Subcategory
-                    </label>
-                    <select
-                        {...register("subcategoryId")}
-                        id="subcategoryId"
-                        disabled={!watchedDepartmentId}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none disabled:bg-gray-100"
-                    >
-                        <option value="">Select subcategory</option>
-                        {subcategories.map(subcategory => (
-                            <option key={subcategory.id} value={subcategory.id}>
-                                {subcategory.name}
-                            </option>
-                        ))}
-                    </select>
-                    {errors.subcategoryId && (
-                        <p className="text-red-500 text-sm mt-1">{errors.subcategoryId.message}</p>
-                    )}
-                </div>
-
                 {/* Role Selection */}
                 <div>
-                    <label htmlFor="roleId" className="block text-sm font-medium text-gray-700 mb-2">
-                        Role/Position
-                    </label>
-                    <select
-                        {...register("roleId")}
-                        id="roleId"
-                        disabled={!watchedSubcategoryId}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none disabled:bg-gray-100"
-                    >
-                        <option value="">Select role</option>
-                        {roles.map(role => (
-                            <option key={role.id} value={role.id}>
-                                {role.name}
-                            </option>
-                        ))}
-                    </select>
+                    <CustomDropdown
+                        value={watch("roleId")}
+                        onChange={(value) => setValue("roleId", value)}
+                        options={roles}
+                        placeholder="Select role"
+                        label="Position"
+                        disabled={!watchedDepartmentId}
+                        maxHeight="200px"
+                    />
                     {errors.roleId && (
                         <p className="text-red-500 text-sm mt-1">{errors.roleId.message}</p>
                     )}
                 </div>
 
-                {/* Ship Selection */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Current Ship
-                    </label>
-                    <ShipSelection
-                        selectedCruiseLineId={selectedCruiseLineId}
-                        selectedShipId={watch("currentShipId")}
-                        onCruiseLineChange={(cruiseLineId) => {
-                            setSelectedCruiseLineId(cruiseLineId);
-                            setValue("currentShipId", "");
-                        }}
-                        onShipChange={(shipId) => setValue("currentShipId", shipId)}
-                        placeholder="Select your current ship"
-                    />
-                    {errors.currentShipId && (
-                        <p className="text-red-500 text-sm mt-1">{errors.currentShipId.message}</p>
-                    )}
-                    
-                    {/* Missing Ship Feedback */}
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                                <span className="text-gray-600 text-sm">Can't find your ship?</span>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setShowFeedbackModal(true)}
-                                className="text-[#069B93] hover:text-[#058a7a] text-sm font-medium underline transition-colors"
-                            >
-                                Missing a ship or position?
-                            </button>
-                        </div>
+
+                {/* Phone Number - Only show if not empty */}
+                {initialData.phoneNumber && (
+                    <div>
+                        <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                            Phone Number
+                        </label>
+                        <input
+                            {...register("phoneNumber")}
+                            type="tel"
+                            id="phoneNumber"
+                            placeholder="Enter your phone number"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none"
+                        />
                     </div>
-                </div>
+                )}
 
-                {/* Phone Number */}
-                <div>
-                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                        Phone Number
-                    </label>
-                    <input
-                        {...register("phoneNumber")}
-                        type="tel"
-                        id="phoneNumber"
-                        placeholder="Enter your phone number"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none"
-                    />
-                </div>
-
-                {/* Bio */}
-                <div>
-                    <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
-                        Bio
-                    </label>
-                    <textarea
-                        {...register("bio")}
-                        id="bio"
-                        rows={4}
-                        placeholder="Tell other crew members about yourself, your experience, and what you're looking for..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none resize-none"
-                    />
-                </div>
-
-                {/* Update Notice */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-start space-x-3">
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <span className="text-white text-xs">✓</span>
-                        </div>
-                        <div>
-                            <h4 className="font-medium text-green-900">Profile Update</h4>
-                            <p className="text-sm text-green-700 mt-1">
-                                Updating your profile will help other crewvar users find you based on your current role and department. 
-                                This information will be visible to other crewvar users.
-                            </p>
-                        </div>
+                {/* Bio - Only show if not empty */}
+                {initialData.bio && (
+                    <div>
+                        <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
+                            Bio
+                        </label>
+                        <textarea
+                            {...register("bio")}
+                            id="bio"
+                            rows={4}
+                            placeholder="Tell other crew members about yourself, your experience, and what you're looking for..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none resize-none"
+                        />
                     </div>
-                </div>
+                )}
+
 
                 {/* Submit Buttons */}
                 <div className="flex space-x-4 pt-4">
@@ -291,16 +342,10 @@ export const ProfileEdit = ({
                         disabled={isSubmitting}
                         className="flex-1 px-4 py-2 text-white bg-[#069B93] hover:bg-[#058a7a] rounded-lg font-medium transition-colors disabled:opacity-50"
                     >
-                        {isSubmitting ? 'Updating Profile...' : 'Update Profile'}
+                        {isSubmitting ? 'Updating...' : 'Update'}
                     </button>
                 </div>
             </form>
-
-            {/* Missing Ship Feedback Modal */}
-            <MissingShipFeedback
-                isOpen={showFeedbackModal}
-                onClose={() => setShowFeedbackModal(false)}
-            />
         </div>
     );
 };

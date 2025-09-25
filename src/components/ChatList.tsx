@@ -83,7 +83,7 @@ export const ChatList = ({ chatRooms, onSelectChat }: ChatListProps) => {
                                     {/* Avatar */}
                                     <div className="relative flex-shrink-0">
                                         <img
-                                            src={room.other_user_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(room.other_user_name)}&background=4ECDC4&color=fff&size=128`}
+                                            src={room.other_user_avatar || `${import.meta.env.VITE_UI_AVATARS_URL || 'https://ui-avatars.com/api'}/?name=${encodeURIComponent(room.other_user_name)}&background=4ECDC4&color=fff&size=128`}
                                             alt={room.other_user_name}
                                             className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover"
                                         />

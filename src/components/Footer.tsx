@@ -108,7 +108,7 @@ const Footer = () => {
                         <h3 className="text-sm sm:text-base font-semibold mb-1 sm:mb-2">Follow Us</h3>
                         <div className="flex space-x-2 sm:space-x-3 mb-1 sm:mb-2">
                             <a 
-                                href="https://instagram.com/crewvarapp" 
+                                href={import.meta.env.VITE_INSTAGRAM_URL || "#"} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors group"
@@ -120,7 +120,7 @@ const Footer = () => {
                                 </svg>
                             </a>
                             <a 
-                                href="https://facebook.com/crewvarapp" 
+                                href={import.meta.env.VITE_FACEBOOK_URL || "#"} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors group"
@@ -131,7 +131,7 @@ const Footer = () => {
                                 </svg>
                             </a>
                             <a 
-                                href="https://tiktok.com/@crewvarapp" 
+                                href={import.meta.env.VITE_TIKTOK_URL || "#"} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors group"

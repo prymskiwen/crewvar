@@ -23,7 +23,7 @@ export const useUpdateUserMutation = (userId: string, token: string) => {
         mutationFn: (data: FormData) => updateUser(userId, data, token),
         onSuccess: (data: IUpdateResult) => {
             toast.success("User updated successfully");
-            queryClient.invalidateQueries(["users", data.user.firebaseId]);
+            queryClient.invalidateQueries(["users", data.user.id]);
         }
     });
 };

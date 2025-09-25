@@ -17,7 +17,7 @@ const LoginForm = () => {
         try {
             console.log('Attempting login with:', { email, password });
             
-            // Use Firebase authentication
+            // Use backend authentication
             await signIn(email, password);
             
             console.log('Login successful!');

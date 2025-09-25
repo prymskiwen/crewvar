@@ -12,7 +12,7 @@ interface IRegisterCredentials extends ILoginCredentials {
 }
 
 interface IRegisterWithGoogleCredentials {
-    firebaseId: string;
+    googleId: string;
     email: string;
     fullName: string;
 }

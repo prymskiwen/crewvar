@@ -58,7 +58,7 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     );
 
     useEffect(() => {
-        // Small delay to allow Firebase to restore state
+        // Small delay to allow auth state to restore
         const timer = setTimeout(() => {
             setIsLoading(false);
         }, 1000);

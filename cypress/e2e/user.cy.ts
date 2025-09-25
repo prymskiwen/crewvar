@@ -90,11 +90,11 @@ describe("User: profile", () => {
     });
 
     it("Successfully updating the profile", () => {
-        cy.intercept("PATCH", `${Cypress.env("apiUrl")}/users/update/${users.BOB_SMITH_FIREBASE_ID}`, {
+        cy.intercept("PATCH", `${Cypress.env("apiUrl")}/users/update/${users.BOB_SMITH_ID}`, {
             statusCode: 200,
             body: {
                 user: {
-                    firebaseId: users.BOB_SMITH_FIREBASE_ID
+                    id: users.BOB_SMITH_ID
                 }
             }
         });

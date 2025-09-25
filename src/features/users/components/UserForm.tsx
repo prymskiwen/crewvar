@@ -40,7 +40,7 @@ const UserForm = () => {
             setIsUpdating(true);
             const fullName = `${data.firstName} ${data.lastName}`;
             await updateUserOnBackend(convertToFormData({
-                firebaseId: currentUser?.uid,
+                id: currentUser?.uid,
                 email: data.email.trim(),
                 fullName,
                 avatar: data.image as Blob | string

@@ -3,12 +3,16 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
-    envDir: "../.",
+    envDir: ".",
     base: "/",
+    define: {
+        // Make environment variables available at build time
+        'process.env': process.env
+    },
     server: {
         proxy: {
             '/uploads': {
-                target: process.env.VITE_API_URL || 'https://crewvar.com/api',
+                target: process.env.VITE_API_URL || 'http://localhost:3000',
                 changeOrigin: true,
                 secure: false,
             }

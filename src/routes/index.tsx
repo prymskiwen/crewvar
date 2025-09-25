@@ -17,7 +17,6 @@ import { AllNotificationsPage } from "../features/notifications/pages/AllNotific
 import { CalendarPage } from "../features/calendar/pages/CalendarPage";
 import { AdminDashboard } from "../pages/AdminDashboard";
 import { AdminUserDetail } from "../pages/AdminUserDetail";
-import { AdminTestPage } from "../pages/AdminTestPage";
 import SupportPage from "../pages/SupportPage";
 import ContactPage from "../pages/ContactPage";
 import FAQPage from "../pages/FAQPage";
@@ -63,7 +62,6 @@ export const AppRoutes = () => {
             <Route path="admin" element={<AdminDashboard />} />
             <Route path="admin/users/:userId" element={<AdminUserDetail />} />
             <Route path="admin/support" element={<AdminSupportPage />} />
-            <Route path="admin/test" element={<AdminTestPage />} />
         </Routes>
     );
 };

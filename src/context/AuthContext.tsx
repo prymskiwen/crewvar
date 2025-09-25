@@ -5,8 +5,8 @@ interface Props {
     children: ReactNode;
 }
 
-// Firebase-compatible User interface
-interface FirebaseUser {
+// User interface
+interface User {
     uid: string;
     email: string | null;
     displayName: string | null;
@@ -17,11 +17,11 @@ interface FirebaseUser {
 }
 
 interface IAuthContext {
-  currentUser: FirebaseUser | null;
+  currentUser: User | null;
   isLoading: boolean;
   isBanned: boolean;
   banInfo: any;
-  signIn: (email: string, password: string) => Promise<{ user: FirebaseUser }>;
+  signIn: (email: string, password: string) => Promise<{ user: User }>;
   signOut: () => void;
   logout: () => void;
 }
@@ -41,7 +41,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: Props) => {
-    const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isBanned, setIsBanned] = useState<boolean>(false);
     const [banInfo, setBanInfo] = useState<any>(null);
@@ -58,18 +58,18 @@ export const AuthProvider = ({ children }: Props) => {
                 throw new Error(response.data.error || 'Account suspended');
             }
             
-            const { token, user } = response.data;
+            const { token, user: userData } = response.data;
             
             // Store token
             localStorage.setItem('token', token);
             
-            // Create Firebase-compatible user object
-            const firebaseUser: FirebaseUser = {
-                uid: user.userId || user.id || 'unknown',
-                email: user.email,
-                displayName: user.displayName || user.fullName || user.email?.split('@')[0] || 'User',
-                photoURL: user.profilePhoto || user.avatar || null,
-                isAdmin: user.isAdmin || false,
+            // Create user object
+            const user: User = {
+                uid: userData.userId || userData.id || 'unknown',
+                email: userData.email,
+                displayName: userData.displayName || userData.fullName || userData.email?.split('@')[0] || 'User',
+                photoURL: userData.profilePhoto || userData.avatar || null,
+                isAdmin: userData.isAdmin || false,
                 getIdToken: async () => token,
                 reload: async () => {
                     // Refresh user data from backend
@@ -77,10 +77,10 @@ export const AuthProvider = ({ children }: Props) => {
                         const userResponse = await api.get('/users/profile');
                         const updatedUser = userResponse.data.user; // Fixed: use response.data.user
                         setCurrentUser({
-                            ...firebaseUser,
-                            displayName: updatedUser.display_name || firebaseUser.displayName,
-                            photoURL: updatedUser.profile_photo || firebaseUser.photoURL,
-                            isAdmin: updatedUser.is_admin || firebaseUser.isAdmin
+                            ...user,
+                            displayName: updatedUser.display_name || user.displayName,
+                            photoURL: updatedUser.profile_photo || user.photoURL,
+                            isAdmin: updatedUser.is_admin || user.isAdmin
                         });
                     } catch (error) {
                         console.error('Failed to reload user:', error);
@@ -88,8 +88,8 @@ export const AuthProvider = ({ children }: Props) => {
                 }
             };
             
-            setCurrentUser(firebaseUser);
-            return { user: firebaseUser };
+            setCurrentUser(user);
+            return { user: user };
         } catch (error) {
             console.error('Sign in error:', error);
             throw error;
@@ -122,7 +122,7 @@ export const AuthProvider = ({ children }: Props) => {
                 try {
                     // Get actual user profile from backend
                     const response = await api.get('/users/profile');
-                    const user = response.data.user; // Fixed: use response.data.user instead of response.data
+                    const userData = response.data.user; // Fixed: use response.data.user instead of response.data
                     
                     // Construct full URL for profile photo
                     const getFullPhotoUrl = (photoUrl: string | null | undefined) => {
@@ -136,34 +136,34 @@ export const AuthProvider = ({ children }: Props) => {
                         return photoUrl; // Fallback
                     };
 
-                    // Create Firebase-compatible user object with real data
-                    const firebaseUser: FirebaseUser = {
-                        uid: user.id, // Fixed: use user.id instead of user.userId
-                        email: user.email,
-                        displayName: user.display_name || user.email?.split('@')[0] || 'User', // Fixed: use display_name
-                        photoURL: getFullPhotoUrl(user.profile_photo),
-                        isAdmin: user.is_admin || false,
+                    // Create user object with real data
+                    const user: User = {
+                        uid: userData.id, // Fixed: use userData.id instead of user.userId
+                        email: userData.email,
+                        displayName: userData.display_name || userData.email?.split('@')[0] || 'User', // Fixed: use display_name
+                        photoURL: getFullPhotoUrl(userData.profile_photo),
+                        isAdmin: userData.is_admin || false,
                         getIdToken: async () => token,
                         reload: async () => {
-                            console.log('User reload called');
+                            // User reload functionality
                         }
                     };
-                    setCurrentUser(firebaseUser);
-                    console.log('AuthContext initialized with user:', firebaseUser.uid);
+                    setCurrentUser(user);
                 } catch (error) {
                     console.error('Failed to load user profile:', error);
                     // Fallback to basic user object
-                    const firebaseUser: FirebaseUser = {
+                    const fallbackUser: User = {
                         uid: 'current_user',
                         email: 'user@example.com',
                         displayName: 'User',
                         photoURL: null,
+                        isAdmin: false,
                         getIdToken: async () => token,
                         reload: async () => {
-                            console.log('User reload called');
+                            // User reload functionality
                         }
                     };
-                    setCurrentUser(firebaseUser);
+                    setCurrentUser(fallbackUser);
                 }
             } else {
                 setCurrentUser(null);
@@ -179,12 +179,10 @@ export const AuthProvider = ({ children }: Props) => {
     useEffect(() => {
         if (!currentUser) return;
 
-        console.log('🔌 Setting up ban notification listeners for user:', currentUser.uid);
+        // Setting up ban notification listeners
 
         const handleUserBanned = (event: any) => {
             const data = event.detail;
-            console.log('🚫 Account banned notification received:', data);
-            console.log('🚫 Setting ban state...');
             setIsBanned(true);
             setBanInfo({
                 isBanned: true,
@@ -193,12 +191,11 @@ export const AuthProvider = ({ children }: Props) => {
                 message: data.message,
                 reason: data.reason
             });
-            console.log('🚫 Ban state set successfully');
         };
 
         const handleUserUnbanned = (event: any) => {
             const data = event.detail;
-            console.log('✅ Account unbanned notification received:', data);
+            // Account unbanned notification received
             setIsBanned(false);
             setBanInfo(null);
             // Show success message or notification

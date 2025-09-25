@@ -17,8 +17,7 @@ const AdminSupportPage = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
     
-    // Debug current user
-    console.log('👤 Current user in AdminSupportPage:', currentUser);
+    // Current user context
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
@@ -50,11 +49,6 @@ const AdminSupportPage = () => {
         const loadData = async () => {
             setIsLoading(true);
             try {
-                console.log('🔍 Loading admin support tickets...', {
-                    statusFilter,
-                    priorityFilter,
-                    searchTerm
-                });
                 
                 const ticketsResponse = await getAdminSupportTickets({
                     page: 1,
@@ -64,7 +58,7 @@ const AdminSupportPage = () => {
                     search: searchTerm
                 });
                 
-                console.log('📋 Admin support tickets response:', ticketsResponse);
+                // Admin support tickets loaded
                 setTickets(ticketsResponse.tickets || []);
             } catch (error: any) {
                 console.error('❌ Failed to load support tickets:', error);
@@ -106,18 +100,6 @@ const AdminSupportPage = () => {
 
     const handleSubmitResponse = async () => {
         if (!selectedTicket || !adminResponse.trim()) return;
-
-        console.log('Submitting response for ticket:', selectedTicket.id);
-        console.log('Response:', adminResponse);
-        console.log('Current user:', currentUser);
-        
-        // Debug token
-        const token = localStorage.getItem('token');
-        console.log('🔍 Token debug:', {
-            exists: !!token,
-            length: token?.length || 0,
-            preview: token ? `${token.substring(0, 20)}...` : 'null'
-        });
 
         setIsSubmitting(true);
         try {

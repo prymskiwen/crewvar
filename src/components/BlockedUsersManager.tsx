@@ -4,8 +4,9 @@ import { useState } from "react";
 export const BlockedUsersManager = () => {
     // TODO: Implement Firebase privacy functionality
     const blockedUsers: any[] = [];
-    const unblockUser = () => {
+    const unblockUser = async (userId: string) => {
         // Placeholder function
+        console.log('Unblock user:', userId);
     };
     const [isLoading, setIsLoading] = useState<{ [key: string]: boolean }>({});
 

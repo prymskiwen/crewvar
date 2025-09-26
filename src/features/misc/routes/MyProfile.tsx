@@ -13,18 +13,20 @@ import { getProfilePhotoUrl } from "../../../utils/imageUtils";
 export const MyProfile = () => {
     const { currentUser } = useAuth();
     // TODO: Implement Firebase user profile functionality
-    const userProfile = null;
+    const userProfile: any = null;
     const profileLoading = false;
     const allShips: any[] = [];
     const shipsLoading = false;
     const cruiseLines: any[] = [];
     const cruiseLinesLoading = false;
-    const updateUserProfile = () => {
+    const updateUserProfile = async (data: any) => {
         // Placeholder function
+        console.log('Update user profile:', data);
     };
     // TODO: Implement Firebase profile update functionality
-    const updateProfileDetails = () => {
+    const updateProfileDetails = async (data: any) => {
         // Placeholder function
+        console.log('Update profile details:', data);
     };
     const departments: any[] = [];
     const allRoles: any[] = [];
@@ -651,8 +653,8 @@ export const MyProfile = () => {
                                                 }}
                                                 disabled={!profile.currentShipId}
                                                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${!profile.currentShipId
-                                                        ? 'bg-gray-400 text-white cursor-not-allowed'
-                                                        : 'text-white bg-[#069B93] hover:bg-[#058a7a]'
+                                                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                                                    : 'text-white bg-[#069B93] hover:bg-[#058a7a]'
                                                     }`}
                                             >
                                                 Update
@@ -825,8 +827,8 @@ export const MyProfile = () => {
                                             }}
                                             disabled={isSavingAboutMe}
                                             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isSavingAboutMe
-                                                    ? 'bg-gray-400 text-white cursor-not-allowed'
-                                                    : 'text-white bg-[#069B93] hover:bg-[#058a7a]'
+                                                ? 'bg-gray-400 text-white cursor-not-allowed'
+                                                : 'text-white bg-[#069B93] hover:bg-[#058a7a]'
                                                 }`}
                                         >
                                             {isSavingAboutMe ? 'Updating...' : 'Update'}
@@ -970,8 +972,8 @@ export const MyProfile = () => {
                                             }}
                                             disabled={isSavingContact}
                                             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isSavingContact
-                                                    ? 'bg-gray-400 text-white cursor-not-allowed'
-                                                    : 'text-white bg-[#069B93] hover:bg-[#058a7a]'
+                                                ? 'bg-gray-400 text-white cursor-not-allowed'
+                                                : 'text-white bg-[#069B93] hover:bg-[#058a7a]'
                                                 }`}
                                         >
                                             {isSavingContact ? 'Updating...' : 'Update'}

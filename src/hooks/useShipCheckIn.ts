@@ -4,8 +4,9 @@ import { useEffect } from "react";
 export const useShipCheckIn = () => {
     // TODO: Implement Firebase quick check-in functionality
     const showCheckInDialog = false;
-    const setShowCheckInDialog = () => {
+    const setShowCheckInDialog = (show: boolean) => {
         // Placeholder function
+        console.log('Set show check-in dialog:', show);
     };
 
     useEffect(() => {

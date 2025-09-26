@@ -212,11 +212,11 @@ export const fileSchemas = {
             .mixed()
             .required('Please select a file')
             .test('fileSize', 'File size must be less than 10MB', (value) => {
-                if (!value) return true;
+                if (!value || !(value instanceof File)) return true;
                 return value.size <= 10 * 1024 * 1024;
             })
             .test('fileType', 'Only image files are allowed', (value) => {
-                if (!value) return true;
+                if (!value || !(value instanceof File)) return true;
                 return ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(value.type);
             }),
     }),
@@ -226,11 +226,11 @@ export const fileSchemas = {
             .mixed()
             .required('Please select a file')
             .test('fileSize', 'File size must be less than 10MB', (value) => {
-                if (!value) return true;
+                if (!value || !(value instanceof File)) return true;
                 return value.size <= 10 * 1024 * 1024;
             })
             .test('fileType', 'Only document files are allowed', (value) => {
-                if (!value) return true;
+                if (!value || !(value instanceof File)) return true;
                 return [
                     'application/pdf',
                     'application/msword',

@@ -1,20 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContextFirebase';
-import { 
-  getChatMessages, 
-  sendChatMessage, 
+import {
+  getChatMessages,
+  sendChatMessage,
   markMessagesAsRead,
-  subscribeToChatMessages 
+  subscribeToChatMessages,
+  ChatMessage
 } from '../firebase/firestore';
-
-export interface ChatMessage {
-  id: string;
-  senderId: string;
-  content: string;
-  timestamp: any;
-  status: 'sent' | 'delivered' | 'read';
-  type: 'text' | 'image' | 'file';
-}
 
 export const useRealtimeChat = (roomId: string) => {
   const { currentUser } = useAuth();
@@ -31,7 +23,7 @@ export const useRealtimeChat = (roomId: string) => {
       setLoading(true);
       setError(null);
       try {
-        const chatMessages = await getChatMessages(roomId);
+        const { messages: chatMessages } = await getChatMessages(roomId);
         setMessages(chatMessages);
       } catch (err) {
         setError('Failed to load messages');
@@ -75,12 +67,12 @@ export const useRealtimeChat = (roomId: string) => {
 
     setSending(true);
     try {
-      await sendChatMessage(roomId, {
-        senderId: currentUser.uid,
-        content: content.trim(),
-        type,
-        status: 'sent'
-      });
+      await sendChatMessage(
+        roomId,
+        currentUser.uid,
+        content.trim(),
+        type
+      );
     } catch (err) {
       setError('Failed to send message');
       console.error('Error sending message:', err);

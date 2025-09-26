@@ -7,10 +7,12 @@ import { toast } from 'react-toastify';
 // TODO: Define ICrewMember interface
 interface ICrewMember {
     id: string;
-    name: string;
-    role: string;
-    department: string;
-    avatar?: string;
+    displayName: string;
+    roleName: string;
+    departmentName: string;
+    shipName: string;
+    cruiseLineName: string;
+    profilePhoto?: string;
 }
 
 export const WhosInPortPage = () => {
@@ -23,18 +25,26 @@ export const WhosInPortPage = () => {
     const today = new Date().toISOString().split('T')[0];
 
     // TODO: Implement Firebase port linking functionality
-    const crewData: ICrewMember[] = [];
+    const crewData = {
+        crew: [] as ICrewMember[],
+        linkedShips: [] as any[],
+        portName: 'Sample Port'
+    };
     const crewLoading = false;
     const crewError = null;
     const cruiseLines: any[] = [];
     const cruiseLinesLoading = false;
     const shipsByCruiseLine: any[] = [];
     const shipsByCruiseLineLoading = false;
-    const linkShips = () => {
+    const linkShips = async (data: any) => {
         // Placeholder function
+        console.log('Link ships:', data);
     };
-    const sendConnectionRequestMutation = () => {
-        // Placeholder function
+    const sendConnectionRequestMutation = {
+        mutateAsync: async (data: any) => {
+            console.log('Send connection request:', data);
+        },
+        isLoading: false
     };
 
     const handleLinkShips = async () => {
@@ -104,7 +114,7 @@ export const WhosInPortPage = () => {
     };
 
     const crew = crewData?.crew || [];
-    const linkedShips = crewData?.linkedShips || 0;
+    const linkedShips = Array.isArray(crewData?.linkedShips) ? crewData.linkedShips.length : 0;
     const portName = crewData?.portName;
 
     // Filter possible friends based on search query
@@ -113,9 +123,9 @@ export const WhosInPortPage = () => {
 
         const query = searchQuery.toLowerCase();
         return (
-            member.display_name?.toLowerCase().includes(query) ||
-            member.ship_name?.toLowerCase().includes(query) ||
-            member.cruise_line_name?.toLowerCase().includes(query)
+            member.displayName?.toLowerCase().includes(query) ||
+            member.shipName?.toLowerCase().includes(query) ||
+            member.cruiseLineName?.toLowerCase().includes(query)
         );
     });
 
@@ -273,25 +283,25 @@ export const WhosInPortPage = () => {
                                                 <div className="flex items-center space-x-3 sm:space-x-4">
                                                     <div className="relative flex-shrink-0">
                                                         <img
-                                                            src={getProfilePhotoUrl(member.profile_photo)}
-                                                            alt={member.display_name}
+                                                            src={getProfilePhotoUrl(member.profilePhoto)}
+                                                            alt={member.displayName}
                                                             className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-gray-100 shadow-sm"
                                                         />
                                                         <div className="absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 border-2 border-white rounded-full"></div>
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
-                                                            {member.display_name}
+                                                            {member.displayName}
                                                         </h4>
                                                         <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
-                                                            {member.ship_name && (
+                                                            {member.shipName && (
                                                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                                    {member.ship_name}
+                                                                    {member.shipName}
                                                                 </span>
                                                             )}
-                                                            {member.cruise_line_name && (
+                                                            {member.cruiseLineName && (
                                                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                                                                    {member.cruise_line_name}
+                                                                    {member.cruiseLineName}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -301,11 +311,11 @@ export const WhosInPortPage = () => {
                                                 {/* Action Buttons */}
                                                 <div className="flex items-center space-x-2 mt-3 sm:mt-4">
                                                     <button
-                                                        onClick={() => handleConnect(member.id, member.display_name)}
+                                                        onClick={() => handleConnect(member.id, member.displayName)}
                                                         disabled={loadingStates[member.id] || sendConnectionRequestMutation.isLoading}
                                                         className={`flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg transition-colors font-medium shadow-sm hover:shadow-md ${loadingStates[member.id] || sendConnectionRequestMutation.isLoading
-                                                                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                                                                : 'bg-[#069B93] text-white hover:bg-[#058a7a]'
+                                                            ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                                            : 'bg-[#069B93] text-white hover:bg-[#058a7a]'
                                                             }`}
                                                     >
                                                         {loadingStates[member.id] || sendConnectionRequestMutation.isLoading ? 'Sending...' : 'Quick Connect'}

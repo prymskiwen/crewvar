@@ -3,7 +3,7 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import PreviewImage from "../../../components/Elements/PreviewImage";
 // TODO: Implement Firebase user update functionality
-import { convertToFormData } from "../../../utils/convertToFormData";
+// import { convertToFormData } from "../../../utils/convertToFormData";
 import { useAuth } from "../../../context/AuthContextFirebase";
 import { useState } from "react";
 import { Spinner } from "../../../components/Elements/Spinner";
@@ -33,21 +33,21 @@ const UserForm = () => {
     });
     const [preview, setPreview] = useState<string | ArrayBuffer | null | undefined>(currentUser?.photoURL);
 
-    const token = localStorage.getItem('token') || '';
     // TODO: Implement Firebase user update functionality
-    const updateUserOnBackend = () => {
+    const updateUserOnBackend = async (data: any) => {
         // Placeholder function
+        console.log('Update user on backend:', data);
     };
     const onSubmit = async (data: UserFormType) => {
         if (isDirty) {
             setIsUpdating(true);
             const fullName = `${data.firstName} ${data.lastName}`;
-            await updateUserOnBackend(convertToFormData({
+            await updateUserOnBackend({
                 id: currentUser?.uid,
                 email: data.email.trim(),
                 fullName,
                 avatar: data.image as Blob | string
-            }));
+            });
             currentUser?.reload();
             setIsUpdating(false);
         }
@@ -68,7 +68,7 @@ const UserForm = () => {
             </div>
             <div className="flex flex-col mb-3">
                 <label htmlFor="email" className="text-secondary">
-            Email
+                    Email
                 </label>
                 <input
                     {...register("email")}
@@ -86,7 +86,7 @@ const UserForm = () => {
             <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:space-x-2 mb-3">
                 <div className="flex flex-col w-full">
                     <label htmlFor="firstName" className="text-secondary">
-              First Name
+                        First Name
                     </label>
                     <input
                         {...register("firstName")}
@@ -103,7 +103,7 @@ const UserForm = () => {
                 </div>
                 <div className="flex flex-col w-full">
                     <label htmlFor="lastName" className="text-secondary">
-              Last Name
+                        Last Name
                     </label>
                     <input
                         {...register("lastName")}
@@ -121,7 +121,7 @@ const UserForm = () => {
             </div>
 
             <button className="w-full font-semibold text-sm bg-dark text-white transition hover:bg-opacity-90 rounded-xl py-3 px-4">
-          Update profile
+                Update profile
             </button>
         </form>
     );

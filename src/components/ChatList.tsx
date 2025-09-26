@@ -87,9 +87,9 @@ export const ChatList = ({ chatRooms, onSelectChat }: ChatListProps) => {
                                             alt={room.other_user_name}
                                             className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover"
                                         />
-                                        {room.unread_count > 0 && (
+                                        {(room.unread_count || 0) > 0 && (
                                             <div className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                                                {room.unread_count > 9 ? '9+' : room.unread_count}
+                                                {(room.unread_count || 0) > 9 ? '9+' : room.unread_count}
                                             </div>
                                         )}
                                     </div>
@@ -102,7 +102,7 @@ export const ChatList = ({ chatRooms, onSelectChat }: ChatListProps) => {
                                             </p>
                                             <div className="flex items-center space-x-1 flex-shrink-0">
                                                 <span className="text-xs text-gray-500">
-                                                    {room.last_message_time ? formatTime(room.last_message_time) : formatTime(room.updated_at)}
+                                                    {room.last_message_time ? formatTime(room.last_message_time) : (room.updated_at ? formatTime(room.updated_at) : '')}
                                                 </span>
                                                 {getMessageStatusIcon(room.last_message_status)}
                                             </div>

@@ -19,14 +19,17 @@ export const AllNotificationsPage = () => {
     const notifications: INotification[] = [];
     const isLoading = false;
     const unreadCount = 0;
-    const markAsRead = () => {
+    const markAsRead = async (notificationId: string) => {
         // Placeholder function
+        console.log('Mark as read:', notificationId);
     };
-    const markAllAsRead = () => {
+    const markAllAsRead = async () => {
         // Placeholder function
+        console.log('Mark all as read');
     };
-    const removeNotification = () => {
+    const removeNotification = async (notificationId: string) => {
         // Placeholder function
+        console.log('Remove notification:', notificationId);
     };
     const [filter, setFilter] = useState<'all' | 'unread'>('all');
     const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set());
@@ -113,7 +116,7 @@ export const AllNotificationsPage = () => {
         }
     };
 
-    const filteredNotifications = filter === 'unread' 
+    const filteredNotifications = filter === 'unread'
         ? notifications.filter((n: INotification) => !n.isRead)
         : notifications;
 
@@ -324,65 +327,65 @@ export const AllNotificationsPage = () => {
                             className="p-2 hover:bg-teal-700 rounded-lg transition-colors disabled:opacity-50"
                             title="Refresh notifications"
                         >
-                            <svg 
-                                className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} 
-                                fill="none" 
-                                stroke="currentColor" 
+                            <svg
+                                className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`}
+                                fill="none"
+                                stroke="currentColor"
                                 viewBox="0 0 24 24"
                             >
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
                         </button>
                         <Link to="/dashboard" className="flex items-center hover:bg-teal-700 rounded-lg px-3 py-2 transition-colors">
-                            <img 
-                                src={logo} 
-                                alt="Crewvar Logo" 
+                            <img
+                                src={logo}
+                                alt="Crewvar Logo"
                                 className="h-6 w-auto brightness-0 invert"
                                 style={{ filter: 'brightness(0) invert(1)' }}
                             />
                         </Link>
                     </div>
                 </div>
-                
-                        {/* Action Buttons */}
-                        {filteredNotifications.length > 0 && (
-                            <div className="flex items-center space-x-2 px-4 py-2 bg-teal-700">
-                                {unreadCount > 0 && (
-                                    <button
-                                        onClick={handleMarkAllAsRead}
-                                        disabled={isMarkingAsRead}
-                                        className="px-3 py-1.5 text-xs bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isMarkingAsRead ? 'Marking...' : 'Mark All Read'}
-                                    </button>
-                                )}
-                                {selectedNotifications.size > 0 && (
-                                    <button
-                                        onClick={handleMarkSelectedAsRead}
-                                        disabled={isMarkingAsRead}
-                                        className="px-3 py-1.5 text-xs bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isMarkingAsRead ? 'Marking...' : `Mark ${selectedNotifications.size} Read`}
-                                    </button>
-                                )}
-                                {selectedNotifications.size > 0 && (
-                                    <button
-                                        onClick={handleDeleteSelectedNotifications}
-                                        disabled={isMarkingAsRead}
-                                        className="px-3 py-1.5 text-xs bg-red-500/20 text-white rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isMarkingAsRead ? 'Deleting...' : `Delete ${selectedNotifications.size}`}
-                                    </button>
-                                )}
-                                <button
-                                    onClick={handleDeleteAllNotifications}
-                                    disabled={isMarkingAsRead}
-                                    className="px-3 py-1.5 text-xs bg-red-500/20 text-white rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isMarkingAsRead ? 'Deleting...' : 'Delete All'}
-                                </button>
-                            </div>
+
+                {/* Action Buttons */}
+                {filteredNotifications.length > 0 && (
+                    <div className="flex items-center space-x-2 px-4 py-2 bg-teal-700">
+                        {unreadCount > 0 && (
+                            <button
+                                onClick={handleMarkAllAsRead}
+                                disabled={isMarkingAsRead}
+                                className="px-3 py-1.5 text-xs bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isMarkingAsRead ? 'Marking...' : 'Mark All Read'}
+                            </button>
                         )}
+                        {selectedNotifications.size > 0 && (
+                            <button
+                                onClick={handleMarkSelectedAsRead}
+                                disabled={isMarkingAsRead}
+                                className="px-3 py-1.5 text-xs bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isMarkingAsRead ? 'Marking...' : `Mark ${selectedNotifications.size} Read`}
+                            </button>
+                        )}
+                        {selectedNotifications.size > 0 && (
+                            <button
+                                onClick={handleDeleteSelectedNotifications}
+                                disabled={isMarkingAsRead}
+                                className="px-3 py-1.5 text-xs bg-red-500/20 text-white rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isMarkingAsRead ? 'Deleting...' : `Delete ${selectedNotifications.size}`}
+                            </button>
+                        )}
+                        <button
+                            onClick={handleDeleteAllNotifications}
+                            disabled={isMarkingAsRead}
+                            className="px-3 py-1.5 text-xs bg-red-500/20 text-white rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isMarkingAsRead ? 'Deleting...' : 'Delete All'}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Filter Tabs */}
@@ -390,21 +393,19 @@ export const AllNotificationsPage = () => {
                 <div className="flex">
                     <button
                         onClick={() => setFilter('all')}
-                        className={`flex-1 py-3 px-4 text-sm font-medium text-center border-b-2 transition-colors ${
-                            filter === 'all'
-                                ? 'border-teal-600 text-teal-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
+                        className={`flex-1 py-3 px-4 text-sm font-medium text-center border-b-2 transition-colors ${filter === 'all'
+                            ? 'border-teal-600 text-teal-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
                     >
                         All ({notifications.length})
                     </button>
                     <button
                         onClick={() => setFilter('unread')}
-                        className={`flex-1 py-3 px-4 text-sm font-medium text-center border-b-2 transition-colors ${
-                            filter === 'unread'
-                                ? 'border-teal-600 text-teal-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
+                        className={`flex-1 py-3 px-4 text-sm font-medium text-center border-b-2 transition-colors ${filter === 'unread'
+                            ? 'border-teal-600 text-teal-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                            }`}
                     >
                         Unread ({unreadCount})
                     </button>
@@ -424,7 +425,7 @@ export const AllNotificationsPage = () => {
                             {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
                         </h3>
                         <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
-                            {filter === 'unread' 
+                            {filter === 'unread'
                                 ? 'All caught up! Check back later for new notifications.'
                                 : 'You\'ll see notifications here when you receive connection requests, messages, and other updates.'
                             }
@@ -450,9 +451,8 @@ export const AllNotificationsPage = () => {
                         {filteredNotifications.map((notification: INotification) => (
                             <div
                                 key={notification.id}
-                                className={`bg-white rounded-lg p-4 shadow-sm border cursor-pointer transition-all hover:shadow-md max-w-full ${
-                                    !notification.isRead ? 'border-l-4 border-l-teal-500' : 'border-gray-200'
-                                } ${selectedNotifications.has(notification.id) ? 'ring-2 ring-teal-500' : ''}`}
+                                className={`bg-white rounded-lg p-4 shadow-sm border cursor-pointer transition-all hover:shadow-md max-w-full ${!notification.isRead ? 'border-l-4 border-l-teal-500' : 'border-gray-200'
+                                    } ${selectedNotifications.has(notification.id) ? 'ring-2 ring-teal-500' : ''}`}
                                 onClick={() => handleMarkAsRead(notification.id)}
                             >
                                 <div className="flex items-start space-x-3">
@@ -466,15 +466,14 @@ export const AllNotificationsPage = () => {
                                         }}
                                         className="mt-1 h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
                                     />
-                                    
+
                                     {getNotificationIcon(notification.type)}
                                     <div className="flex-1 min-w-0 overflow-hidden">
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
                                                 <div className="flex items-center justify-between mb-1">
-                                                    <h4 className={`text-sm font-medium ${
-                                                        !notification.isRead ? 'text-gray-900' : 'text-gray-600'
-                                                    }`}>
+                                                    <h4 className={`text-sm font-medium ${!notification.isRead ? 'text-gray-900' : 'text-gray-600'
+                                                        }`}>
                                                         {notification.title}
                                                     </h4>
                                                     {isMessageLong(notification.message) && (
@@ -487,22 +486,20 @@ export const AllNotificationsPage = () => {
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className={`text-sm sm:text-sm mb-2 ${
-                                                    !notification.isRead ? 'text-gray-700' : 'text-gray-500'
-                                                }`}>
+                                                <div className={`text-sm sm:text-sm mb-2 ${!notification.isRead ? 'text-gray-700' : 'text-gray-500'
+                                                    }`}>
                                                     {isMessageLong(notification.message) ? (
                                                         <div className="relative">
-                                                            <div 
-                                                                className={`cursor-pointer transition-all duration-200 hover:bg-gray-50 active:bg-gray-100 rounded-md p-3 -m-2 border-l-2 touch-manipulation ${
-                                                                    expandedMessages.has(notification.id) 
-                                                                        ? 'bg-gray-50 border-blue-300' 
-                                                                        : 'border-transparent hover:border-gray-200'
-                                                                }`}
+                                                            <div
+                                                                className={`cursor-pointer transition-all duration-200 hover:bg-gray-50 active:bg-gray-100 rounded-md p-3 -m-2 border-l-2 touch-manipulation ${expandedMessages.has(notification.id)
+                                                                    ? 'bg-gray-50 border-blue-300'
+                                                                    : 'border-transparent hover:border-gray-200'
+                                                                    }`}
                                                                 onClick={() => toggleMessageExpansion(notification.id)}
                                                                 title="Tap to expand/collapse message"
                                                             >
                                                                 <p className="whitespace-pre-wrap break-words leading-relaxed text-sm sm:text-sm">
-                                                                    {expandedMessages.has(notification.id) 
+                                                                    {expandedMessages.has(notification.id)
                                                                         ? notification.message
                                                                         : notification.message.substring(0, 150) + '...'
                                                                     }
@@ -587,14 +584,14 @@ export const AllNotificationsPage = () => {
                                 Delete Notifications
                             </h3>
                         </div>
-                        
+
                         <p className="text-gray-600 mb-6">
-                            {deleteAction.type === 'all' 
+                            {deleteAction.type === 'all'
                                 ? `Are you sure you want to delete all ${deleteAction.count} notifications? This action cannot be undone.`
                                 : `Are you sure you want to delete ${deleteAction.count} selected notification${deleteAction.count > 1 ? 's' : ''}? This action cannot be undone.`
                             }
                         </p>
-                        
+
                         <div className="flex space-x-3">
                             <button
                                 onClick={handleCancelDelete}

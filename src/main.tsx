@@ -10,7 +10,11 @@ import { persistor } from "./app/store";
 import { PersistGate } from "redux-persist/integration/react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { initializeMemoryLeakPrevention } from "./utils/eventEmitterFix";
 // Removed axios import - now using Firebase
+
+// Initialize memory leak prevention
+initializeMemoryLeakPrevention();
 
 const queryClient = new QueryClient({
     defaultOptions: {

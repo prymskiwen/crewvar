@@ -2,16 +2,36 @@ import { useState } from "react";
 // TODO: Implement Firebase port connection and quick check-in functionality
 import { PortConnectionForm } from "./PortConnectionForm";
 import { WhoInPort } from "./WhoInPort";
-import { getConnectionDuration } from "../data/port-connections-data";
+// import { getConnectionDuration } from "../data/port-connections-data";
+
+const getConnectionDuration = (_startTime: string, _endTime: string) => {
+    // Placeholder function
+    return '2 hours';
+};
 
 export const PortConnectionsDashboard = () => {
     // TODO: Implement Firebase quick check-in and port connection functionality
-    const currentShip = null;
-    const getConnectionsForShip = () => {
-        // Placeholder function
+    const currentShip = {
+        shipId: 'sample-ship-id',
+        shipName: 'Sample Ship',
+        port: 'Sample Port'
     };
-    const removePortConnection = () => {
+    const getConnectionsForShip = (shipId: string, date: string) => {
         // Placeholder function
+        console.log('Get connections for ship:', shipId, date);
+        return [
+            {
+                id: 'conn-1',
+                dockedWithShipName: 'Sample Ship 2',
+                portName: 'Sample Port',
+                startTime: '2024-01-01T10:00:00Z',
+                endTime: '2024-01-01T12:00:00Z'
+            }
+        ];
+    };
+    const removePortConnection = async (connectionId: string) => {
+        // Placeholder function
+        console.log('Remove port connection:', connectionId);
     };
     const [showPortForm, setShowPortForm] = useState(false);
     const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -197,7 +217,7 @@ export const PortConnectionsDashboard = () => {
                                                     <svg className="w-4 h-4 text-[#069B93]" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                                                     </svg>
-                                                    <span className="text-sm text-gray-600">{getConnectionDuration(connection)}</span>
+                                                    <span className="text-sm text-gray-600">{getConnectionDuration(connection.startTime, connection.endTime)}</span>
                                                 </div>
                                             </div>
                                         </div>

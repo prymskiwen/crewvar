@@ -8,6 +8,23 @@ import {
 } from 'firebase/storage';
 import { storage } from './config';
 
+// Check if Firebase Storage is available
+export const isStorageAvailable = (): boolean => {
+    return storage !== null;
+};
+
+// Fallback function for when storage is not available
+const createFallbackUrl = (file: File): Promise<string> => {
+    // Create a data URL as fallback
+    return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            resolve(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    });
+};
+
 // Types
 export interface UploadProgress {
     bytesTransferred: number;
@@ -22,6 +39,14 @@ export const uploadProfilePhoto = async (
     onProgress?: (progress: UploadProgress) => void
 ): Promise<string> => {
     try {
+        // Check if storage is available
+        if (!storage) {
+            console.warn('Firebase Storage is not available. Using fallback data URL.');
+            // Use fallback data URL
+            const fallbackUrl = await createFallbackUrl(file);
+            return fallbackUrl;
+        }
+
         const fileName = `profile-${Date.now()}.${file.name.split('.').pop()}`;
         const filePath = `users/${userId}/profile-photo/${fileName}`;
         const storageRef = ref(storage, filePath);
@@ -68,10 +93,17 @@ export const uploadProfilePhoto = async (
 export const uploadAdditionalPhoto = async (
     file: File,
     userId: string,
-    photoSlot?: number,
+    _photoSlot?: number,
     onProgress?: (progress: UploadProgress) => void
 ): Promise<string> => {
     try {
+        // Check if storage is available
+        if (!storage) {
+            console.warn('Firebase Storage is not available. Using fallback data URL.');
+            const fallbackUrl = await createFallbackUrl(file);
+            return fallbackUrl;
+        }
+
         const fileName = `additional-${Date.now()}.${file.name.split('.').pop()}`;
         const filePath = `users/${userId}/additional-photos/${fileName}`;
         const storageRef = ref(storage, filePath);
@@ -121,6 +153,13 @@ export const uploadChatImage = async (
     onProgress?: (progress: UploadProgress) => void
 ): Promise<string> => {
     try {
+        // Check if storage is available
+        if (!storage) {
+            console.warn('Firebase Storage is not available. Using fallback data URL.');
+            const fallbackUrl = await createFallbackUrl(file);
+            return fallbackUrl;
+        }
+
         const fileName = `chat-${Date.now()}.${file.name.split('.').pop()}`;
         const filePath = `chat/${roomId}/${fileName}`;
         const storageRef = ref(storage, filePath);
@@ -166,6 +205,12 @@ export const uploadChatImage = async (
 // Delete file
 export const deleteFile = async (fileUrl: string): Promise<void> => {
     try {
+        // Check if storage is available
+        if (!storage) {
+            console.warn('Firebase Storage is not available. Cannot delete file.');
+            return;
+        }
+
         // Extract file path from URL
         const url = new URL(fileUrl);
         const filePath = url.pathname.substring(1); // Remove leading slash
@@ -180,6 +225,12 @@ export const deleteFile = async (fileUrl: string): Promise<void> => {
 // Get file metadata
 export const getFileMetadata = async (fileUrl: string) => {
     try {
+        // Check if storage is available
+        if (!storage) {
+            console.warn('Firebase Storage is not available. Cannot get file metadata.');
+            return null;
+        }
+
         // Extract file path from URL
         const url = new URL(fileUrl);
         const filePath = url.pathname.substring(1); // Remove leading slash

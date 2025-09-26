@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { uploadProfilePhoto } from '../firebase/storage';
+import { shouldShowStorageWarning } from '../utils/storageFallback';
 import { useAuth } from '../context/AuthContextFirebase';
 
 interface ProfilePhotoUploadProps {
@@ -21,6 +22,7 @@ export const ProfilePhotoUpload = ({
     const [preview, setPreview] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [error, setError] = useState<Error | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { currentUser } = useAuth();
 
@@ -31,16 +33,19 @@ export const ProfilePhotoUpload = ({
     };
 
     const handleFileSelect = useCallback(async (file: File) => {
+        // Clear any previous errors
+        setError(null);
+
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            alert('Please select a valid image file (JPEG, PNG, or WebP)');
+            setError(new Error('Please select a valid image file (JPEG, PNG, or WebP)'));
             return;
         }
 
         // Validate file size (10MB)
         if (file.size > 10 * 1024 * 1024) {
-            alert('File size must be less than 10MB');
+            setError(new Error('File size must be less than 10MB'));
             return;
         }
 
@@ -68,9 +73,9 @@ export const ProfilePhotoUpload = ({
             URL.revokeObjectURL(previewUrl);
         } catch (error) {
             console.error('Upload failed:', error);
+            setError(error instanceof Error ? error : new Error('Upload failed'));
             setPreview(null);
             setUploadProgress(0);
-            alert('Upload failed. Please try again.');
 
             // Clean up preview URL
             URL.revokeObjectURL(previewUrl);
@@ -226,6 +231,11 @@ export const ProfilePhotoUpload = ({
                     <p className="text-xs text-gray-400">
                         Max 10MB • JPG, PNG, WebP supported
                     </p>
+                    {shouldShowStorageWarning() && (
+                        <p className="text-xs text-amber-600 font-medium mt-1">
+                            ⚠️ Storage not available - using local preview
+                        </p>
+                    )}
                 </div>
             )}
 

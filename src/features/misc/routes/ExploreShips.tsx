@@ -176,9 +176,11 @@ export const ExploreShips = () => {
 
     // TODO: Implement Firebase connection functionality
     const sendConnectionRequestMutation = {
-        mutateAsync: () => {
+        mutateAsync: async (data: any) => {
             // Placeholder function
-        }
+            console.log('Send connection request:', data);
+        },
+        isLoading: false
     };
 
     // TODO: Implement Firebase cruise data functionality
@@ -240,22 +242,33 @@ export const ExploreShips = () => {
 
     // Flatten all crew data from all pages
     const allCrew = useMemo(() => {
-        if (!crewData?.pages) return [];
-        return crewData.pages.flatMap(page => page.crew);
+        if (!crewData) return [];
+        // If crewData is already an array, return it directly
+        if (Array.isArray(crewData)) {
+            return crewData;
+        }
+        // If crewData has pages property, flatten them
+        if (crewData && typeof crewData === 'object' && 'pages' in crewData) {
+            const dataWithPages = crewData as any;
+            if (Array.isArray(dataWithPages.pages)) {
+                return dataWithPages.pages.flatMap((page: any) => page.crew || []);
+            }
+        }
+        return [];
     }, [crewData]);
 
     // Filter crew members based on selections (client-side filtering)
     const filteredCrew = useMemo(() => {
         if (!allCrew) return [];
 
-        return allCrew.filter(member => {
+        return allCrew.filter((member: any) => {
             const matchesCruiseLine = !selectedCruiseLine || member.cruise_line_name === selectedCruiseLine;
             const matchesShip = !selectedShip || member.ship_name === selectedShip;
             const matchesSearch = !searchQuery ||
-                member.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                member.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 member.department_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 member.role_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                member.ship_name.toLowerCase().includes(searchQuery.toLowerCase());
+                member.ship_name?.toLowerCase().includes(searchQuery.toLowerCase());
 
             return matchesCruiseLine && matchesShip && matchesSearch;
         });
@@ -411,7 +424,7 @@ export const ExploreShips = () => {
                             </div>
                         ) : (
                             <div className="space-y-3 sm:space-y-4">
-                                {filteredCrew.map((member) => (
+                                {filteredCrew.map((member: any) => (
                                     <div key={member.id} className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-teal-300 transition-colors">
                                         <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
                                             {/* Avatar and Info */}

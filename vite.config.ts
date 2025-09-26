@@ -10,6 +10,10 @@ export default defineConfig({
         'process.env': process.env
     },
     server: {
+        // Increase max listeners to prevent memory leak warnings
+        hmr: {
+            overlay: false
+        },
         proxy: {
             '/uploads': {
                 target: process.env.VITE_API_URL || 'http://localhost:3000',

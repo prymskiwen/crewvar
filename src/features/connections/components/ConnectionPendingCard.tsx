@@ -7,7 +7,19 @@ interface ConnectionPendingCardProps {
 
 export const ConnectionPendingCard: React.FC<ConnectionPendingCardProps> = () => {
     // TODO: Implement Firebase connection functionality
-    const requestsData = null;
+    const requestsData = {
+        requests: [
+            {
+                id: 'req-1',
+                display_name: 'John Doe',
+                profile_photo: null,
+                ship_name: 'Sample Ship',
+                cruise_line_name: 'Sample Cruise Line',
+                message: 'Hello, I would like to connect!'
+            }
+        ]
+    };
+    const pendingRequests = requestsData?.requests || [];
     const isLoading = false;
     const error = null;
     const respondMutation = {
@@ -16,7 +28,8 @@ export const ConnectionPendingCard: React.FC<ConnectionPendingCardProps> = () =>
             console.log('Responding to connection request:', requestData);
             await new Promise(resolve => setTimeout(resolve, 1000));
             toast.success(`Connection request ${requestData.action}ed successfully!`);
-        }
+        },
+        isLoading: false
     };
 
     const handleAccept = async (requestId: string) => {
@@ -24,7 +37,7 @@ export const ConnectionPendingCard: React.FC<ConnectionPendingCardProps> = () =>
             await respondMutation.mutateAsync({ requestId, action: 'accept' });
 
             // Find the request to get the user's name for the notification
-            const request = pendingRequests.find(req => req.id === requestId);
+            const request = pendingRequests.find((req: any) => req.id === requestId);
             const userName = request?.display_name || 'User';
 
             toast.success(`🎉 Connection accepted! You're now connected with ${userName}`, {
@@ -63,7 +76,7 @@ export const ConnectionPendingCard: React.FC<ConnectionPendingCardProps> = () =>
             await respondMutation.mutateAsync({ requestId, action: 'decline' });
 
             // Find the request to get the user's name for the notification
-            const request = pendingRequests.find(req => req.id === requestId);
+            const request = pendingRequests.find((req: any) => req.id === requestId);
             const userName = request?.display_name || 'User';
 
             toast.info(`Connection request from ${userName} has been declined`, {
@@ -96,8 +109,6 @@ export const ConnectionPendingCard: React.FC<ConnectionPendingCardProps> = () =>
             });
         }
     };
-
-    const pendingRequests = requestsData?.requests || [];
 
     if (isLoading) {
         return (

@@ -10,10 +10,11 @@ export const FavoritesAlerts = ({ onViewProfile, onStartChat }: FavoritesAlertsP
     // TODO: Implement Firebase favorites functionality
     const alerts: IFavoriteAlert[] = [];
     const unreadAlertsCount = 0;
-    const markAlertAsRead = () => {
+    const markAlertAsRead = async (alertId: string) => {
         // Placeholder function
+        console.log('Mark alert as read:', alertId);
     };
-    const connectionsData = null;
+    const connectionsData = { connections: [] };
     const [filter, setFilter] = useState<'all' | 'unread' | 'same_ship' | 'same_port'>('all');
 
     // Get connected users for display names
@@ -87,7 +88,7 @@ export const FavoritesAlerts = ({ onViewProfile, onStartChat }: FavoritesAlertsP
                 console.error('Failed to mark alert as read:', error);
             }
         }
-        
+
         if (onViewProfile) {
             onViewProfile(alert.favoriteUserId);
         }
@@ -118,41 +119,37 @@ export const FavoritesAlerts = ({ onViewProfile, onStartChat }: FavoritesAlertsP
             <div className="flex flex-wrap gap-1 mb-4 lg:mb-6 bg-gray-100 rounded-lg p-1">
                 <button
                     onClick={() => setFilter('all')}
-                    className={`flex-1 min-w-0 px-2 lg:px-3 py-2 text-xs lg:text-sm font-medium rounded-md transition-colors ${
-                        filter === 'all'
-                            ? 'bg-white text-[#069B93] shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`flex-1 min-w-0 px-2 lg:px-3 py-2 text-xs lg:text-sm font-medium rounded-md transition-colors ${filter === 'all'
+                        ? 'bg-white text-[#069B93] shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                        }`}
                 >
                     All ({alerts.length})
                 </button>
                 <button
                     onClick={() => setFilter('unread')}
-                    className={`flex-1 min-w-0 px-2 lg:px-3 py-2 text-xs lg:text-sm font-medium rounded-md transition-colors ${
-                        filter === 'unread'
-                            ? 'bg-white text-[#069B93] shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`flex-1 min-w-0 px-2 lg:px-3 py-2 text-xs lg:text-sm font-medium rounded-md transition-colors ${filter === 'unread'
+                        ? 'bg-white text-[#069B93] shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                        }`}
                 >
                     Unread ({unreadAlertsCount})
                 </button>
                 <button
                     onClick={() => setFilter('same_ship')}
-                    className={`flex-1 min-w-0 px-2 lg:px-3 py-2 text-xs lg:text-sm font-medium rounded-md transition-colors ${
-                        filter === 'same_ship'
-                            ? 'bg-white text-[#069B93] shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`flex-1 min-w-0 px-2 lg:px-3 py-2 text-xs lg:text-sm font-medium rounded-md transition-colors ${filter === 'same_ship'
+                        ? 'bg-white text-[#069B93] shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                        }`}
                 >
                     Same Ship
                 </button>
                 <button
                     onClick={() => setFilter('same_port')}
-                    className={`flex-1 min-w-0 px-2 lg:px-3 py-2 text-xs lg:text-sm font-medium rounded-md transition-colors ${
-                        filter === 'same_port'
-                            ? 'bg-white text-[#069B93] shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`flex-1 min-w-0 px-2 lg:px-3 py-2 text-xs lg:text-sm font-medium rounded-md transition-colors ${filter === 'same_port'
+                        ? 'bg-white text-[#069B93] shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                        }`}
                 >
                     Same Port
                 </button>
@@ -166,13 +163,13 @@ export const FavoritesAlerts = ({ onViewProfile, onStartChat }: FavoritesAlertsP
                             <span className="text-2xl">⭐</span>
                         </div>
                         <p className="text-gray-500">
-                            {filter === 'unread' 
-                                ? 'No unread alerts' 
+                            {filter === 'unread'
+                                ? 'No unread alerts'
                                 : filter === 'same_ship'
-                                ? 'No same ship alerts'
-                                : filter === 'same_port'
-                                ? 'No same port alerts'
-                                : 'No favorite alerts yet'
+                                    ? 'No same ship alerts'
+                                    : filter === 'same_port'
+                                        ? 'No same port alerts'
+                                        : 'No favorite alerts yet'
                             }
                         </p>
                         <p className="text-sm text-gray-400 mt-2">
@@ -186,8 +183,8 @@ export const FavoritesAlerts = ({ onViewProfile, onStartChat }: FavoritesAlertsP
                             onClick={() => handleAlertClick(alert)}
                             className={`
                                 border rounded-lg p-3 lg:p-4 cursor-pointer transition-all duration-200 hover:shadow-md
-                                ${alert.isRead 
-                                    ? 'border-gray-200 bg-white' 
+                                ${alert.isRead
+                                    ? 'border-gray-200 bg-white'
                                     : 'border-[#069B93] bg-[#069B93]/5'
                                 }
                             `}
@@ -198,13 +195,13 @@ export const FavoritesAlerts = ({ onViewProfile, onStartChat }: FavoritesAlertsP
                                         {getAlertIcon(alert.alertType)}
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex-1 min-w-0">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-1 sm:space-y-0">
                                         <h3 className="font-semibold text-gray-900 truncate text-sm lg:text-base">
                                             {getCrewMemberName(alert.favoriteUserId)} - {alert.alertType === 'same_ship' ? 'Same Ship Today!' :
-                                             alert.alertType === 'same_port' ? 'Same Port Today!' :
-                                             'Sailing Together!'}
+                                                alert.alertType === 'same_port' ? 'Same Port Today!' :
+                                                    'Sailing Together!'}
                                         </h3>
                                         <div className="flex items-center space-x-2">
                                             <span className="text-xs text-gray-500">
@@ -215,11 +212,11 @@ export const FavoritesAlerts = ({ onViewProfile, onStartChat }: FavoritesAlertsP
                                             )}
                                         </div>
                                     </div>
-                                    
+
                                     <p className="text-xs lg:text-sm text-gray-600 mt-1">
                                         {alert.message}
                                     </p>
-                                    
+
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-3 space-y-2 sm:space-y-0">
                                         <div className="text-xs text-gray-500">
                                             <span className="font-medium">{alert.shipName}</span>
@@ -227,7 +224,7 @@ export const FavoritesAlerts = ({ onViewProfile, onStartChat }: FavoritesAlertsP
                                                 <span> • {alert.port}</span>
                                             )}
                                         </div>
-                                        
+
                                         <div className="flex space-x-2">
                                             {onViewProfile && (
                                                 <button

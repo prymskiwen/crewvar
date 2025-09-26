@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, memo } from "react";
 import { useAuth } from "../context/AuthContextFirebase";
 import { useRealtime } from "../context/RealtimeContextFirebase";
 import { sendChatMessage, subscribeToChatMessages } from "../firebase/firestore";
-import { IChatMessage } from "../types/chat.d";
+import { ChatMessage } from "../firebase/firestore";
 import { EmojiPicker } from './EmojiPicker';
 import { ReportUserModal } from '../features/reports/components/ReportUserModal';
 
@@ -22,7 +22,7 @@ interface ChatWindowProps {
 export const ChatWindow = memo(({ chatRoom, onClose }: ChatWindowProps) => {
     const { currentUser } = useAuth();
     const { joinRoom, leaveRoom, startTyping, stopTyping, typingUsers } = useRealtime();
-    const [messages, setMessages] = useState<IChatMessage[]>([]);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [messageInput, setMessageInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -151,14 +151,14 @@ export const ChatWindow = memo(({ chatRoom, onClose }: ChatWindowProps) => {
                     >
                         <div
                             className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.senderId === currentUser?.uid
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-200 text-gray-900'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-200 text-gray-900'
                                 }`}
                         >
                             <p className="text-sm">{message.content}</p>
                             <p className={`text-xs mt-1 ${message.senderId === currentUser?.uid
-                                    ? 'text-blue-100'
-                                    : 'text-gray-500'
+                                ? 'text-blue-100'
+                                : 'text-gray-500'
                                 }`}>
                                 {new Date(message.createdAt?.toDate?.() || message.createdAt).toLocaleTimeString([], {
                                     hour: '2-digit',
@@ -215,7 +215,7 @@ export const ChatWindow = memo(({ chatRoom, onClose }: ChatWindowProps) => {
                 {/* Emoji Picker */}
                 {showEmojiPicker && (
                     <div className="absolute bottom-16 left-4">
-                        <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+                        <EmojiPicker onEmojiSelect={handleEmojiSelect} onClose={() => setShowEmojiPicker(false)} />
                     </div>
                 )}
             </div>
@@ -223,7 +223,9 @@ export const ChatWindow = memo(({ chatRoom, onClose }: ChatWindowProps) => {
             {/* Report Modal */}
             {showReportModal && (
                 <ReportUserModal
+                    isOpen={showReportModal}
                     reportedUserId={chatRoom.other_user_id}
+                    reportedUserName={chatRoom.other_user_name}
                     onClose={() => setShowReportModal(false)}
                 />
             )}

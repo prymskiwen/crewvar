@@ -11,8 +11,12 @@ export const ShipAssignment = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     // TODO: Implement Firebase ship assignment functionality
-    const updateShipAssignmentMutation = () => {
-        // Placeholder function
+    const updateShipAssignmentMutation = {
+        mutateAsync: async (data: any) => {
+            // Placeholder function
+            console.log('Update ship assignment:', data);
+        },
+        isLoading: false
     };
     const { data: userProfile } = useQuery({
         queryKey: ['user', 'profile'],
@@ -20,7 +24,7 @@ export const ShipAssignment = () => {
             // TODO: Implement Firebase user profile fetch
             return null;
         }
-    });
+    }) as { data: any };
     const allShips: any[] = [];
     const cruiseLines: any[] = [];
 
@@ -29,7 +33,7 @@ export const ShipAssignment = () => {
         if (userProfile?.user?.current_ship_id) {
             const currentShip = allShips?.find(ship => ship.id === userProfile.user.current_ship_id);
             if (currentShip) {
-                setSelectedCruiseLineId(currentShip.cruise_line_id);
+                setSelectedCruiseLineId(currentShip.cruise_line_id || '');
                 setSelectedShipId(currentShip.id);
             }
         }
@@ -116,7 +120,7 @@ export const ShipAssignment = () => {
                                         const currentShip = allShips?.find(ship => ship.id === userProfile.user.current_ship_id);
                                         const currentCruiseLine = cruiseLines?.find(cl => cl.id === currentShip?.cruise_line_id);
                                         return currentShip && currentCruiseLine
-                                            ? `${currentShip.name} • ${currentCruiseLine.name}`
+                                            ? `${currentShip.name || 'Unknown Ship'} • ${currentCruiseLine.name || 'Unknown Cruise Line'}`
                                             : 'Loading...';
                                     })()}
                                 </p>

@@ -44,17 +44,17 @@ export const MissingShipFeedback = ({ isOpen, onClose }: MissingShipFeedbackProp
 
     const onSubmit = async (data: FeedbackFormData) => {
         setIsSubmitting(true);
-        
+
         try {
             console.log('📧 Submitting feedback:', data);
-            
+
             // TODO: Implement Firebase feedback submission
             const response = { success: true };
-            
+
             if (response.success) {
                 toast.success('Feedback submitted successfully! We\'ll review it and add the missing information.');
                 setIsSubmitted(true);
-                
+
                 // Reset form after 2 seconds
                 setTimeout(() => {
                     setIsSubmitted(false);
@@ -62,12 +62,12 @@ export const MissingShipFeedback = ({ isOpen, onClose }: MissingShipFeedbackProp
                     onClose();
                 }, 2000);
             } else {
-                throw new Error(response.data.message || 'Failed to submit feedback');
+                throw new Error('Failed to submit feedback');
             }
-            
+
         } catch (error: any) {
             console.error('❌ Failed to submit feedback:', error);
-            
+
             if (error.response?.data?.error) {
                 toast.error(`Failed to submit feedback: ${error.response.data.error}`);
             } else if (error.message) {
@@ -140,17 +140,17 @@ export const MissingShipFeedback = ({ isOpen, onClose }: MissingShipFeedbackProp
                             {/* Name */}
                             <div>
                                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                                    {watchedType === 'ship' ? 'Ship Name' : 
-                                     watchedType === 'position' ? 'Position Name' : 
-                                     watchedType === 'department' ? 'Department Name' : 'Name'}
+                                    {watchedType === 'ship' ? 'Ship Name' :
+                                        watchedType === 'position' ? 'Position Name' :
+                                            watchedType === 'department' ? 'Department Name' : 'Name'}
                                 </label>
                                 <input
                                     {...register("name")}
                                     type="text"
                                     id="name"
-                                    placeholder={watchedType === 'ship' ? 'e.g., Harmony of the Seas' : 
-                                               watchedType === 'position' ? 'e.g., Assistant Cruise Director' : 
-                                               watchedType === 'department' ? 'e.g., Medical Services' : 'Name'}
+                                    placeholder={watchedType === 'ship' ? 'e.g., Harmony of the Seas' :
+                                        watchedType === 'position' ? 'e.g., Assistant Cruise Director' :
+                                            watchedType === 'department' ? 'e.g., Medical Services' : 'Name'}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none"
                                 />
                                 {errors.name && (

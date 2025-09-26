@@ -9,10 +9,17 @@ const NotificationSettings = () => {
         push: true,
         connectionRequests: true,
         messages: true,
-        announcements: true
+        announcements: true,
+        inAppBadges: true,
+        inAppToasts: true,
+        emailConnectionRequest: true,
+        emailConnectionAccepted: true,
+        emailNewMessageOffline: true,
+        emailDailySummary: true
     };
-    const updatePreferences = () => {
+    const updatePreferences = async (prefs: any) => {
         // Placeholder function
+        console.log('Update preferences:', prefs);
     };
     const [localPreferences, setLocalPreferences] = useState(preferences);
     const [isSaving, setIsSaving] = useState(false);
@@ -72,7 +79,7 @@ const NotificationSettings = () => {
                             <HiBell className="w-5 h-5 text-[#069B93]" />
                             <h2 className="text-lg font-semibold text-gray-900">In-App Notifications</h2>
                         </div>
-                        
+
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -114,7 +121,7 @@ const NotificationSettings = () => {
                             <HiMail className="w-5 h-5 text-[#069B93]" />
                             <h2 className="text-lg font-semibold text-gray-900">Email Notifications</h2>
                         </div>
-                        
+
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -192,7 +199,7 @@ const NotificationSettings = () => {
                             >
                                 Reset to Default
                             </button>
-                            
+
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}

@@ -13,7 +13,7 @@ export const ConnectionButton = ({ userId, userName, className = '', size = 'md'
     const [message, setMessage] = useState('');
 
     // TODO: Implement Firebase connection functionality
-    const statusData = null;
+    const statusData = { status: 'none' };
     const statusLoading = false;
     const sendRequestMutation = {
         mutateAsync: async (requestData: { receiverId: string; message: string }) => {
@@ -21,7 +21,8 @@ export const ConnectionButton = ({ userId, userName, className = '', size = 'md'
             console.log('Sending connection request:', requestData);
             await new Promise(resolve => setTimeout(resolve, 1000));
             toast.success('Connection request sent successfully!');
-        }
+        },
+        isLoading: false
     };
 
     const handleSendRequest = async () => {

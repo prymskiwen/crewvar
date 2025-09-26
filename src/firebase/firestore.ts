@@ -277,6 +277,27 @@ export const markNotificationAsRead = async (notificationId: string): Promise<vo
     }
 };
 
+export const markMessagesAsRead = async (roomId: string, userId: string): Promise<void> => {
+    try {
+        const messagesRef = collection(db, 'chatRooms', roomId, 'messages');
+        const q = query(messagesRef, where('senderId', '!=', userId), where('isRead', '==', false));
+        const querySnapshot = await getDocs(q);
+
+        const batch: Promise<void>[] = [];
+        querySnapshot.forEach((doc) => {
+            batch.push(updateDoc(doc.ref, {
+                isRead: true,
+                readAt: serverTimestamp()
+            }));
+        });
+
+        await Promise.all(batch);
+    } catch (error) {
+        console.error('Error marking messages as read:', error);
+        throw error;
+    }
+};
+
 // Real-time listeners
 export const subscribeToChatMessages = (
     roomId: string,

@@ -4,11 +4,13 @@ import { getProfilePhotoUrl } from '../../../utils/imageUtils';
 
 // TODO: Define ICrewMember interface
 interface ICrewMember {
-    id: string;
-    name: string;
-    role: string;
-    department: string;
-    avatar?: string;
+  id: string;
+  displayName: string;
+  roleName: string;
+  departmentName: string;
+  shipName: string;
+  cruiseLineName: string;
+  profilePhoto?: string;
 }
 
 interface WhosInPortProps {
@@ -19,31 +21,36 @@ export const WhosInPort = ({ className = "" }: WhosInPortProps) => {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [selectedCruiseLineId, setSelectedCruiseLineId] = useState("");
   const [selectedShipId, setSelectedShipId] = useState("");
-  
+
   const today = new Date().toISOString().split('T')[0];
-  
+
   // TODO: Implement Firebase port linking functionality
-  const crewData: ICrewMember[] = [];
+  const crewData = {
+    crew: [] as ICrewMember[],
+    linkedShips: 0,
+    portName: 'Sample Port'
+  };
   const crewLoading = false;
   const crewError = null;
   const cruiseLines: any[] = [];
   const cruiseLinesLoading = false;
   const shipsByCruiseLine: any[] = [];
   const shipsByCruiseLineLoading = false;
-  const linkShips = () => {
-      // Placeholder function
+  const linkShips = async (data: any) => {
+    // Placeholder function
+    console.log('Link ships:', data);
   };
   // Removed unused unlinkShips
 
   const handleLinkShips = async () => {
     if (!selectedCruiseLineId || !selectedShipId) return;
-    
+
     try {
       await linkShips({
         shipId: selectedShipId,
         date: today
       });
-      
+
       setShowLinkModal(false);
       setSelectedCruiseLineId("");
       setSelectedShipId("");
@@ -87,8 +94,8 @@ export const WhosInPort = ({ className = "" }: WhosInPortProps) => {
           </div>
           <h3 className="text-lg font-semibold text-gray-800 mb-2">Unable to load port data</h3>
           <p className="text-gray-600 mb-4">This feature requires backend connection</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors"
           >
             Refresh Page
@@ -124,7 +131,7 @@ export const WhosInPort = ({ className = "" }: WhosInPortProps) => {
         <div className="flex items-center space-x-3">
           <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
           <span className="text-base font-semibold text-blue-800">
-            {linkedShips > 0 
+            {linkedShips > 0
               ? `🔗 Linked with ${linkedShips} ship${linkedShips > 1 ? 's' : ''} today`
               : '⚓ No ships linked today'
             }
@@ -152,18 +159,18 @@ export const WhosInPort = ({ className = "" }: WhosInPortProps) => {
                 <div className="flex items-center space-x-4">
                   <div className="relative">
                     <img
-                      src={getProfilePhotoUrl(member.profile_photo)}
-                      alt={member.display_name}
+                      src={getProfilePhotoUrl(member.profilePhoto)}
+                      alt={member.displayName}
                       className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md group-hover:border-[#069B93] transition-colors"
                     />
                     <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-gray-900 truncate group-hover:text-[#069B93] transition-colors">
-                      {member.display_name}
+                      {member.displayName}
                     </h4>
-                    <p className="text-sm text-gray-600 truncate">{member.ship_name}</p>
-                    <p className="text-xs text-gray-500 truncate">{member.cruise_line_name}</p>
+                    <p className="text-sm text-gray-600 truncate">{member.shipName}</p>
+                    <p className="text-xs text-gray-500 truncate">{member.cruiseLineName}</p>
                   </div>
                 </div>
                 <div className="mt-4 flex space-x-2">
@@ -201,7 +208,7 @@ export const WhosInPort = ({ className = "" }: WhosInPortProps) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Link Ships in Port</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -229,7 +236,7 @@ export const WhosInPort = ({ className = "" }: WhosInPortProps) => {
                   </select>
                 )}
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Select Ship to Link With
@@ -258,7 +265,7 @@ export const WhosInPort = ({ className = "" }: WhosInPortProps) => {
                 )}
               </div>
             </div>
-            
+
             <div className="flex space-x-3 mt-6">
               <button
                 onClick={() => setShowLinkModal(false)}

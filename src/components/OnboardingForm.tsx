@@ -18,7 +18,7 @@ const createValidationSchema = (hasExistingProfile: boolean) => yup.object({
         .required("Display name is required")
         .min(2, "Display name must be at least 2 characters")
         .max(50, "Display name must be less than 50 characters"),
-    profilePhoto: hasExistingProfile 
+    profilePhoto: hasExistingProfile
         ? yup.mixed().optional() // Optional if user already has a photo
         : yup.mixed().required("Profile photo is required"), // Required for new users
     departmentId: yup.string().required("Department is required"),
@@ -38,12 +38,12 @@ interface CustomDropdownProps {
     maxHeight?: string;
 }
 
-const CustomDropdown = ({ 
-    value, 
-    onChange, 
-    options, 
-    placeholder, 
-    disabled = false, 
+const CustomDropdown = ({
+    value,
+    onChange,
+    options,
+    placeholder,
+    disabled = false,
     label,
     maxHeight = "200px"
 }: CustomDropdownProps) => {
@@ -106,13 +106,13 @@ const CustomDropdown = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
                 {label}
             </label>
-            
+
             {/* Input Field */}
-            <div 
+            <div
                 className={`
                     w-full px-3 py-2 border rounded-lg cursor-pointer
-                    ${disabled 
-                        ? 'bg-gray-100 cursor-not-allowed border-gray-200' 
+                    ${disabled
+                        ? 'bg-gray-100 cursor-not-allowed border-gray-200'
                         : 'border-gray-300 hover:border-[#069B93] focus-within:border-[#069B93] focus-within:ring-1 focus-within:ring-[#069B93]'
                     }
                     transition-colors
@@ -123,10 +123,10 @@ const CustomDropdown = ({
                     <span className={selectedOption ? 'text-gray-900' : 'text-gray-500'}>
                         {selectedOption ? selectedOption.name : placeholder}
                     </span>
-                    <svg 
+                    <svg
                         className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
+                        fill="none"
+                        stroke="currentColor"
                         viewBox="0 0 24 24"
                     >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -151,7 +151,7 @@ const CustomDropdown = ({
                     </div>
 
                     {/* Options List */}
-                    <div 
+                    <div
                         className="overflow-y-auto"
                         style={{ maxHeight }}
                     >
@@ -185,12 +185,19 @@ const CustomDropdown = ({
 const OnboardingForm = () => {
     const navigate = useNavigate();
     // TODO: Implement Firebase user profile functionality
-    const userProfile = null;
+    const userProfile: any = {
+        display_name: '',
+        profile_photo: null,
+        department_id: '',
+        role_id: '',
+        current_ship_id: ''
+    };
     const profileLoading = false;
     const profileError = null;
     const allShips: any[] = [];
-    const updateProfile = () => {
+    const updateProfile = (data: any) => {
         // Placeholder function
+        console.log('Update profile:', data);
     };
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [preview, setPreview] = useState<string | ArrayBuffer | null>(null);
@@ -200,7 +207,7 @@ const OnboardingForm = () => {
     const [showCalendar, setShowCalendar] = useState(false);
     const [showAssignmentForm, setShowAssignmentForm] = useState(false);
     const [editingAssignment, setEditingAssignment] = useState<ICruiseAssignment | null>(null);
-    
+
     // Add a flag to prevent OnboardingGuard redirect when AssignmentForm is open
     useEffect(() => {
         if (showAssignmentForm) {
@@ -209,7 +216,7 @@ const OnboardingForm = () => {
         } else {
             localStorage.removeItem('assignmentFormOpen');
         }
-        
+
         // Cleanup on unmount
         return () => {
             localStorage.removeItem('assignmentFormOpen');
@@ -218,7 +225,7 @@ const OnboardingForm = () => {
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
     const { formState: { errors }, watch, setValue, reset, clearErrors, register } = useForm({
-        resolver: userProfile && (userProfile.display_name || userProfile.profile_photo) 
+        resolver: userProfile && (userProfile.display_name || userProfile.profile_photo)
             ? undefined // No validation for existing profiles
             : yupResolver(createValidationSchema(false)), // Only validate for new profiles
         defaultValues: {
@@ -231,7 +238,7 @@ const OnboardingForm = () => {
     });
 
     const watchedDepartmentId = watch("departmentId");
-    
+
     // TODO: Implement Firebase job data functionality
     const departments: any[] = [];
     const departmentsLoading = false;
@@ -252,7 +259,7 @@ const OnboardingForm = () => {
     useEffect(() => {
         if (userProfile) {
             console.log('Loading existing user data:', userProfile);
-            
+
             // Pre-populate form with existing data
             const formData = {
                 displayName: userProfile.display_name || '',
@@ -260,28 +267,28 @@ const OnboardingForm = () => {
                 roleId: userProfile.role_id || '',
                 currentShipId: userProfile.current_ship_id || ''
             };
-            
+
             console.log('Setting form data:', formData);
-            
+
             // Set form values directly
             reset(formData);
-            
+
             // Also set individual values to ensure they're registered
             setValue("displayName", userProfile.display_name || '');
             setValue("departmentId", userProfile.department_id || '');
             setValue("roleId", userProfile.role_id || '');
             setValue("currentShipId", userProfile.current_ship_id || '');
-            
+
             console.log('Form values set:', {
                 displayName: watch("displayName"),
                 departmentId: watch("departmentId"),
                 roleId: watch("roleId"),
                 currentShipId: watch("currentShipId")
             });
-            
+
             // Clear any existing validation errors
             clearErrors();
-            
+
             // Force clear validation errors after a short delay to ensure form is updated
             setTimeout(() => {
                 clearErrors();
@@ -311,10 +318,10 @@ const OnboardingForm = () => {
     // Custom submit handler that bypasses validation for existing profiles
     const handleCustomSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         try {
             setIsSubmitting(true);
-            
+
             // Get current form values
             const formData = {
                 displayName: watch("displayName") || userProfile?.display_name || '',
@@ -322,9 +329,9 @@ const OnboardingForm = () => {
                 roleId: watch("roleId") || userProfile?.role_id || '',
                 currentShipId: watch("currentShipId") || userProfile?.current_ship_id || ''
             };
-            
+
             console.log('Custom submit - Form data:', formData);
-            
+
             // Check if all required fields have values
             if (!formData.displayName || !formData.departmentId || !formData.roleId || !formData.currentShipId) {
                 console.error('Missing required fields:', formData);
@@ -332,7 +339,7 @@ const OnboardingForm = () => {
                 setIsSubmitting(false);
                 return;
             }
-            
+
             // Handle profile photo
             let profilePhotoBase64 = '';
             if (preview && typeof preview === 'string') {
@@ -340,7 +347,7 @@ const OnboardingForm = () => {
             } else if (userProfile?.profile_photo) {
                 profilePhotoBase64 = userProfile.profile_photo;
             }
-            
+
             const updateData = {
                 displayName: formData.displayName,
                 profilePhoto: profilePhotoBase64,
@@ -348,17 +355,17 @@ const OnboardingForm = () => {
                 roleId: formData.roleId,
                 currentShipId: formData.currentShipId
             };
-            
+
             console.log('Sending update data to backend:', updateData);
-            
+
             // Send profile data to backend
             try {
                 await updateProfile(updateData);
-                
+
                 // Wait a moment for the profile to be updated in the backend
                 // This prevents race conditions with OnboardingGuard
                 await new Promise(resolve => setTimeout(resolve, 500));
-                
+
             } catch (error: any) {
                 if (error.response?.status === 413) {
                     alert('Profile photo is too large. Please choose a smaller image.');
@@ -368,14 +375,14 @@ const OnboardingForm = () => {
                 setIsSubmitting(false);
                 return;
             }
-            
+
             // Profile update successful - redirect to dashboard
             // Set flag to indicate onboarding is complete (new user)
             localStorage.setItem('onboardingComplete', 'true');
-            
+
             // The OnboardingGuard will now see the updated profile and allow navigation
             navigate('/dashboard', { replace: true });
-            
+
         } catch (error) {
             alert("Failed to save your profile. Please try again.");
         } finally {
@@ -407,7 +414,7 @@ const OnboardingForm = () => {
                     </div>
                     <p className="text-red-600 font-medium">Failed to load your profile</p>
                     <p className="text-gray-600 text-sm mt-2">Please try refreshing the page</p>
-                    <button 
+                    <button
                         onClick={() => window.location.reload()}
                         className="mt-4 px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a]"
                     >
@@ -421,13 +428,13 @@ const OnboardingForm = () => {
     return (
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
             {isSubmitting && <Spinner />}
-            
+
             <form onSubmit={handleCustomSubmit} className="space-y-6 sm:space-y-8">
                 {/* Profile Photo and Display Name Section */}
                 <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
                     <h2 className="text-lg sm:text-xl font-bold text-[#069B93] mb-4">
-                        {userProfile && (userProfile.display_name || userProfile.profile_photo) 
-                            ? 'Update Your Profile' 
+                        {userProfile && (userProfile.display_name || userProfile.profile_photo)
+                            ? 'Update Your Profile'
                             : 'Profile Setup'
                         }
                     </h2>
@@ -477,7 +484,7 @@ const OnboardingForm = () => {
                                 )}
                             </div>
                         </div>
-                        
+
                         <div className="flex-1">
                             <div>
                                 <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -568,13 +575,13 @@ const OnboardingForm = () => {
                             <p className="text-red-500 text-sm mt-1">{errors.currentShipId.message}</p>
                         )}
                     </div>
-                    
+
                     <div className="bg-blue-50 p-3 sm:p-4 rounded-lg mt-4">
                         <p className="text-xs sm:text-sm text-blue-800">
                             <strong>Privacy Note:</strong> We'll only show today's ship to others. Your future assignments remain private.
                         </p>
                     </div>
-                    
+
                     {/* Missing Ship Feedback */}
                     <div className="mt-4 pt-4 border-t border-gray-200">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -598,7 +605,7 @@ const OnboardingForm = () => {
                     <p className="text-sm text-gray-600 mb-4">
                         Add your cruise assignments to help us suggest connections when you're on the same ship or in the same port.
                     </p>
-                    
+
                     {!showCalendar ? (
                         <div className="space-y-4">
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
@@ -609,13 +616,13 @@ const OnboardingForm = () => {
                                     <div>
                                         <h4 className="font-medium text-blue-900 text-sm sm:text-base">Schedule Management</h4>
                                         <p className="text-xs sm:text-sm text-blue-700 mt-1">
-                                            Create your cruise assignments directly in Crewvar. No need to upload documents - 
+                                            Create your cruise assignments directly in Crewvar. No need to upload documents -
                                             just select your cruise line, ship, and dates.
                                         </p>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <button
                                 type="button"
                                 onClick={() => setShowCalendar(true)}
@@ -636,7 +643,7 @@ const OnboardingForm = () => {
                                     Hide Calendar
                                 </button>
                             </div>
-                            
+
                             <CalendarView
                                 onAddAssignment={() => {
                                     setEditingAssignment(null);
@@ -657,7 +664,7 @@ const OnboardingForm = () => {
                     <div className="bg-white p-6 rounded-lg shadow-sm border">
                         <h2 className="text-xl font-bold text-[#069B93] mb-4">You're All Set!</h2>
                         <p className="text-gray-600 mb-4">Here are some crew members you might know:</p>
-                        
+
                         <div className="space-y-4">
                             {suggestedProfiles.map((profile) => (
                                 <div key={profile.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
@@ -705,15 +712,15 @@ const OnboardingForm = () => {
                             }}
                             className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors disabled:opacity-50 text-base sm:text-lg font-semibold"
                         >
-                            {isSubmitting 
-                                ? (userProfile && (userProfile.display_name || userProfile.profile_photo) 
-                                    ? "Updating your profile..." 
+                            {isSubmitting
+                                ? (userProfile && (userProfile.display_name || userProfile.profile_photo)
+                                    ? "Updating your profile..."
                                     : "Setting up your profile..."
-                                  )
-                                : (userProfile && (userProfile.display_name || userProfile.profile_photo) 
-                                    ? "Update Profile" 
+                                )
+                                : (userProfile && (userProfile.display_name || userProfile.profile_photo)
+                                    ? "Update Profile"
                                     : "Complete Setup"
-                                  )
+                                )
                             }
                         </button>
                     </div>

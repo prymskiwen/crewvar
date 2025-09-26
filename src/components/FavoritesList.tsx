@@ -9,8 +9,9 @@ interface FavoritesListProps {
 export const FavoritesList = ({ onViewProfile, onStartChat }: FavoritesListProps) => {
     // TODO: Implement Firebase favorites functionality
     const favorites: any[] = [];
-    const removeFavorite = () => {
+    const removeFavorite = async (userId: string) => {
         // Placeholder function
+        console.log('Remove favorite:', userId);
     };
     const [searchTerm, setSearchTerm] = useState("");
 

@@ -8,9 +8,9 @@ interface AdditionalPhotoUploadProps {
     index: number;
 }
 
-export const AdditionalPhotoUpload = ({ 
-    currentPhoto, 
-    onPhotoChange, 
+export const AdditionalPhotoUpload = ({
+    currentPhoto,
+    onPhotoChange,
     onPhotoDelete,
     className = '',
     index
@@ -18,15 +18,21 @@ export const AdditionalPhotoUpload = ({
     const [isDragOver, setIsDragOver] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    
+
     // TODO: Implement Firebase photo upload functionality
-    const uploadPhoto = () => {
+    const uploadPhoto = async (data: any, callbacks: any) => {
         // Placeholder function
+        console.log('Upload photo:', data);
+        // Simulate success
+        setTimeout(() => {
+            callbacks.onSuccess({ fileUrl: 'placeholder-url' });
+        }, 1000);
     };
     const isUploading = false;
     const error = null;
-    const deletePhoto = () => {
+    const deletePhoto = async (data: any) => {
         // Placeholder function
+        console.log('Delete photo:', data);
     };
     const isDeleting = false;
 
@@ -50,13 +56,13 @@ export const AdditionalPhotoUpload = ({
 
         // Upload file with specific slot
         uploadPhoto({ file, photoSlot: index + 1 }, {
-            onSuccess: (response) => {
+            onSuccess: (response: any) => {
                 onPhotoChange(response.fileUrl);
                 // Clean up preview URL
                 URL.revokeObjectURL(previewUrl);
                 setPreview(null);
             },
-            onError: (error) => {
+            onError: (error: any) => {
                 console.error('Upload error:', error);
                 // Clean up preview on error
                 URL.revokeObjectURL(previewUrl);
@@ -69,11 +75,8 @@ export const AdditionalPhotoUpload = ({
         deletePhoto({
             photoType: 'additional',
             photoSlot: (index + 1).toString()
-        }, {
-            onSuccess: () => {
-                onPhotoDelete();
-            }
         });
+        onPhotoDelete();
     }, [deletePhoto, index, onPhotoDelete]);
 
     const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,7 +89,7 @@ export const AdditionalPhotoUpload = ({
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
         setIsDragOver(false);
-        
+
         const file = e.dataTransfer.files[0];
         if (file) {
             handleFileSelect(file);
@@ -117,8 +120,8 @@ export const AdditionalPhotoUpload = ({
                     w-full h-32 rounded-lg border-2 border-dashed 
                     cursor-pointer transition-all duration-200
                     flex items-center justify-center overflow-hidden
-                    ${isDragOver 
-                        ? 'border-[#069B93] bg-[#069B93]/10' 
+                    ${isDragOver
+                        ? 'border-[#069B93] bg-[#069B93]/10'
                         : 'border-gray-300 hover:border-[#069B93] hover:bg-gray-50'
                     }
                     ${isLoading ? 'opacity-50 pointer-events-none' : ''}
@@ -177,7 +180,7 @@ export const AdditionalPhotoUpload = ({
 
             {/* Error message */}
             {error && (
-                <p className="text-red-500 text-xs mt-1 text-center">{error.message}</p>
+                <p className="text-red-500 text-xs mt-1 text-center">{String(error)}</p>
             )}
 
             {/* Hidden file input */}

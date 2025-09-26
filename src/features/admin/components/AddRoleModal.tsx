@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-// TODO: Implement Firebase data management functionality
+import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import { addRole, getDepartments, Department } from '../../../firebase/firestore';
 
 interface AddRoleModalProps {
   isOpen: boolean;
@@ -10,22 +11,46 @@ export const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose }) =
   const [name, setName] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [description, setDescription] = useState('');
-  // TODO: Implement Firebase data management functionality
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingDepartments, setIsLoadingDepartments] = useState(false);
+
+  // Fetch departments when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchDepartments();
+    }
+  }, [isOpen]);
+
+  const fetchDepartments = async () => {
+    setIsLoadingDepartments(true);
+    try {
+      const departmentsData = await getDepartments();
+      setDepartments(departmentsData);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      toast.error('Failed to load departments');
+    } finally {
+      setIsLoadingDepartments(false);
+    }
+  };
+
   const addRoleMutation = {
     mutateAsync: async (roleData: { name: string; departmentId: string; description?: string }) => {
-      // TODO: Implement Firebase add role functionality
-      console.log('Adding role:', roleData);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Role added successfully!');
+      setIsLoading(true);
+      try {
+        const roleId = await addRole(roleData);
+        console.log('Role added successfully with ID:', roleId);
+        toast.success('Role added successfully!');
+      } catch (error) {
+        console.error('Error adding role:', error);
+        toast.error('Failed to add role. Please try again.');
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
     },
-    isLoading: false
-  };
-  const departmentsData = {
-    departments: [
-      { id: '1', name: 'Entertainment' },
-      { id: '2', name: 'Food & Beverage' },
-      { id: '3', name: 'Housekeeping' }
-    ]
+    isLoading
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

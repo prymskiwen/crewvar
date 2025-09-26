@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-// TODO: Implement Firebase data management functionality
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { getDepartments, deleteDepartment, Department } from '../../../firebase/firestore';
 
 interface DeleteDepartmentModalProps {
   isOpen: boolean;
@@ -9,22 +9,48 @@ interface DeleteDepartmentModalProps {
 
 export const DeleteDepartmentModal: React.FC<DeleteDepartmentModalProps> = ({ isOpen, onClose }) => {
   const [selectedDepartmentId, setSelectedDepartmentId] = useState('');
-  // TODO: Implement Firebase data management functionality
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Fetch departments when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchDepartments();
+    }
+  }, [isOpen]);
+
+  const fetchDepartments = async () => {
+    setIsLoading(true);
+    try {
+      const departmentsData = await getDepartments();
+      setDepartments(departmentsData);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      toast.error('Failed to load departments');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const deleteDepartmentMutation = {
     mutateAsync: async (departmentId: string) => {
-      // TODO: Implement Firebase delete department functionality
-      console.log('Deleting department:', departmentId);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Department deleted successfully!');
+      setIsDeleting(true);
+      try {
+        await deleteDepartment(departmentId);
+        console.log('Department deleted successfully:', departmentId);
+        toast.success('Department deleted successfully!');
+        // Refresh the departments list
+        await fetchDepartments();
+      } catch (error) {
+        console.error('Error deleting department:', error);
+        toast.error('Failed to delete department. Please try again.');
+        throw error;
+      } finally {
+        setIsDeleting(false);
+      }
     },
-    isLoading: false
-  };
-  const departmentsData = {
-    departments: [
-      { id: '1', name: 'Entertainment' },
-      { id: '2', name: 'Food & Beverage' },
-      { id: '3', name: 'Housekeeping' }
-    ]
+    isLoading: isDeleting
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,20 +90,30 @@ export const DeleteDepartmentModal: React.FC<DeleteDepartmentModalProps> = ({ is
               <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1">
                 Select Department to Delete:
               </label>
-              <select
-                id="department"
-                value={selectedDepartmentId}
-                onChange={(e) => setSelectedDepartmentId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                required
-              >
-                <option value="">Choose a department...</option>
-                {departmentsData?.departments?.map((department: any) => (
-                  <option key={department.id} value={department.id}>
-                    {department.name}
+              {isLoading ? (
+                <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500 mr-2"></div>
+                  Loading departments...
+                </div>
+              ) : (
+                <select
+                  id="department"
+                  value={selectedDepartmentId}
+                  onChange={(e) => setSelectedDepartmentId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  required
+                  disabled={departments.length === 0}
+                >
+                  <option value="">
+                    {departments.length === 0 ? 'No departments available' : 'Choose a department...'}
                   </option>
-                ))}
-              </select>
+                  {departments.map((department) => (
+                    <option key={department.id} value={department.id}>
+                      {department.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">

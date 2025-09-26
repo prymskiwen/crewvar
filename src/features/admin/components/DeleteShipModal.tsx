@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { getShips, deleteShip, Ship } from '../../../firebase/firestore';
 
 interface DeleteShipModalProps {
   isOpen: boolean;
@@ -7,17 +8,49 @@ interface DeleteShipModalProps {
 }
 
 export const DeleteShipModal: React.FC<DeleteShipModalProps> = ({ isOpen, onClose }) => {
-  const [selectedCruiseLineId, setSelectedCruiseLineId] = useState('');
   const [selectedShipId, setSelectedShipId] = useState('');
-  // TODO: Implement Firebase data management functionality
+  const [ships, setShips] = useState<Ship[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Fetch ships when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchShips();
+    }
+  }, [isOpen]);
+
+  const fetchShips = async () => {
+    setIsLoading(true);
+    try {
+      const shipsData = await getShips();
+      setShips(shipsData);
+    } catch (error) {
+      console.error('Error fetching ships:', error);
+      toast.error('Failed to load ships');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const deleteShipMutation = {
     mutateAsync: async (shipId: string) => {
-      // TODO: Implement Firebase delete ship functionality
-      console.log('Deleting ship:', shipId);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Ship deleted successfully!');
+      setIsDeleting(true);
+      try {
+        await deleteShip(shipId);
+        console.log('Ship deleted successfully:', shipId);
+        toast.success('Ship deleted successfully!');
+        // Refresh the ships list
+        await fetchShips();
+      } catch (error) {
+        console.error('Error deleting ship:', error);
+        toast.error('Failed to delete ship. Please try again.');
+        throw error;
+      } finally {
+        setIsDeleting(false);
+      }
     },
-    isLoading: false
+    isLoading: isDeleting
   };
   const cruiseLinesData = {
     cruiseLines: [

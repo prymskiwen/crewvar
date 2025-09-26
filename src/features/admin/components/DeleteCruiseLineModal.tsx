@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { getCruiseLines, deleteCruiseLine, CruiseLine } from '../../../firebase/firestore';
 
 interface DeleteCruiseLineModalProps {
   isOpen: boolean;
@@ -8,23 +9,48 @@ interface DeleteCruiseLineModalProps {
 
 export const DeleteCruiseLineModal: React.FC<DeleteCruiseLineModalProps> = ({ isOpen, onClose }) => {
   const [selectedCruiseLineId, setSelectedCruiseLineId] = useState('');
-  // TODO: Implement Firebase data management functionality
+  const [cruiseLines, setCruiseLines] = useState<CruiseLine[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Fetch cruise lines when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchCruiseLines();
+    }
+  }, [isOpen]);
+
+  const fetchCruiseLines = async () => {
+    setIsLoading(true);
+    try {
+      const cruiseLinesData = await getCruiseLines();
+      setCruiseLines(cruiseLinesData);
+    } catch (error) {
+      console.error('Error fetching cruise lines:', error);
+      toast.error('Failed to load cruise lines');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const deleteCruiseLineMutation = {
     mutateAsync: async (cruiseLineId: string) => {
-      // TODO: Implement Firebase delete cruise line functionality
-      console.log('Deleting cruise line:', cruiseLineId);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Cruise line deleted successfully!');
+      setIsDeleting(true);
+      try {
+        await deleteCruiseLine(cruiseLineId);
+        console.log('Cruise line deleted successfully:', cruiseLineId);
+        toast.success('Cruise line deleted successfully!');
+        // Refresh the cruise lines list
+        await fetchCruiseLines();
+      } catch (error) {
+        console.error('Error deleting cruise line:', error);
+        toast.error('Failed to delete cruise line. Please try again.');
+        throw error;
+      } finally {
+        setIsDeleting(false);
+      }
     },
-    isLoading: false
-  };
-  const cruiseLinesData = {
-    cruiseLines: [
-      { id: '1', name: 'Carnival Cruise Line' },
-      { id: '2', name: 'Royal Caribbean International' },
-      { id: '3', name: 'Norwegian Cruise Line' }
-    ]
+    isLoading: isDeleting
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

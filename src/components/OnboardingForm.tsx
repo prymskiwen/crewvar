@@ -11,6 +11,7 @@ import { CalendarView } from "./CalendarView";
 import { MissingShipFeedback } from "./MissingShipFeedback";
 import { ISuggestedProfile } from "../types/onboarding";
 import { ICruiseAssignment } from "../types/calendar";
+import { useDepartments, useRolesByDepartment } from "../hooks/useDepartments";
 
 // Dynamic validation schema based on whether user has existing profile
 const createValidationSchema = (hasExistingProfile: boolean) => yup.object({
@@ -239,11 +240,9 @@ const OnboardingForm = () => {
 
     const watchedDepartmentId = watch("departmentId");
 
-    // TODO: Implement Firebase job data functionality
-    const departments: any[] = [];
-    const departmentsLoading = false;
-    const roles: any[] = [];
-    const rolesLoading = false;
+    // Load departments and roles from Firebase
+    const { departments, loading: departmentsLoading, error: departmentsError } = useDepartments();
+    const { roles, loading: rolesLoading, error: rolesError } = useRolesByDepartment(watchedDepartmentId);
 
     // Memoized callback functions to prevent infinite re-renders
     const handleCruiseLineChange = useCallback((cruiseLineId: string) => {
@@ -517,11 +516,18 @@ const OnboardingForm = () => {
                                         <span className="text-gray-500">Loading departments...</span>
                                     </div>
                                 </div>
+                            ) : departmentsError ? (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                                    <div className="w-full px-3 py-2 border border-red-300 rounded-lg bg-red-50">
+                                        <span className="text-red-500">Error loading departments. Please try again.</span>
+                                    </div>
+                                </div>
                             ) : (
                                 <CustomDropdown
                                     value={watch("departmentId") || userProfile?.department_id || ''}
                                     onChange={(value) => setValue("departmentId", value)}
-                                    options={departments}
+                                    options={departments.map(dept => ({ id: dept.id, name: dept.name }))}
                                     placeholder="Select your department"
                                     label="Department"
                                     maxHeight="200px"
@@ -539,12 +545,19 @@ const OnboardingForm = () => {
                                     <span className="text-gray-500">Loading positions...</span>
                                 </div>
                             </div>
+                        ) : rolesError ? (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
+                                <div className="w-full px-3 py-2 border border-red-300 rounded-lg bg-red-50">
+                                    <span className="text-red-500">Error loading positions. Please try again.</span>
+                                </div>
+                            </div>
                         ) : roles.length > 0 ? (
                             <div>
                                 <CustomDropdown
                                     value={watch("roleId") || userProfile?.role_id || ''}
                                     onChange={(value) => setValue("roleId", value)}
-                                    options={roles}
+                                    options={roles.map(role => ({ id: role.id, name: role.name }))}
                                     placeholder="Select your position"
                                     label="Position"
                                     maxHeight="200px"

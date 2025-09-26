@@ -181,25 +181,12 @@ export const AdminDashboard = () => {
   useCruiseLines();
   useDepartments();
 
-  // Check if user is admin
+  // Load admin data when component mounts
   useEffect(() => {
-    if (!currentUser) {
-      navigate('/login');
-      return;
+    if (currentUser) {
+      loadAdminData();
     }
-
-    // Check if user is admin (you might want to add this to the user object)
-    const isAdmin = currentUser.email === 'admin@crewvar.com' ||
-      (currentUser as any).isAdmin === true;
-
-    if (!isAdmin) {
-      toast.error('Access denied. Admin privileges required.');
-      navigate('/dashboard');
-      return;
-    }
-
-    loadAdminData();
-  }, [currentUser, navigate]);
+  }, [currentUser]);
 
   // Close custom dropdowns on outside click
   useEffect(() => {
@@ -220,9 +207,6 @@ export const AdminDashboard = () => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('No authentication token');
-
       // Load stats
       const statsData = await getAdminStats();
       setStats(statsData);

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import { addCruiseLine } from '../../../firebase/firestore';
 
 interface AddCruiseLineModalProps {
   isOpen: boolean;
@@ -8,14 +9,24 @@ interface AddCruiseLineModalProps {
 
 export const AddCruiseLineModal: React.FC<AddCruiseLineModalProps> = ({ isOpen, onClose }) => {
   const [name, setName] = useState('');
-  // TODO: Implement Firebase data management functionality
+  const [isLoading, setIsLoading] = useState(false);
+
   const addCruiseLineMutation = {
     mutateAsync: async (cruiseLineData: { name: string }) => {
-      // TODO: Implement Firebase add cruise line functionality
-      console.log('Adding cruise line:', cruiseLineData);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Cruise line added successfully!');
-    }
+      setIsLoading(true);
+      try {
+        const cruiseLineId = await addCruiseLine(cruiseLineData);
+        console.log('Cruise line added successfully with ID:', cruiseLineId);
+        toast.success('Cruise line added successfully!');
+      } catch (error) {
+        console.error('Error adding cruise line:', error);
+        toast.error('Failed to add cruise line. Please try again.');
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    isLoading
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

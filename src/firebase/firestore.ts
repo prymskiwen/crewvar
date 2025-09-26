@@ -6,6 +6,7 @@ import {
     addDoc,
     updateDoc,
     setDoc,
+    deleteDoc,
     query,
     where,
     orderBy,
@@ -397,4 +398,223 @@ export const getChatRooms = async (userId: string): Promise<IChatRoom[]> => {
             unreadCount: data.unreadCount || 0
         } as IChatRoom;
     });
+};
+
+// Department and Role Management
+export interface Department {
+    id: string;
+    name: string;
+    description?: string;
+    createdAt: any;
+    updatedAt: any;
+}
+
+export interface Role {
+    id: string;
+    name: string;
+    departmentId: string;
+    description?: string;
+    createdAt: any;
+    updatedAt: any;
+}
+
+export interface CruiseLine {
+    id: string;
+    name: string;
+    createdAt: any;
+    updatedAt: any;
+}
+
+export interface Ship {
+    id: string;
+    name: string;
+    cruiseLineId: string;
+    port?: string;
+    createdAt: any;
+    updatedAt: any;
+}
+
+// Get all departments
+export const getDepartments = async (): Promise<Department[]> => {
+    try {
+        const departmentsRef = collection(db, 'departments');
+        const q = query(departmentsRef, orderBy('name', 'asc'));
+        const querySnapshot = await getDocs(q);
+
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as Department));
+    } catch (error) {
+        console.error('Error fetching departments:', error);
+        throw error;
+    }
+};
+
+// Add new department
+export const addDepartment = async (departmentData: { name: string; description?: string }): Promise<string> => {
+    try {
+        const departmentsRef = collection(db, 'departments');
+        const docRef = await addDoc(departmentsRef, {
+            name: departmentData.name.trim(),
+            description: departmentData.description?.trim() || '',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+        return docRef.id;
+    } catch (error) {
+        console.error('Error adding department:', error);
+        throw error;
+    }
+};
+
+// Delete department
+export const deleteDepartment = async (departmentId: string): Promise<void> => {
+    try {
+        const departmentRef = doc(db, 'departments', departmentId);
+        await deleteDoc(departmentRef);
+    } catch (error) {
+        console.error('Error deleting department:', error);
+        throw error;
+    }
+};
+
+// Get all cruise lines
+export const getCruiseLines = async (): Promise<CruiseLine[]> => {
+    try {
+        const cruiseLinesRef = collection(db, 'cruiseLines');
+        const q = query(cruiseLinesRef, orderBy('name', 'asc'));
+        const querySnapshot = await getDocs(q);
+
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as CruiseLine));
+    } catch (error) {
+        console.error('Error fetching cruise lines:', error);
+        throw error;
+    }
+};
+
+// Add new cruise line
+export const addCruiseLine = async (cruiseLineData: { name: string }): Promise<string> => {
+    try {
+        const cruiseLinesRef = collection(db, 'cruiseLines');
+        const docRef = await addDoc(cruiseLinesRef, {
+            name: cruiseLineData.name.trim(),
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+        return docRef.id;
+    } catch (error) {
+        console.error('Error adding cruise line:', error);
+        throw error;
+    }
+};
+
+// Delete cruise line
+export const deleteCruiseLine = async (cruiseLineId: string): Promise<void> => {
+    try {
+        const cruiseLineRef = doc(db, 'cruiseLines', cruiseLineId);
+        await deleteDoc(cruiseLineRef);
+    } catch (error) {
+        console.error('Error deleting cruise line:', error);
+        throw error;
+    }
+};
+
+// Get all ships
+export const getShips = async (): Promise<Ship[]> => {
+    try {
+        const shipsRef = collection(db, 'ships');
+        const q = query(shipsRef, orderBy('name', 'asc'));
+        const querySnapshot = await getDocs(q);
+
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as Ship));
+    } catch (error) {
+        console.error('Error fetching ships:', error);
+        throw error;
+    }
+};
+
+// Add new ship
+export const addShip = async (shipData: { name: string; cruiseLineId: string; port?: string }): Promise<string> => {
+    try {
+        const shipsRef = collection(db, 'ships');
+        const docRef = await addDoc(shipsRef, {
+            name: shipData.name.trim(),
+            cruiseLineId: shipData.cruiseLineId,
+            port: shipData.port?.trim() || '',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+        return docRef.id;
+    } catch (error) {
+        console.error('Error adding ship:', error);
+        throw error;
+    }
+};
+
+// Delete ship
+export const deleteShip = async (shipId: string): Promise<void> => {
+    try {
+        const shipRef = doc(db, 'ships', shipId);
+        await deleteDoc(shipRef);
+    } catch (error) {
+        console.error('Error deleting ship:', error);
+        throw error;
+    }
+};
+
+// Add new role
+export const addRole = async (roleData: { name: string; departmentId: string; description?: string }): Promise<string> => {
+    try {
+        const rolesRef = collection(db, 'roles');
+        const docRef = await addDoc(rolesRef, {
+            name: roleData.name.trim(),
+            departmentId: roleData.departmentId,
+            description: roleData.description?.trim() || '',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+        return docRef.id;
+    } catch (error) {
+        console.error('Error adding role:', error);
+        throw error;
+    }
+};
+
+// Delete role
+export const deleteRole = async (roleId: string): Promise<void> => {
+    try {
+        const roleRef = doc(db, 'roles', roleId);
+        await deleteDoc(roleRef);
+    } catch (error) {
+        console.error('Error deleting role:', error);
+        throw error;
+    }
+};
+
+// Get roles by department
+export const getRolesByDepartment = async (departmentId: string): Promise<Role[]> => {
+    try {
+        const rolesRef = collection(db, 'roles');
+        const q = query(
+            rolesRef,
+            where('departmentId', '==', departmentId),
+            orderBy('name', 'asc')
+        );
+        const querySnapshot = await getDocs(q);
+
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as Role));
+    } catch (error) {
+        console.error('Error fetching roles by department:', error);
+        throw error;
+    }
 };

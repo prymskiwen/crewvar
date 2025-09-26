@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-// TODO: Implement Firebase data management functionality
+import { toast } from 'react-toastify';
+import { addDepartment } from '../../../firebase/firestore';
 
 interface AddDepartmentModalProps {
   isOpen: boolean;
@@ -9,15 +10,24 @@ interface AddDepartmentModalProps {
 export const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({ isOpen, onClose }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  // TODO: Implement Firebase data management functionality
+  const [isLoading, setIsLoading] = useState(false);
+
   const addDepartmentMutation = {
     mutateAsync: async (departmentData: { name: string; description?: string }) => {
-      // TODO: Implement Firebase add department functionality
-      console.log('Adding department:', departmentData);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Department added successfully!');
+      setIsLoading(true);
+      try {
+        const departmentId = await addDepartment(departmentData);
+        console.log('Department added successfully with ID:', departmentId);
+        toast.success('Department added successfully!');
+      } catch (error) {
+        console.error('Error adding department:', error);
+        toast.error('Failed to add department. Please try again.');
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
     },
-    isLoading: false
+    isLoading
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

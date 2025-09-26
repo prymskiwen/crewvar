@@ -23,7 +23,6 @@ export const AdminGuard = ({ children }: AdminGuardProps) => {
             const isAdminRoute = location.pathname.startsWith('/admin');
 
             if (!isAdminRoute) {
-                console.log('Admin user accessing non-admin route, redirecting to admin page');
                 navigate('/admin', {
                     replace: true,
                     state: {
@@ -34,18 +33,6 @@ export const AdminGuard = ({ children }: AdminGuardProps) => {
             }
         }
     }, [currentUser, userProfile, loading, location.pathname, navigate]);
-
-    // If user is admin and not on admin route, show loading while redirecting
-    if (userProfile?.isAdmin && !location.pathname.startsWith('/admin')) {
-        return (
-            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#B9F3DF' }}>
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#069B93] mx-auto mb-4"></div>
-                    <p className="text-[#069B93] font-medium">Redirecting to admin page...</p>
-                </div>
-            </div>
-        );
-    }
 
     return <>{children}</>;
 };

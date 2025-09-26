@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-// TODO: Implement Firebase data management functionality
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { getRolesByDepartment, deleteRole, Role, getDepartments, Department } from '../../../firebase/firestore';
 
 interface DeleteRoleModalProps {
   isOpen: boolean;
@@ -10,13 +10,68 @@ interface DeleteRoleModalProps {
 export const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({ isOpen, onClose }) => {
   const [selectedDepartmentId, setSelectedDepartmentId] = useState('');
   const [selectedRoleId, setSelectedRoleId] = useState('');
-  // TODO: Implement Firebase data management functionality
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Fetch departments when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchDepartments();
+    }
+  }, [isOpen]);
+
+  // Fetch roles when department changes
+  useEffect(() => {
+    if (selectedDepartmentId) {
+      fetchRoles(selectedDepartmentId);
+    } else {
+      setRoles([]);
+    }
+  }, [selectedDepartmentId]);
+
+  const fetchDepartments = async () => {
+    setIsLoading(true);
+    try {
+      const departmentsData = await getDepartments();
+      setDepartments(departmentsData);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      toast.error('Failed to load departments');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchRoles = async (departmentId: string) => {
+    try {
+      const rolesData = await getRolesByDepartment(departmentId);
+      setRoles(rolesData);
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      toast.error('Failed to load roles');
+    }
+  };
+
   const deleteRoleMutation = {
     mutateAsync: async (roleId: string) => {
-      // TODO: Implement Firebase delete role functionality
-      console.log('Deleting role:', roleId);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Role deleted successfully!');
+      setIsDeleting(true);
+      try {
+        await deleteRole(roleId);
+        console.log('Role deleted successfully:', roleId);
+        toast.success('Role deleted successfully!');
+        // Refresh the roles list
+        if (selectedDepartmentId) {
+          await fetchRoles(selectedDepartmentId);
+        }
+      } catch (error) {
+        console.error('Error deleting role:', error);
+        toast.error('Failed to delete role. Please try again.');
+        throw error;
+      } finally {
+        setIsDeleting(false);
+      }
     },
     isLoading: false
   };

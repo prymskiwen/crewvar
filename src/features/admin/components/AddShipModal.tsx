@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-// TODO: Implement Firebase data management functionality
+import { addShip, getCruiseLines, CruiseLine } from '../../../firebase/firestore';
 
 interface AddShipModalProps {
   isOpen: boolean;
@@ -10,22 +10,47 @@ interface AddShipModalProps {
 export const AddShipModal: React.FC<AddShipModalProps> = ({ isOpen, onClose }) => {
   const [name, setName] = useState('');
   const [cruiseLineId, setCruiseLineId] = useState('');
-  // TODO: Implement Firebase data management functionality
-  const addShipMutation = {
-    mutateAsync: async (shipData: { name: string; cruiseLineId: string }) => {
-      // TODO: Implement Firebase add ship functionality
-      console.log('Adding ship:', shipData);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Ship added successfully!');
-    },
-    isLoading: false
+  const [port, setPort] = useState('');
+  const [cruiseLines, setCruiseLines] = useState<CruiseLine[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingCruiseLines, setIsLoadingCruiseLines] = useState(false);
+
+  // Fetch cruise lines when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchCruiseLines();
+    }
+  }, [isOpen]);
+
+  const fetchCruiseLines = async () => {
+    setIsLoadingCruiseLines(true);
+    try {
+      const cruiseLinesData = await getCruiseLines();
+      setCruiseLines(cruiseLinesData);
+    } catch (error) {
+      console.error('Error fetching cruise lines:', error);
+      toast.error('Failed to load cruise lines');
+    } finally {
+      setIsLoadingCruiseLines(false);
+    }
   };
-  const cruiseLinesData = {
-    cruiseLines: [
-      { id: '1', name: 'Carnival Cruise Line' },
-      { id: '2', name: 'Royal Caribbean International' },
-      { id: '3', name: 'Norwegian Cruise Line' }
-    ]
+
+  const addShipMutation = {
+    mutateAsync: async (shipData: { name: string; cruiseLineId: string; port?: string }) => {
+      setIsLoading(true);
+      try {
+        const shipId = await addShip(shipData);
+        console.log('Ship added successfully with ID:', shipId);
+        toast.success('Ship added successfully!');
+      } catch (error) {
+        console.error('Error adding ship:', error);
+        toast.error('Failed to add ship. Please try again.');
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    isLoading
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

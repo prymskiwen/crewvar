@@ -116,17 +116,9 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
                 return;
             }
 
-            // ADMIN LOGIC: Skip onboarding entirely and redirect to admin page
+            // ADMIN LOGIC: Skip onboarding entirely - let AdminGuard handle admin routing
             if (isAdmin) {
-                console.log('Admin user detected, redirecting to admin page');
-                // Always redirect admins to admin page, regardless of current route
-                navigate('/admin', {
-                    replace: true,
-                    state: {
-                        from: location.pathname,
-                        reason: 'Admin users must use admin interface'
-                    }
-                });
+                console.log('Admin user detected, skipping onboarding - AdminGuard will handle routing');
                 return;
             }
 

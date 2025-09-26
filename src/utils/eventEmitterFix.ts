@@ -10,15 +10,33 @@
  * This is particularly useful in development environments with hot reloading
  */
 export const fixEventEmitterMemoryLeak = (): void => {
+    // This function is primarily for Node.js environments
+    // In browser environments, we rely on the browser's built-in memory management
+    if (typeof window !== 'undefined') {
+        // Browser environment - no need for EventEmitter fixes
+        console.log('Running in browser environment - using browser memory management');
+        return;
+    }
+
+    // Only run in Node.js environments (like during build processes)
     if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
-        // Increase max listeners for development
-        const EventEmitter = require('events');
-        EventEmitter.defaultMaxListeners = 20;
+        try {
+            // Check if we're in a Node.js environment with require available
+            if (typeof require !== 'undefined') {
+                const EventEmitter = require('events');
+                EventEmitter.defaultMaxListeners = 20;
 
-        // Set max listeners for process
-        process.setMaxListeners(20);
+                // Set max listeners for process if available
+                if (process.setMaxListeners) {
+                    process.setMaxListeners(20);
+                }
 
-        console.log('EventEmitter max listeners increased to prevent memory leak warnings');
+                console.log('EventEmitter max listeners increased to prevent memory leak warnings');
+            }
+        } catch (error) {
+            // Silently handle if EventEmitter is not available
+            console.log('EventEmitter not available in current environment');
+        }
     }
 };
 

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContextFirebase';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getProfilePhotoUrl } from '../utils/imageUtils';
+import { getUsers, banUser, unbanUser, User } from '../firebase/firestore';
 // TODO: Implement Firebase admin functionality
 import { AddCruiseLineModal } from '../features/admin/components/AddCruiseLineModal';
 import { AddShipModal } from '../features/admin/components/AddShipModal';
@@ -71,21 +72,8 @@ const getAdminStats = async (): Promise<AdminStats> => {
   };
 };
 
-const getUsers = async (limit: number = 50): Promise<any[]> => {
-  // TODO: Implement with Firebase Firestore
-  console.log('Get users with limit:', limit);
-  return [];
-};
 
-const banUser = async (userId: string, reason: string): Promise<void> => {
-  // TODO: Implement with Firebase Firestore
-  console.log('Ban user:', userId, 'Reason:', reason);
-};
 
-const unbanUser = async (userId: string): Promise<void> => {
-  // TODO: Implement with Firebase Firestore
-  console.log('Unban user:', userId);
-};
 
 interface AdminStats {
   users: {
@@ -108,19 +96,6 @@ interface AdminStats {
   };
 }
 
-interface User {
-  id: string;
-  email: string;
-  display_name: string;
-  profile_photo: string;
-  is_admin: boolean;
-  is_email_verified: boolean;
-  is_active: boolean;
-  is_banned: boolean;
-  ban_reason?: string;
-  created_at: string;
-  last_login?: string;
-}
 
 export const AdminDashboard = () => {
   const { currentUser } = useAuth();
@@ -225,6 +200,7 @@ export const AdminDashboard = () => {
 
       // Load users
       const usersData = await getUsers(50);
+      console.log('Loaded users:', usersData);
       setUsers(usersData);
 
     } catch (err: any) {
@@ -551,104 +527,111 @@ export const AdminDashboard = () => {
                         <tr>
                           <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                           <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Status</th>
-                          <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Created</th>
-                          <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Last Login</th>
                           <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredUsers.map((user) => (
-                          <tr key={user.id} className="hover:bg-gray-50">
-                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
-                                  <img
-                                    className="h-8 w-8 sm:h-10 sm:w-10 rounded-full"
-                                    src={getProfilePhotoUrl(user.profile_photo)}
-                                    alt={user.display_name}
-                                  />
-                                </div>
-                                <div className="ml-3 sm:ml-4 min-w-0">
-                                  <div className="text-sm font-medium text-gray-900 truncate">{user.display_name}</div>
-                                  <div className="text-xs sm:text-sm text-gray-500 truncate">{user.email}</div>
-                                  {/* Mobile status badges */}
-                                  <div className="flex flex-wrap gap-1 mt-1 sm:hidden">
-                                    <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${user.is_banned ? 'bg-red-100 text-red-800' :
-                                      user.is_active ? 'bg-green-100 text-green-800' :
-                                        'bg-gray-100 text-gray-800'
-                                      }`}>
-                                      {user.is_banned ? 'Banned' : user.is_active ? 'Active' : 'Inactive'}
-                                    </span>
-                                    {!user.is_email_verified && (
-                                      <span className="inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                        Unverified
-                                      </span>
-                                    )}
-                                    {user.is_admin && (
-                                      <span className="inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                        Admin
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
-                              <div className="flex flex-col space-y-1">
-                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.is_banned ? 'bg-red-100 text-red-800' :
-                                  user.is_active ? 'bg-green-100 text-green-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
-                                  {user.is_banned ? 'Banned' : user.is_active ? 'Active' : 'Inactive'}
-                                </span>
-                                {!user.is_email_verified && (
-                                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                    Unverified
-                                  </span>
-                                )}
-                                {user.is_admin && (
-                                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    Admin
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
-                              {new Date(user.created_at).toLocaleDateString()}
-                            </td>
-                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
-                              {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
-                            </td>
-                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
-                                {user.is_banned ? (
-                                  <button
-                                    onClick={() => handleUnbanUser(user.id)}
-                                    className="text-green-600 hover:text-green-900 text-xs sm:text-sm"
-                                  >
-                                    Unban
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      const reason = prompt('Ban reason:');
-                                      if (reason) handleBanUser(user.id, reason);
-                                    }}
-                                    className="text-red-600 hover:text-red-900 text-xs sm:text-sm"
-                                  >
-                                    Ban
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => navigate(`/admin/users/${user.id}`)}
-                                  className="text-blue-600 hover:text-blue-900 text-xs sm:text-sm"
-                                >
-                                  View
-                                </button>
+                        {filteredUsers.length === 0 ? (
+                          <tr>
+                            <td colSpan={3} className="px-6 py-12 text-center text-gray-500">
+                              <div className="flex flex-col items-center">
+                                <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                                </svg>
+                                <p className="text-lg font-medium text-gray-900 mb-2">No users found</p>
+                                <p className="text-sm text-gray-500">
+                                  {searchTerm ? `No users match "${searchTerm}"` : 'No users available'}
+                                </p>
                               </div>
                             </td>
                           </tr>
-                        ))}
+                        ) : (
+                          filteredUsers.map((user) => (
+                            <tr key={user.id} className="hover:bg-gray-50">
+                              <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="flex-shrink-0 h-10 w-10">
+                                    <img
+                                      className="h-10 w-10 rounded-full object-cover"
+                                      src={getProfilePhotoUrl(user.profile_photo)}
+                                      alt={user.display_name}
+                                      onError={(e) => {
+                                        e.currentTarget.src = getProfilePhotoUrl();
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="ml-4 min-w-0 flex-1">
+                                    <div className="text-sm font-medium text-gray-900 truncate">
+                                      {user.display_name || 'Undefined Name'}
+                                    </div>
+                                    <div className="text-sm text-gray-500 truncate">
+                                      {user.email || 'No email'}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-3 sm:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                                <div className="flex flex-col space-y-1">
+                                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.is_banned ? 'bg-red-100 text-red-800' :
+                                    user.is_active ? 'bg-green-100 text-green-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
+                                    {user.is_banned ? 'Banned' : user.is_active ? 'Active' : 'Inactive'}
+                                  </span>
+                                  {!user.is_email_verified && (
+                                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                      Unverified
+                                    </span>
+                                  )}
+                                  {user.is_admin && (
+                                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                      Admin
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
+                                  {user.is_banned ? (
+                                    <button
+                                      onClick={() => handleUnbanUser(user.id)}
+                                      className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center space-x-1"
+                                    >
+                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                      </svg>
+                                      <span>Unban</span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        const reason = prompt('Ban reason:');
+                                        if (reason) handleBanUser(user.id, reason);
+                                      }}
+                                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center space-x-1"
+                                    >
+                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-12.728 12.728m0-12.728l12.728 12.728" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" />
+                                      </svg>
+                                      <span>Ban</span>
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => navigate(`/admin/users/${user.id}`)}
+                                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center space-x-1"
+                                  >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    <span>View</span>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
                       </tbody>
                     </table>
                   </div>

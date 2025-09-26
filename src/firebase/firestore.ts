@@ -420,6 +420,40 @@ export interface Role {
     updatedAt: any;
 }
 
+export interface User {
+    id: string;
+    email: string;
+    display_name: string;
+    bio?: string;
+    is_email_verified: boolean;
+    verification_token?: string;
+    verification_token_expires?: string;
+    password_reset_token?: string;
+    password_reset_expires?: string;
+    is_active: boolean;
+    is_admin: boolean;
+    created_at: string;
+    updated_at: string;
+    profile_photo?: string;
+    department_id?: string;
+    subcategory_id?: string;
+    role_id?: string;
+    current_ship_id?: string;
+    phone?: string;
+    instagram?: string;
+    twitter?: string;
+    facebook?: string;
+    snapchat?: string;
+    website?: string;
+    additional_photo_1?: string;
+    additional_photo_2?: string;
+    additional_photo_3?: string;
+    is_banned: boolean;
+    ban_expires_at?: string;
+    ban_reason?: string;
+    last_login?: string;
+}
+
 export interface CruiseLine {
     id: string;
     name: string;
@@ -653,6 +687,140 @@ export const deleteRole = async (roleId: string): Promise<void> => {
         await deleteDoc(roleRef);
     } catch (error) {
         console.error('Error deleting role:', error);
+        throw error;
+    }
+};
+
+// User Management Functions
+
+// Get all users
+export const getUsers = async (limitCount: number = 50): Promise<User[]> => {
+    try {
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, orderBy('createdAt', 'desc'), limit(limitCount));
+        const querySnapshot = await getDocs(q);
+
+        const users: User[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            users.push({
+                id: doc.id,
+                email: data.email || '',
+                display_name: data.displayName || data.display_name || '',
+                bio: data.bio || undefined,
+                is_email_verified: data.emailVerified || data.is_email_verified || false,
+                verification_token: data.verificationToken || data.verification_token || undefined,
+                verification_token_expires: data.verificationTokenExpires?.toDate?.()?.toISOString() || data.verification_token_expires || undefined,
+                password_reset_token: data.passwordResetToken || data.password_reset_token || undefined,
+                password_reset_expires: data.passwordResetExpires?.toDate?.()?.toISOString() || data.password_reset_expires || undefined,
+                is_active: data.isActive !== false, // Default to true if not set
+                is_admin: data.isAdmin || data.is_admin || false,
+                created_at: data.createdAt?.toDate?.()?.toISOString() || data.created_at || new Date().toISOString(),
+                updated_at: data.updatedAt?.toDate?.()?.toISOString() || data.updated_at || new Date().toISOString(),
+                profile_photo: data.profilePhoto || data.profile_photo || undefined,
+                department_id: data.departmentId || data.department_id || undefined,
+                subcategory_id: data.subcategoryId || data.subcategory_id || undefined,
+                role_id: data.roleId || data.role_id || undefined,
+                current_ship_id: data.currentShipId || data.current_ship_id || undefined,
+                phone: data.phone || undefined,
+                instagram: data.instagram || undefined,
+                twitter: data.twitter || undefined,
+                facebook: data.facebook || undefined,
+                snapchat: data.snapchat || undefined,
+                website: data.website || undefined,
+                additional_photo_1: data.additionalPhoto1 || data.additional_photo_1 || undefined,
+                additional_photo_2: data.additionalPhoto2 || data.additional_photo_2 || undefined,
+                additional_photo_3: data.additionalPhoto3 || data.additional_photo_3 || undefined,
+                is_banned: data.isBanned || data.is_banned || false,
+                ban_expires_at: data.banExpiresAt?.toDate?.()?.toISOString() || data.ban_expires_at || undefined,
+                ban_reason: data.banReason || data.ban_reason || undefined,
+                last_login: data.lastLoginAt?.toDate?.()?.toISOString() || data.last_login || undefined
+            });
+        });
+
+        return users;
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+    }
+};
+
+// Ban user
+export const banUser = async (userId: string, reason: string, expiresAt?: Date): Promise<void> => {
+    try {
+        const userRef = doc(db, 'users', userId);
+        const updateData: any = {
+            isBanned: true,
+            banReason: reason,
+            updatedAt: serverTimestamp()
+        };
+
+        if (expiresAt) {
+            updateData.banExpiresAt = expiresAt;
+        }
+
+        await updateDoc(userRef, updateData);
+    } catch (error) {
+        console.error('Error banning user:', error);
+        throw error;
+    }
+};
+
+// Unban user
+export const unbanUser = async (userId: string): Promise<void> => {
+    try {
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, {
+            isBanned: false,
+            banReason: null,
+            banExpiresAt: null,
+            updatedAt: serverTimestamp()
+        });
+    } catch (error) {
+        console.error('Error unbanning user:', error);
+        throw error;
+    }
+};
+
+// Update user status
+export const updateUserStatus = async (userId: string, updates: {
+    isActive?: boolean;
+    isAdmin?: boolean;
+    isEmailVerified?: boolean;
+    departmentId?: string;
+    subcategoryId?: string;
+    roleId?: string;
+    currentShipId?: string;
+    phone?: string;
+    instagram?: string;
+    twitter?: string;
+    facebook?: string;
+    snapchat?: string;
+    website?: string;
+}): Promise<void> => {
+    try {
+        const userRef = doc(db, 'users', userId);
+        const updateData: any = {
+            updatedAt: serverTimestamp()
+        };
+
+        if (updates.isActive !== undefined) updateData.isActive = updates.isActive;
+        if (updates.isAdmin !== undefined) updateData.isAdmin = updates.isAdmin;
+        if (updates.isEmailVerified !== undefined) updateData.emailVerified = updates.isEmailVerified;
+        if (updates.departmentId !== undefined) updateData.departmentId = updates.departmentId;
+        if (updates.subcategoryId !== undefined) updateData.subcategoryId = updates.subcategoryId;
+        if (updates.roleId !== undefined) updateData.roleId = updates.roleId;
+        if (updates.currentShipId !== undefined) updateData.currentShipId = updates.currentShipId;
+        if (updates.phone !== undefined) updateData.phone = updates.phone;
+        if (updates.instagram !== undefined) updateData.instagram = updates.instagram;
+        if (updates.twitter !== undefined) updateData.twitter = updates.twitter;
+        if (updates.facebook !== undefined) updateData.facebook = updates.facebook;
+        if (updates.snapchat !== undefined) updateData.snapchat = updates.snapchat;
+        if (updates.website !== undefined) updateData.website = updates.website;
+
+        await updateDoc(userRef, updateData);
+    } catch (error) {
+        console.error('Error updating user status:', error);
         throw error;
     }
 };

@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { usePortConnection } from "../context/PortConnectionContext";
-import { useQuickCheckIn } from "../context/QuickCheckInContext";
+// TODO: Implement Firebase port connection and quick check-in functionality
 import { getConnectionDuration } from "../data/port-connections-data";
 import { defaultAvatar } from "../utils/images";
 
@@ -11,9 +10,12 @@ interface WhoInPortProps {
 }
 
 export const WhoInPort = ({ portName, date, onConnect }: WhoInPortProps) => {
-    const { currentShip } = useQuickCheckIn();
-    const { getCrewInSamePort } = usePortConnection();
-    const [connectionRequests, setConnectionRequests] = useState<{[key: string]: 'pending' | 'sent' | 'accepted' | 'declined' | 'none'}>({});
+    // TODO: Implement Firebase quick check-in and port connection functionality
+    const currentShip = null;
+    const getCrewInSamePort = () => {
+        // Placeholder function
+    };
+    const [connectionRequests, setConnectionRequests] = useState<{ [key: string]: 'pending' | 'sent' | 'accepted' | 'declined' | 'none' }>({});
 
     if (!currentShip) {
         return (
@@ -29,11 +31,11 @@ export const WhoInPort = ({ portName, date, onConnect }: WhoInPortProps) => {
 
     const handleConnect = (userId: string, userName: string) => {
         setConnectionRequests(prev => ({ ...prev, [userId]: 'sent' }));
-        
+
         if (onConnect) {
             onConnect(userId, userName);
         }
-        
+
         // Simulate connection request
         setTimeout(() => {
             setConnectionRequests(prev => ({ ...prev, [userId]: 'pending' }));
@@ -102,13 +104,13 @@ export const WhoInPort = ({ portName, date, onConnect }: WhoInPortProps) => {
                 {crewInSamePort.map((crewMember) => {
                     const connectionStatus = getConnectionStatus(crewMember.userId);
                     const isDisabled = connectionStatus !== 'none' && connectionStatus !== 'declined';
-                    
+
                     return (
                         <div key={crewMember.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
                             {/* Avatar */}
                             <div className="relative">
-                                <img 
-                                    src={defaultAvatar} 
+                                <img
+                                    src={defaultAvatar}
                                     alt={crewMember.userDisplayName}
                                     className="w-12 h-12 rounded-full object-cover"
                                 />
@@ -136,11 +138,10 @@ export const WhoInPort = ({ portName, date, onConnect }: WhoInPortProps) => {
                                 <button
                                     onClick={() => handleConnect(crewMember.userId, crewMember.userDisplayName)}
                                     disabled={isDisabled}
-                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                                        isDisabled 
-                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isDisabled
+                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                             : getButtonStyle(connectionStatus)
-                                    }`}
+                                        }`}
                                 >
                                     {getButtonText(connectionStatus)}
                                 </button>
@@ -159,7 +160,7 @@ export const WhoInPort = ({ portName, date, onConnect }: WhoInPortProps) => {
                     <div>
                         <h4 className="font-medium text-blue-900">Port Connections</h4>
                         <p className="text-sm text-blue-700 mt-1">
-                            These crew members are from ships docked in the same port as your ship today. 
+                            These crew members are from ships docked in the same port as your ship today.
                             Connect with them to chat and plan meetups!
                         </p>
                     </div>

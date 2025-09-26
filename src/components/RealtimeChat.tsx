@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRealtimeChat } from '../hooks/useRealtimeChat';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContextFirebase';
 import { getProfilePhotoUrl } from '../utils/imageUtils';
 
 interface RealtimeChatProps {

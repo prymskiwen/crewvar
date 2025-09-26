@@ -3,10 +3,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { useUpdateUserProfile, useUserProfile } from "../features/auth/api/userProfile";
-import { useAllShips } from "../features/cruise/api/cruiseData";
 import { Spinner } from "./Elements/Spinner";
-import { useDepartments, useRolesByDepartment } from '../features/auth/api/jobDataHooks';
 import { ShipSelection } from "./ShipSelection";
 import { getProfilePhotoUrl } from "../utils/imageUtils";
 import { AssignmentForm } from "./AssignmentForm";
@@ -187,9 +184,14 @@ const CustomDropdown = ({
 
 const OnboardingForm = () => {
     const navigate = useNavigate();
-    const { data: userProfile, isLoading: profileLoading, error: profileError } = useUserProfile();
-    const { data: allShips = [] } = useAllShips();
-    const { mutateAsync: updateProfile } = useUpdateUserProfile();
+    // TODO: Implement Firebase user profile functionality
+    const userProfile = null;
+    const profileLoading = false;
+    const profileError = null;
+    const allShips: any[] = [];
+    const updateProfile = () => {
+        // Placeholder function
+    };
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [preview, setPreview] = useState<string | ArrayBuffer | null>(null);
     const [suggestedProfiles] = useState<ISuggestedProfile[]>([]);
@@ -230,8 +232,11 @@ const OnboardingForm = () => {
 
     const watchedDepartmentId = watch("departmentId");
     
-    const { data: departments = [], isLoading: departmentsLoading } = useDepartments();
-    const { data: roles = [], isLoading: rolesLoading } = useRolesByDepartment(watchedDepartmentId);
+    // TODO: Implement Firebase job data functionality
+    const departments: any[] = [];
+    const departmentsLoading = false;
+    const roles: any[] = [];
+    const rolesLoading = false;
 
     // Memoized callback functions to prevent infinite re-renders
     const handleCruiseLineChange = useCallback((cruiseLineId: string) => {

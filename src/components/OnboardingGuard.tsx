@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { useOnboardingGuard } from "../context/OnboardingGuardContext";
-import { useUserProfile } from "../features/auth/api/userProfile";
+import { useAuth } from "../context/AuthContextFirebase";
+import { getUserProfile } from "../firebase/firestore";
 
 interface OnboardingGuardProps {
     children: React.ReactNode;
@@ -12,23 +11,41 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     const navigate = useNavigate();
     const location = useLocation();
     const [isLoading, setIsLoading] = useState(true);
-    const { currentUser, isLoading: authLoading } = useAuth();
-    const { 
-        checkOnboardingStatus 
-    } = useOnboardingGuard();
-    
-    // Get actual user profile data
-    const { data: userProfile, isLoading: profileLoading } = useUserProfile();
+    const [userProfile, setUserProfile] = useState<any>(null);
+    const [profileLoading, setProfileLoading] = useState(false);
+    const { currentUser, loading: authLoading } = useAuth();
 
-    // Check if user is admin
-    const isAdmin = currentUser?.isAdmin === true;
+    // Fetch user profile
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            if (currentUser && !authLoading) {
+                setProfileLoading(true);
+                try {
+                    const profile = await getUserProfile(currentUser.uid);
+                    setUserProfile(profile);
+                } catch (error) {
+                    console.error('Error fetching user profile:', error);
+                } finally {
+                    setProfileLoading(false);
+                    setIsLoading(false);
+                }
+            } else if (!authLoading) {
+                setIsLoading(false);
+            }
+        };
+
+        fetchUserProfile();
+    }, [currentUser, authLoading]);
+
+    // Check if user is admin (from user profile, not Firebase user)
+    const isAdmin = userProfile?.isAdmin === true;
 
     // Check if user profile is complete based on actual data
-    const isProfileComplete = userProfile && 
-        userProfile.display_name && 
-        userProfile.profile_photo && 
-        userProfile.department_id && 
-        userProfile.role_id && 
+    const isProfileComplete = userProfile &&
+        userProfile.display_name &&
+        userProfile.profile_photo &&
+        userProfile.department_id &&
+        userProfile.role_id &&
         userProfile.current_ship_id;
 
     // Check if onboarding is marked as complete in localStorage
@@ -53,31 +70,14 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     ];
 
     // Check if current route is public
-    const isPublicRoute = publicRoutes.some(route => 
+    const isPublicRoute = publicRoutes.some(route =>
         location.pathname === route || location.pathname.startsWith(route + '/')
     );
 
-    useEffect(() => {
-        // Small delay to allow auth state to restore
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 1000);
-
-        return () => clearTimeout(timer);
-    }, []);
-
-    // Check onboarding status when user is authenticated
-    useEffect(() => {
-        if (currentUser && !isPublicRoute) {
-            checkOnboardingStatus("current_user").catch(error => {
-                console.error('Failed to check onboarding status:', error);
-            });
-        }
-    }, [currentUser, isPublicRoute, checkOnboardingStatus]);
 
     useEffect(() => {
         // Don't redirect while loading
-        if (isLoading || authLoading || profileLoading) return;
+        if (isLoading || authLoading) return;
 
         // Check if AssignmentForm is open - if so, don't redirect
         const assignmentFormOpen = localStorage.getItem('assignmentFormOpen') === 'true';
@@ -89,7 +89,7 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
         // If not authenticated and trying to access protected route, redirect to login
         if (!currentUser && !isPublicRoute) {
             console.log('No user logged in, redirecting to login');
-            navigate('/auth/login', { 
+            navigate('/auth/login', {
                 replace: true,
                 state: { from: location.pathname }
             });
@@ -102,13 +102,13 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
             if (profileLoading) {
                 return;
             }
-            
+
             // If email is not verified, redirect to verification pending page
             if (!isEmailVerified) {
                 console.log('Email not verified, redirecting to verification pending');
-                navigate('/auth/verification-pending', { 
+                navigate('/auth/verification-pending', {
                     replace: true,
-                    state: { 
+                    state: {
                         from: location.pathname,
                         email: currentUser.email
                     }
@@ -120,9 +120,9 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
             if (isAdmin) {
                 console.log('Admin user detected, redirecting to admin page');
                 // Always redirect admins to admin page, regardless of current route
-                navigate('/admin', { 
+                navigate('/admin', {
                     replace: true,
-                    state: { 
+                    state: {
                         from: location.pathname,
                         reason: 'Admin users must use admin interface'
                     }
@@ -138,12 +138,12 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
                 console.log('Is profile complete:', isProfileComplete);
                 console.log('Is new user:', isNewUser);
                 console.log('Onboarding complete flag:', isOnboardingComplete);
-                
+
                 // Only redirect if we're not already on the onboarding page
                 if (location.pathname !== '/onboarding') {
-                    navigate('/onboarding', { 
+                    navigate('/onboarding', {
                         replace: true,
-                        state: { 
+                        state: {
                             from: location.pathname
                         }
                     });

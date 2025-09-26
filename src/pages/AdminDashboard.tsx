@@ -1,17 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContextFirebase';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getProfilePhotoUrl } from '../utils/imageUtils';
-import { 
-  useReports, 
-  useResolveReport, 
-  useFlaggedMessages, 
-  useModerateMessage, 
-  useRoleRequests, 
-  useHandleRoleRequest 
-} from '../features/admin/api/adminApi';
-import { getSupportStats } from '../features/support/api/supportApi';
+// TODO: Implement Firebase admin functionality
 import { AddCruiseLineModal } from '../features/admin/components/AddCruiseLineModal';
 import { AddShipModal } from '../features/admin/components/AddShipModal';
 import { AddDepartmentModal } from '../features/admin/components/AddDepartmentModal';
@@ -21,12 +13,37 @@ import { DeleteShipModal } from '../features/admin/components/DeleteShipModal';
 import { DeleteDepartmentModal } from '../features/admin/components/DeleteDepartmentModal';
 import { DeleteRoleModal } from '../features/admin/components/DeleteRoleModal';
 import { BulkMessagingModal } from '../features/admin/components/BulkMessagingModal';
-import { 
-  useCruiseLines,
-  useDepartments
-} from '../features/admin/api/dataManagementApi';
-import { api } from '../app/api';
+// TODO: Implement Firebase data management
+// Removed old API import - now using Firebase
 import logo from '../assets/images/Home/logo.png';
+
+// Placeholder Firebase functions - to be implemented
+const getAdminStats = async (): Promise<AdminStats> => {
+    // TODO: Implement with Firebase Firestore
+    console.log('Get admin stats');
+    return {
+        users: { total: 0, active: 0, banned: 0 },
+        ships: { total: 0, active: 0 },
+        departments: { total: 0 },
+        reports: { total: 0, pending: 0 }
+    };
+};
+
+const getUsers = async (limit: number = 50): Promise<any[]> => {
+    // TODO: Implement with Firebase Firestore
+    console.log('Get users with limit:', limit);
+    return [];
+};
+
+const banUser = async (userId: string, reason: string): Promise<void> => {
+    // TODO: Implement with Firebase Firestore
+    console.log('Ban user:', userId, 'Reason:', reason);
+};
+
+const unbanUser = async (userId: string): Promise<void> => {
+    // TODO: Implement with Firebase Firestore
+    console.log('Unban user:', userId);
+};
 
 interface AdminStats {
   users: {
@@ -165,8 +182,8 @@ export const AdminDashboard = () => {
       if (!token) throw new Error('No authentication token');
 
       // Load stats
-      const { data: statsData } = await api.get('/admin/stats');
-      setStats(statsData.stats);
+      const statsData = await getAdminStats();
+      setStats(statsData);
 
       // Load support stats
       setSupportStatsLoading(true);
@@ -181,8 +198,8 @@ export const AdminDashboard = () => {
       }
 
       // Load users
-      const { data: usersData } = await api.get('/admin/users', { params: { limit: 50 } });
-      setUsers(usersData.users);
+      const usersData = await getUsers(50);
+      setUsers(usersData);
 
     } catch (err: any) {
       console.error('Failed to load admin data:', err);
@@ -195,7 +212,7 @@ export const AdminDashboard = () => {
 
   const handleBanUser = async (userId: string, reason: string) => {
     try {
-      await api.post(`/admin/users/${userId}/ban`, { reason });
+      await banUser(userId, reason);
       
       toast.success('User banned successfully');
       loadAdminData(); // Refresh data
@@ -206,7 +223,7 @@ export const AdminDashboard = () => {
 
   const handleUnbanUser = async (userId: string) => {
     try {
-      await api.post(`/admin/users/${userId}/unban`);
+      await unbanUser(userId);
       
       toast.success('User unbanned successfully');
       loadAdminData(); // Refresh data

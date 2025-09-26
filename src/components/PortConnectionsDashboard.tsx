@@ -1,16 +1,21 @@
 import { useState } from "react";
-import { usePortConnection } from "../context/PortConnectionContext";
-import { useQuickCheckIn } from "../context/QuickCheckInContext";
+// TODO: Implement Firebase port connection and quick check-in functionality
 import { PortConnectionForm } from "./PortConnectionForm";
 import { WhoInPort } from "./WhoInPort";
 import { getConnectionDuration } from "../data/port-connections-data";
 
 export const PortConnectionsDashboard = () => {
-    const { currentShip } = useQuickCheckIn();
-    const { getConnectionsForShip, removePortConnection } = usePortConnection();
+    // TODO: Implement Firebase quick check-in and port connection functionality
+    const currentShip = null;
+    const getConnectionsForShip = () => {
+        // Placeholder function
+    };
+    const removePortConnection = () => {
+        // Placeholder function
+    };
     const [showPortForm, setShowPortForm] = useState(false);
     const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-    const [isLoading, setIsLoading] = useState<{[key: string]: boolean}>({});
+    const [isLoading, setIsLoading] = useState<{ [key: string]: boolean }>({});
 
     if (!currentShip) {
         return (
@@ -32,7 +37,7 @@ export const PortConnectionsDashboard = () => {
 
     const handleRemoveConnection = async (connectionId: string) => {
         setIsLoading(prev => ({ ...prev, [connectionId]: true }));
-        
+
         try {
             await removePortConnection(connectionId);
         } catch (error) {
@@ -72,7 +77,7 @@ export const PortConnectionsDashboard = () => {
                         <span>Mark Cruise Line</span>
                     </button>
                 </div>
-                
+
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
                     <div className="flex items-start space-x-3">
                         <div className="w-8 h-8 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -83,8 +88,8 @@ export const PortConnectionsDashboard = () => {
                         <div>
                             <h4 className="font-semibold text-blue-900 mb-1">How Port Connections Work</h4>
                             <p className="text-sm text-blue-700 leading-relaxed">
-                                Mark when your ship is docked with another ship in the same port. 
-                                This allows you to see and connect with crew members from other ships docked nearby. 
+                                Mark when your ship is docked with another ship in the same port.
+                                This allows you to see and connect with crew members from other ships docked nearby.
                                 Stay connected with the maritime community!
                             </p>
                         </div>

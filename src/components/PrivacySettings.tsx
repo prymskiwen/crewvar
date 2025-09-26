@@ -1,16 +1,26 @@
 import { useState } from "react";
-import { usePrivacy } from "../context/PrivacyContext";
+// TODO: Implement Firebase privacy functionality
 import { IPrivacySettings } from "../types/privacy";
 
 export const PrivacySettings = () => {
-    const { privacySettings, updatePrivacySettings } = usePrivacy();
+    // TODO: Implement Firebase privacy functionality
+    const privacySettings = {
+        profileVisibility: 'public',
+        showEmail: false,
+        showPhone: false,
+        allowConnectionRequests: true,
+        allowMessages: true
+    };
+    const updatePrivacySettings = () => {
+        // Placeholder function
+    };
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [settings, setSettings] = useState<IPrivacySettings>(privacySettings);
 
     const handleSave = async () => {
         setIsLoading(true);
-        
+
         try {
             await updatePrivacySettings(settings);
             setIsEditing(false);
@@ -47,13 +57,12 @@ export const PrivacySettings = () => {
                 <div className="border-b border-gray-200 pb-4">
                     <h3 className="text-lg font-medium text-gray-900 mb-3">Verification Status</h3>
                     <div className="flex items-center space-x-3">
-                        <div className={`w-3 h-3 rounded-full ${
-                            settings.verificationStatus === 'verified' ? 'bg-green-500' : 
-                            settings.verificationStatus === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
-                        }`}></div>
+                        <div className={`w-3 h-3 rounded-full ${settings.verificationStatus === 'verified' ? 'bg-green-500' :
+                                settings.verificationStatus === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}></div>
                         <span className="text-gray-700 capitalize">
-                            {settings.verificationStatus === 'verified' ? '✅ Verified' : 
-                             settings.verificationStatus === 'pending' ? '⏳ Pending Verification' : '❌ Verification Rejected'}
+                            {settings.verificationStatus === 'verified' ? '✅ Verified' :
+                                settings.verificationStatus === 'pending' ? '⏳ Pending Verification' : '❌ Verification Rejected'}
                         </span>
                     </div>
                     {settings.verificationStatus === 'verified' && settings.verificationDate && (
@@ -84,9 +93,8 @@ export const PrivacySettings = () => {
                                     className="w-4 h-4 text-[#069B93] border-gray-300 rounded focus:ring-[#069B93]"
                                 />
                             ) : (
-                                <span className={`px-2 py-1 text-xs rounded-full ${
-                                    settings.showOnlyTodayShip ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                }`}>
+                                <span className={`px-2 py-1 text-xs rounded-full ${settings.showOnlyTodayShip ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                    }`}>
                                     {settings.showOnlyTodayShip ? 'Enabled' : 'Disabled'}
                                 </span>
                             )}
@@ -109,9 +117,8 @@ export const PrivacySettings = () => {
                                     className="w-4 h-4 text-[#069B93] border-gray-300 rounded focus:ring-[#069B93]"
                                 />
                             ) : (
-                                <span className={`px-2 py-1 text-xs rounded-full ${
-                                    settings.allowFutureShipVisibility ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                }`}>
+                                <span className={`px-2 py-1 text-xs rounded-full ${settings.allowFutureShipVisibility ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                    }`}>
                                     {settings.allowFutureShipVisibility ? 'Enabled' : 'Disabled'}
                                 </span>
                             )}
@@ -140,9 +147,8 @@ export const PrivacySettings = () => {
                                     className="w-4 h-4 text-[#069B93] border-gray-300 rounded focus:ring-[#069B93]"
                                 />
                             ) : (
-                                <span className={`px-2 py-1 text-xs rounded-full ${
-                                    settings.declineRequestsSilently ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                }`}>
+                                <span className={`px-2 py-1 text-xs rounded-full ${settings.declineRequestsSilently ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                    }`}>
                                     {settings.declineRequestsSilently ? 'Enabled' : 'Disabled'}
                                 </span>
                             )}
@@ -165,9 +171,8 @@ export const PrivacySettings = () => {
                                     className="w-4 h-4 text-[#069B93] border-gray-300 rounded focus:ring-[#069B93]"
                                 />
                             ) : (
-                                <span className={`px-2 py-1 text-xs rounded-full ${
-                                    settings.blockEnforcesInvisibility ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                }`}>
+                                <span className={`px-2 py-1 text-xs rounded-full ${settings.blockEnforcesInvisibility ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                    }`}>
                                     {settings.blockEnforcesInvisibility ? 'Enabled' : 'Disabled'}
                                 </span>
                             )}
@@ -188,9 +193,8 @@ export const PrivacySettings = () => {
                                     Your account is currently active and visible to other crew members
                                 </p>
                             </div>
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                                settings.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
+                            <span className={`px-2 py-1 text-xs rounded-full ${settings.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                }`}>
                                 {settings.isActive ? 'Active' : 'Inactive'}
                             </span>
                         </div>
@@ -240,7 +244,7 @@ export const PrivacySettings = () => {
                     <div>
                         <h4 className="font-medium text-blue-900">Privacy Protection</h4>
                         <p className="text-sm text-blue-700 mt-1">
-                            These settings help protect your privacy and ensure a safe environment for all crew members. 
+                            These settings help protect your privacy and ensure a safe environment for all crew members.
                             Only verified active profiles can see other crew members, and ship assignments are limited to today's information by default.
                         </p>
                     </div>

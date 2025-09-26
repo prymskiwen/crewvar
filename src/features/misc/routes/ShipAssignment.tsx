@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUpdateShipAssignment } from "../../user/api/shipAssignmentApi";
-import { useCruiseLines, useAllShips } from "../../cruise/api/cruiseData";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../../../app/api";
 import { toast } from "react-toastify";
 import { ShipSelection } from "../../../components/ShipSelection";
 
@@ -13,16 +10,19 @@ export const ShipAssignment = () => {
     const [selectedShipId, setSelectedShipId] = useState<string>("");
     const [isLoading, setIsLoading] = useState(false);
 
-    const updateShipAssignmentMutation = useUpdateShipAssignment();
+    // TODO: Implement Firebase ship assignment functionality
+    const updateShipAssignmentMutation = () => {
+        // Placeholder function
+    };
     const { data: userProfile } = useQuery({
         queryKey: ['user', 'profile'],
         queryFn: async () => {
-            const response = await api.get('/users/profile');
-            return response.data;
+            // TODO: Implement Firebase user profile fetch
+            return null;
         }
     });
-    const { data: allShips } = useAllShips();
-    const { data: cruiseLines } = useCruiseLines();
+    const allShips: any[] = [];
+    const cruiseLines: any[] = [];
 
     // Initialize with user's current ship
     useEffect(() => {
@@ -42,12 +42,12 @@ export const ShipAssignment = () => {
         }
 
         setIsLoading(true);
-        
+
         try {
             await updateShipAssignmentMutation.mutateAsync({
                 currentShipId: selectedShipId
             });
-            
+
             // Also save to localStorage for quick access
             const selectedShip = allShips?.find(ship => ship.id === selectedShipId);
             if (selectedShip) {
@@ -59,11 +59,11 @@ export const ShipAssignment = () => {
                     date: today,
                     isConfirmed: true
                 };
-                
+
                 localStorage.setItem('currentShipAssignment', JSON.stringify(shipAssignment));
                 localStorage.setItem('lastShipConfirmation', today);
             }
-            
+
             toast.success('Ship assignment updated successfully!');
             navigate('/dashboard');
         } catch (error) {
@@ -115,7 +115,7 @@ export const ShipAssignment = () => {
                                     {(() => {
                                         const currentShip = allShips?.find(ship => ship.id === userProfile.user.current_ship_id);
                                         const currentCruiseLine = cruiseLines?.find(cl => cl.id === currentShip?.cruise_line_id);
-                                        return currentShip && currentCruiseLine 
+                                        return currentShip && currentCruiseLine
                                             ? `${currentShip.name} • ${currentCruiseLine.name}`
                                             : 'Loading...';
                                     })()}
@@ -145,7 +145,7 @@ export const ShipAssignment = () => {
                         <div>
                             <h4 className="font-medium text-blue-900">Privacy Notice</h4>
                             <p className="text-sm text-blue-700 mt-1">
-                                Your new ship assignment will be visible to other crew members immediately. 
+                                Your new ship assignment will be visible to other crew members immediately.
                                 This helps them find and connect with you on the same ship.
                             </p>
                         </div>

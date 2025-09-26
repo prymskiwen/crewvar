@@ -1,4 +1,4 @@
-import { useRealtime } from '../context/RealtimeContext';
+import { useRealtime } from '../context/RealtimeContextFirebase';
 
 interface ConnectionStatusProps {
     className?: string;

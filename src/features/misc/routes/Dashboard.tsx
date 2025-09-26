@@ -1,13 +1,9 @@
 import { NotificationBell } from "../../../components/NotificationBell";
 import { OnboardingProgress } from "../../../components/OnboardingProgress";
-import { useUserProfile } from "../../auth/api/userProfile";
-import { useQuickCheckIn } from "../../../context/QuickCheckInContext";
+import { useAuth } from "../../../context/AuthContextFirebase";
 import { Link } from "react-router-dom";
 import logo from "../../../assets/images/Home/logo.png";
 import { getProfilePhotoUrl } from "../../../utils/imageUtils";
-import { useCrewInPort, useLinkShips } from "../../port/api/portLinking";
-import { useCrewOnboard } from "../../crew/api/crewApi";
-import { useCruiseLines, useShipsByCruiseLine } from "../../cruise/api/cruiseData";
 import { ConnectionButton } from "../../connections/components/ConnectionButton";
 import { ConnectionPendingCard } from "../../connections/components/ConnectionPendingCard";
 import { ConnectionRequestModal } from "../../connections/components/ConnectionRequestModal";
@@ -72,12 +68,12 @@ const CrewMemberCard = ({ member, showRequestDate = false }: {
                 )}
             </div>
             <div className="flex flex-col space-y-1">
-                <ConnectionButton 
-                    userId={member.id} 
+                <ConnectionButton
+                    userId={member.id}
                     userName={member.name}
                     size="sm"
                 />
-                <button 
+                <button
                     onClick={() => window.location.href = `/crew/${member.id}`}
                     className="px-2 py-1 text-xs border border-gray-300 text-gray-600 rounded hover:border-[#069B93] hover:text-[#069B93] transition-colors"
                 >
@@ -90,9 +86,12 @@ const CrewMemberCard = ({ member, showRequestDate = false }: {
 
 // Today on Board Card Component
 const TodayOnBoardCard = ({ onConnectClick }: { onConnectClick: () => void }) => {
-    const { data: crewData, isLoading: crewLoading, error: crewError } = useCrewOnboard();
-    
-    const crew = crewData?.crew || [];
+    // TODO: Implement Firebase crew onboard functionality
+    const crewData: any[] = [];
+    const crewLoading = false;
+    const crewError = null;
+
+    const crew = crewData || [];
 
     const handleViewAll = () => {
         // Navigate to the dedicated page
@@ -122,12 +121,12 @@ const TodayOnBoardCard = ({ onConnectClick }: { onConnectClick: () => void }) =>
                     <h3 className="text-xl font-bold text-[#069B93]">🚢 Today on Board</h3>
                     <span className="bg-gradient-to-r from-[#069B93] to-[#058a7a] text-white text-sm px-4 py-2 rounded-full font-semibold shadow-lg">
                         0
-                </span>
+                    </span>
                 </div>
                 <div className="text-center py-4">
                     <p className="text-gray-600 mb-4">Unable to load crew data</p>
-                    <button 
-                        onClick={() => window.location.reload()} 
+                    <button
+                        onClick={() => window.location.reload()}
                         className="px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors text-sm"
                     >
                         Refresh
@@ -156,10 +155,10 @@ const TodayOnBoardCard = ({ onConnectClick }: { onConnectClick: () => void }) =>
                     </button>
                 </div>
             </div>
-            
+
             <div className="space-y-2 mb-6">
                 {crew.length > 0 ? (
-                    crew.slice(0, 8).map((member) => (
+                    crew.slice(0, 8).map((member: any) => (
                         <CrewMemberCard key={member.id} member={{
                             id: member.id,
                             name: member.display_name,
@@ -182,7 +181,7 @@ const TodayOnBoardCard = ({ onConnectClick }: { onConnectClick: () => void }) =>
                     </div>
                 )}
             </div>
-            
+
             <button
                 onClick={handleViewAll}
                 className="w-full text-center text-[#069B93] hover:text-white font-semibold text-sm py-3 border-2 border-[#069B93] rounded-xl hover:bg-gradient-to-r hover:from-[#069B93] hover:to-[#058a7a] transition-all duration-200 transform hover:scale-105"
@@ -198,14 +197,20 @@ const WhosInPortCard = () => {
     const [showLinkModal, setShowLinkModal] = useState(false);
     const [selectedCruiseLineId, setSelectedCruiseLineId] = useState("");
     const [selectedShipId, setSelectedShipId] = useState("");
-    
-    const today = new Date().toISOString().split('T')[0];
-    const { data: crewData, isLoading: crewLoading, error: crewError } = useCrewInPort(today);
-    const { data: cruiseLines = [], isLoading: cruiseLinesLoading } = useCruiseLines();
-    const { data: shipsByCruiseLine = [], isLoading: shipsByCruiseLineLoading } = useShipsByCruiseLine(selectedCruiseLineId);
-    const { mutateAsync: linkShips } = useLinkShips();
-    
-    const crew = crewData?.crew || [];
+
+    // TODO: Implement Firebase port linking functionality
+    const crewData: any[] = [];
+    const crewLoading = false;
+    const crewError = null;
+    const cruiseLines: any[] = [];
+    const cruiseLinesLoading = false;
+    const shipsByCruiseLine: any[] = [];
+    const shipsByCruiseLineLoading = false;
+    const linkShips = () => {
+        // Placeholder function
+    };
+
+    const crew = crewData || [];
 
     const handleViewAll = () => {
         // Navigate to the dedicated page
@@ -214,13 +219,10 @@ const WhosInPortCard = () => {
 
     const handleLinkShips = async () => {
         if (!selectedCruiseLineId || !selectedShipId) return;
-        
+
         try {
-            await linkShips({
-                shipId: selectedShipId,
-                date: today
-            });
-            
+            await linkShips();
+
             setShowLinkModal(false);
             setSelectedCruiseLineId("");
             setSelectedShipId("");
@@ -257,8 +259,8 @@ const WhosInPortCard = () => {
                 </div>
                 <div className="text-center py-4">
                     <p className="text-gray-600 mb-4">Unable to load port data</p>
-                    <button 
-                        onClick={() => window.location.reload()} 
+                    <button
+                        onClick={() => window.location.reload()}
                         className="px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors text-sm"
                     >
                         Refresh
@@ -288,10 +290,10 @@ const WhosInPortCard = () => {
                         </button>
                     </div>
                 </div>
-                
+
                 <div className="space-y-4 mb-6">
                     {crew.length > 0 ? (
-                        crew.slice(0, 3).map((member) => (
+                        crew.slice(0, 3).map((member: any) => (
                             <CrewMemberCard key={member.id} member={{
                                 id: member.id,
                                 name: member.display_name,
@@ -322,7 +324,7 @@ const WhosInPortCard = () => {
                         </div>
                     )}
                 </div>
-                
+
                 <div className="flex space-x-3">
                     <button
                         onClick={handleViewAll}
@@ -332,9 +334,9 @@ const WhosInPortCard = () => {
                     </button>
                 </div>
             </div>
-            
+
             {/* Link Ships Modal */}
-            <LinkShipsModal 
+            <LinkShipsModal
                 showModal={showLinkModal}
                 setShowModal={setShowLinkModal}
                 selectedCruiseLineId={selectedCruiseLineId}
@@ -352,18 +354,18 @@ const WhosInPortCard = () => {
 };
 
 // Link Ships Modal Component
-const LinkShipsModal = ({ 
-    showModal, 
-    setShowModal, 
-    selectedCruiseLineId, 
-    setSelectedCruiseLineId, 
-    selectedShipId, 
-    setSelectedShipId, 
-    cruiseLines, 
-    cruiseLinesLoading, 
-    shipsByCruiseLine, 
-    shipsByCruiseLineLoading, 
-    handleLinkShips 
+const LinkShipsModal = ({
+    showModal,
+    setShowModal,
+    selectedCruiseLineId,
+    setSelectedCruiseLineId,
+    selectedShipId,
+    setSelectedShipId,
+    cruiseLines,
+    cruiseLinesLoading,
+    shipsByCruiseLine,
+    shipsByCruiseLineLoading,
+    handleLinkShips
 }: any) => {
     if (!showModal) return null;
 
@@ -371,7 +373,7 @@ const LinkShipsModal = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl p-8 w-full max-w-md mx-4 shadow-2xl">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6">Link Ships in Port</h3>
-                
+
                 <div className="space-y-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -399,7 +401,7 @@ const LinkShipsModal = ({
                             </select>
                         )}
                     </div>
-                    
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Select Ship to Link With
@@ -428,7 +430,7 @@ const LinkShipsModal = ({
                         )}
                     </div>
                 </div>
-                
+
                 <div className="flex space-x-4 mt-8">
                     <button
                         onClick={() => setShowModal(false)}
@@ -450,8 +452,10 @@ const LinkShipsModal = ({
 };
 
 export const Dashboard = () => {
-    const { data: userProfile, isLoading: profileLoading } = useUserProfile();
-    const { setShowCheckInDialog } = useQuickCheckIn();
+    const { userProfile, loading: profileLoading } = useAuth();
+    const setShowCheckInDialog = () => {
+        // Placeholder function
+    };
     const [showConnectionModal, setShowConnectionModal] = useState(false);
 
     // Debug logging
@@ -482,32 +486,32 @@ export const Dashboard = () => {
                 {/* Header */}
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center space-x-4">
-                        <img 
-                            src={logo} 
-                            alt="Crewvar Logo" 
-                            className="h-12 w-auto"
-                        />
-                        <div className="flex-1">
-                            <h1 className="text-3xl font-bold text-[#069B93]">
-                                    Welcome back, {userProfile?.display_name || 'Crew Member'}!
-                            </h1>
-                            <p className="text-gray-600">
-                                Here's what's happening on your ship today.
-                            </p>
-                            
-                            {/* Current Ship Assignment */}
-                            <div className="mt-3 flex items-center space-x-3">
-                                <div className="flex items-center space-x-2 px-3 py-1 bg-[#069B93]/10 rounded-lg">
-                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                    <span className="text-sm font-medium text-[#069B93]">
-                                            {userProfile?.current_ship_id ? `Ship ID: ${userProfile.current_ship_id}` : 'No ship assigned'}
-                                    </span>
+                        <div className="flex items-center space-x-4">
+                            <img
+                                src={logo}
+                                alt="Crewvar Logo"
+                                className="h-12 w-auto"
+                            />
+                            <div className="flex-1">
+                                <h1 className="text-3xl font-bold text-[#069B93]">
+                                    Welcome back, {userProfile?.displayName || 'Crew Member'}!
+                                </h1>
+                                <p className="text-gray-600">
+                                    Here's what's happening on your ship today.
+                                </p>
+
+                                {/* Current Ship Assignment */}
+                                <div className="mt-3 flex items-center space-x-3">
+                                    <div className="flex items-center space-x-2 px-3 py-1 bg-[#069B93]/10 rounded-lg">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        <span className="text-sm font-medium text-[#069B93]">
+                                            {userProfile?.currentShipId ? `Ship ID: ${userProfile.currentShipId}` : 'No ship assigned'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                        
+
                         {/* Notification Bell, Admin Link, and Test Button */}
                         <div className="flex items-center space-x-4">
                             <NotificationBell />
@@ -544,8 +548,8 @@ export const Dashboard = () => {
                 <div className="mt-8 bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
                     <h3 className="text-2xl font-bold text-[#069B93] mb-6">⚡ Quick Actions</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                        <button 
-                            onClick={() => setShowCheckInDialog(true)}
+                        <button
+                            onClick={() => setShowCheckInDialog()}
                             className="p-6 text-left border-2 border-gray-200 rounded-xl hover:border-[#069B93] hover:bg-gradient-to-br hover:from-[#069B93]/5 hover:to-[#069B93]/10 transition-all duration-200 group transform hover:-translate-y-1 hover:shadow-lg"
                         >
                             <div className="w-12 h-12 bg-[#069B93]/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-[#069B93] transition-colors">
@@ -597,11 +601,11 @@ export const Dashboard = () => {
                 </div>
 
             </div>
-            
+
             {/* Connection Request Modal */}
-            <ConnectionRequestModal 
-                isOpen={showConnectionModal} 
-                onClose={() => setShowConnectionModal(false)} 
+            <ConnectionRequestModal
+                isOpen={showConnectionModal}
+                onClose={() => setShowConnectionModal(false)}
             />
         </div>
     );

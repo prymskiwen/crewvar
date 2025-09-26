@@ -1,7 +1,5 @@
-import { useCalendar } from "../context/CalendarContext";
 import { ICruiseAssignment } from "../types/calendar";
 import { formatDateRange, getDaysDifference } from "../data/calendar-data";
-import { useCruiseLines, useAllShips } from "../features/cruise/api/cruiseData";
 import { HiPencil, HiCalendar } from "react-icons/hi";
 
 interface CalendarViewProps {
@@ -15,9 +13,10 @@ export const CalendarView = ({
     onEditAssignment,
     className = ""
 }: CalendarViewProps) => {
-    const { assignments } = useCalendar();
-    const { data: cruiseLines = [] } = useCruiseLines();
-    const { data: allShips = [] } = useAllShips();
+    // TODO: Implement Firebase calendar functionality
+    const assignments: ICruiseAssignment[] = [];
+    const cruiseLines: any[] = [];
+    const allShips: any[] = [];
 
     const getStatusColor = (status: ICruiseAssignment['status']) => {
         switch (status) {

@@ -2,10 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { usePortConnection } from "../context/PortConnectionContext";
-import { useAuth } from "../context/AuthContext";
-import { useQuickCheckIn } from "../context/QuickCheckInContext";
-import { useCruiseLines, useShipsByCruiseLine } from "../features/cruise/api/cruiseData";
+import { useAuth } from "../context/AuthContextFirebase";
 import { IPortConnectionFormData } from "../types/port-connections";
 
 interface PortConnectionFormProps {
@@ -21,13 +18,18 @@ const portConnectionValidationSchema = yup.object({
 
 export const PortConnectionForm = ({ onClose, onSuccess }: PortConnectionFormProps) => {
     const { currentUser } = useAuth();
-    const { currentShip } = useQuickCheckIn();
-    const { addPortConnection } = usePortConnection();
+    // TODO: Implement Firebase port connection functionality
+    const currentShip = null;
+    const addPortConnection = () => {
+        // Placeholder function
+    };
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedCruiseLineId, setSelectedCruiseLineId] = useState<string>("");
 
-    const { data: cruiseLines = [], isLoading: cruiseLinesLoading } = useCruiseLines();
-    const { data: availableShips = [], isLoading: shipsLoading } = useShipsByCruiseLine(selectedCruiseLineId);
+    const cruiseLines: any[] = [];
+    const cruiseLinesLoading = false;
+    const availableShips: any[] = [];
+    const shipsLoading = false;
 
     const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<IPortConnectionFormData>({
         resolver: yupResolver(portConnectionValidationSchema),
@@ -56,7 +58,7 @@ export const PortConnectionForm = ({ onClose, onSuccess }: PortConnectionFormPro
         }
 
         setIsSubmitting(true);
-        
+
         try {
             const selectedShip = availableShips.find(ship => ship.id === data.dockedWithShipId);
             if (!selectedShip) {
@@ -77,12 +79,12 @@ export const PortConnectionForm = ({ onClose, onSuccess }: PortConnectionFormPro
             };
 
             await addPortConnection(connectionData);
-            
+
             if (onSuccess) {
                 onSuccess();
             }
             onClose();
-            
+
         } catch (error) {
             console.error('Failed to add port connection:', error);
         } finally {
@@ -186,9 +188,9 @@ export const PortConnectionForm = ({ onClose, onSuccess }: PortConnectionFormPro
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#069B93] focus:ring-2 focus:ring-[#069B93]/20 focus:outline-none disabled:bg-gray-100 disabled:border-gray-200 transition-all duration-200"
                     >
                         <option value="">
-                            {shipsLoading ? 'Loading ships...' : 
-                             !watchedCruiseLineId || !watchedDate ? 'Select cruise line and date first' : 
-                             availableShips.length === 0 ? 'No ships available' : 'Select ship'}
+                            {shipsLoading ? 'Loading ships...' :
+                                !watchedCruiseLineId || !watchedDate ? 'Select cruise line and date first' :
+                                    availableShips.length === 0 ? 'No ships available' : 'Select ship'}
                         </option>
                         {availableShips.map(ship => (
                             <option key={ship.id} value={ship.id}>
@@ -227,7 +229,7 @@ export const PortConnectionForm = ({ onClose, onSuccess }: PortConnectionFormPro
                         <div>
                             <h4 className="font-semibold text-green-900">Port Connection Benefits</h4>
                             <p className="text-sm text-green-700 mt-1 leading-relaxed">
-                                By marking your port status, you'll be able to see and connect with crew members 
+                                By marking your port status, you'll be able to see and connect with crew members
                                 from other ships docked in the same port today. Expand your maritime network!
                             </p>
                         </div>

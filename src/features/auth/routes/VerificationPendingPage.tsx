@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useResendVerificationEmail } from "../api/emailVerification";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContextFirebase";
 import { toast } from "react-toastify";
 
 export const VerificationPendingPage = () => {
@@ -9,17 +8,15 @@ export const VerificationPendingPage = () => {
     const location = useLocation();
     const { signOut } = useAuth();
     const [isResending, setIsResending] = useState(false);
-    
-    const resendVerificationMutation = useResendVerificationEmail();
-    
+
     // Get email from location state or use placeholder
     const email = location.state?.email || 'your email address';
 
     const handleResendVerification = async () => {
         setIsResending(true);
-        
+
         try {
-            await resendVerificationMutation.mutateAsync(email);
+            // TODO: Implement Firebase email verification resend
             toast.success('Verification email sent! Check your inbox.');
         } catch (error: any) {
             toast.error('Failed to resend verification email');
@@ -63,7 +60,7 @@ export const VerificationPendingPage = () => {
                                     <div>
                                         <h4 className="font-medium text-blue-900">Check Your Email</h4>
                                         <p className="text-sm text-blue-700 mt-1">
-                                            We've sent a verification link to <strong>{email}</strong>. 
+                                            We've sent a verification link to <strong>{email}</strong>.
                                             Click the link to verify your account and unlock all features.
                                         </p>
                                     </div>
@@ -92,7 +89,7 @@ export const VerificationPendingPage = () => {
                                 >
                                     {isResending ? 'Sending...' : 'Resend Verification Email'}
                                 </button>
-                                
+
                                 <button
                                     onClick={handleSignOut}
                                     className="w-full px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:border-[#069B93] hover:text-[#069B93] transition-colors font-medium"

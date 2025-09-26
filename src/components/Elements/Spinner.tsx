@@ -9,4 +9,5 @@ export const Spinner = () => {
         left: "50%"
     };
 
-    return <FadeLoader color="#333" cssOverride={stylesOverride} />;};
+    return <FadeLoader color="#333" cssOverride={stylesOverride} />;
+};

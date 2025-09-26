@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { useAllShips } from "../features/cruise/api/cruiseData";
 
 interface QuickCheckInProps {
     isOpen: boolean;
@@ -17,7 +16,8 @@ export const QuickCheckIn = ({
     isLoading = false 
 }: QuickCheckInProps) => {
     const navigate = useNavigate();
-    const { data: allShips } = useAllShips();
+    // TODO: Implement Firebase ships functionality
+    const allShips: any[] = [];
     
     // Get the current ship name for display
     const currentShipData = allShips?.find(ship => ship.id === currentShip);

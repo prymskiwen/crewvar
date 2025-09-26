@@ -1,12 +1,33 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useNotifications, INotification } from '../../../context/NotificationContext';
 import { toast } from 'react-toastify';
 import logo from '../../../assets/images/Home/logo.png';
 
+// TODO: Define INotification interface
+interface INotification {
+    id: string;
+    type: string;
+    title: string;
+    message: string;
+    isRead: boolean;
+    createdAt: string;
+}
+
 export const AllNotificationsPage = () => {
     const navigate = useNavigate();
-    const { notifications = [], isLoading, unreadCount, markAsRead, markAllAsRead, removeNotification } = useNotifications();
+    // TODO: Implement Firebase notifications
+    const notifications: INotification[] = [];
+    const isLoading = false;
+    const unreadCount = 0;
+    const markAsRead = () => {
+        // Placeholder function
+    };
+    const markAllAsRead = () => {
+        // Placeholder function
+    };
+    const removeNotification = () => {
+        // Placeholder function
+    };
     const [filter, setFilter] = useState<'all' | 'unread'>('all');
     const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set());
     const [isMarkingAsRead, setIsMarkingAsRead] = useState(false);

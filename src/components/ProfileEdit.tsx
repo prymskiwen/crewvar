@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useDepartments, useRolesByDepartment } from "../features/auth/api/jobDataHooks";
 
 interface ProfileEditData {
     displayName: string;
@@ -189,7 +188,8 @@ export const ProfileEdit = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Get real data from API
-    const { data: departments = [] } = useDepartments();
+    // TODO: Implement Firebase job data functionality
+    const departments: any[] = [];
 
     console.log('ProfileEdit: Available departments:', departments);
     console.log('ProfileEdit: Initial departmentId:', initialData.departmentId);
@@ -207,7 +207,7 @@ export const ProfileEdit = ({
 
     const watchedDepartmentId = watch("departmentId");
     
-    const { data: roles = [] } = useRolesByDepartment(watchedDepartmentId);
+    const roles: any[] = [];
 
     // Reset form when initialData changes
     useEffect(() => {

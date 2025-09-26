@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useCalendar } from "../context/CalendarContext";
 import { ShipSelection } from "./ShipSelection";
 import { IAssignmentFormData, ICruiseAssignment } from "../types/calendar";
 
@@ -29,7 +28,13 @@ export const AssignmentForm = ({
     className = "",
     editingAssignment = null
 }: AssignmentFormProps) => {
-    const { addAssignment, updateAssignment } = useCalendar();
+    // TODO: Implement Firebase calendar functionality
+    const addAssignment = () => {
+        // Placeholder function
+    };
+    const updateAssignment = () => {
+        // Placeholder function
+    };
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedCruiseLineId, setSelectedCruiseLineId] = useState<string>("");
 

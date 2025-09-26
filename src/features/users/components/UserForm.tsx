@@ -2,9 +2,9 @@ import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import PreviewImage from "../../../components/Elements/PreviewImage";
-import { useUpdateUserMutation } from "../api/updateUser";
+// TODO: Implement Firebase user update functionality
 import { convertToFormData } from "../../../utils/convertToFormData";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContextFirebase";
 import { useState } from "react";
 import { Spinner } from "../../../components/Elements/Spinner";
 
@@ -34,7 +34,10 @@ const UserForm = () => {
     const [preview, setPreview] = useState<string | ArrayBuffer | null | undefined>(currentUser?.photoURL);
 
     const token = localStorage.getItem('token') || '';
-    const { mutateAsync: updateUserOnBackend } = useUpdateUserMutation(currentUser?.uid || "", token);
+    // TODO: Implement Firebase user update functionality
+    const updateUserOnBackend = () => {
+        // Placeholder function
+    };
     const onSubmit = async (data: UserFormType) => {
         if (isDirty) {
             setIsUpdating(true);

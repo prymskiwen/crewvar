@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback } from 'react';
-import { useUploadAdditionalPhoto, useDeletePhoto } from '../features/upload/api/uploadApi';
 
 interface AdditionalPhotoUploadProps {
     currentPhoto?: string;
@@ -20,8 +19,16 @@ export const AdditionalPhotoUpload = ({
     const [preview, setPreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     
-    const { mutate: uploadPhoto, isLoading: isUploading, error } = useUploadAdditionalPhoto();
-    const { mutate: deletePhoto, isLoading: isDeleting } = useDeletePhoto();
+    // TODO: Implement Firebase photo upload functionality
+    const uploadPhoto = () => {
+        // Placeholder function
+    };
+    const isUploading = false;
+    const error = null;
+    const deletePhoto = () => {
+        // Placeholder function
+    };
+    const isDeleting = false;
 
     const handleFileSelect = useCallback(async (file: File) => {
         // Validate file type

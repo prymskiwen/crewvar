@@ -10,6 +10,19 @@ export interface IChatMessage {
 
 export interface IChatRoom {
     id: string;
+    room_id: string;
+    other_user_id: string;
+    other_user_name: string;
+    other_user_avatar: string;
+    ship_name: string;
+    department_name: string;
+    role_name: string;
+    last_message_content?: string;
+    last_message_time?: string;
+    last_message_status?: string;
+    unread_count?: number;
+    created_at?: string;
+    updated_at?: string;
     participants: string[]; // User IDs
     lastMessage?: IChatMessage;
     lastActivity: string;

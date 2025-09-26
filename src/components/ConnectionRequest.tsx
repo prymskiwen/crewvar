@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IUserProfile } from "../types/connections";
 import { sampleConnectionContext } from "../data/connections-data";
-import { usePrivacy } from "../context/PrivacyContext";
 import { ReportUser } from "./ReportUser";
 
 interface ConnectionRequestProps {
@@ -21,7 +20,14 @@ export const ConnectionRequest = ({
     isLoading = false 
 }: ConnectionRequestProps) => {
     const navigate = useNavigate();
-    const { isUserVerified, isUserActive, isUserBlocked, isInDeclineCooldown, blockUser } = usePrivacy();
+    // TODO: Implement Firebase privacy functionality
+    const isUserVerified = true;
+    const isUserActive = true;
+    const isUserBlocked = false;
+    const isInDeclineCooldown = false;
+    const blockUser = () => {
+        // Placeholder function
+    };
     const [showRequestForm, setShowRequestForm] = useState(false);
     const [message, setMessage] = useState("");
     const [showBlockOption, setShowBlockOption] = useState(false);

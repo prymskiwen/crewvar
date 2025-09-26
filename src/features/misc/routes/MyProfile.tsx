@@ -1,32 +1,39 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContextFirebase";
 import { SocialMediaLinks } from "../../../components/SocialMediaLinks";
 import { SocialMediaDisplay } from "../../../components/SocialMediaDisplay";
 import { ProfileEdit } from "../../../components/ProfileEdit";
 import { ProfilePhotoUpload } from "../../../components/ProfilePhotoUpload";
 import { AdditionalPhotoUpload } from "../../../components/AdditionalPhotoUpload";
-import { useDepartments, useAllRoles } from "../../auth/api/jobDataHooks";
-import { useUserProfile, useUpdateProfileDetails, useUpdateUserProfile } from "../../auth/api/userProfile";
-import { useAllShips, useCruiseLines } from "../../cruise/api/cruiseData";
+// TODO: Implement Firebase job data and user profile functionality
 import { Link } from "react-router-dom";
 import { HiCalendar } from "react-icons/hi";
 import { getProfilePhotoUrl } from "../../../utils/imageUtils";
 
 export const MyProfile = () => {
     const { currentUser } = useAuth();
-    const { data: userProfile, isLoading: profileLoading } = useUserProfile();
-    const { data: allShips = [], isLoading: shipsLoading } = useAllShips();
-    const { data: cruiseLines = [], isLoading: cruiseLinesLoading } = useCruiseLines();
-    const { mutateAsync: updateUserProfile } = useUpdateUserProfile();
-    const { mutateAsync: updateProfileDetails } = useUpdateProfileDetails();
-    const { data: departments = [] } = useDepartments();
-    const { data: allRoles = [] } = useAllRoles();
-    
+    // TODO: Implement Firebase user profile functionality
+    const userProfile = null;
+    const profileLoading = false;
+    const allShips: any[] = [];
+    const shipsLoading = false;
+    const cruiseLines: any[] = [];
+    const cruiseLinesLoading = false;
+    const updateUserProfile = () => {
+        // Placeholder function
+    };
+    // TODO: Implement Firebase profile update functionality
+    const updateProfileDetails = () => {
+        // Placeholder function
+    };
+    const departments: any[] = [];
+    const allRoles: any[] = [];
+
     // Helper functions to get names from database data
     const getDepartmentName = (departmentId: string) => {
         console.log('getDepartmentName called with:', departmentId);
         console.log('Available departments:', departments);
-        
+
         // Use real database data if available, otherwise fallback to hardcoded
         if (userProfile?.department_name) {
             console.log('Using userProfile.department_name:', userProfile.department_name);
@@ -37,7 +44,7 @@ export const MyProfile = () => {
         console.log('Found department:', department);
         return department ? department.name : 'Not specified';
     };
-    
+
     const getRoleName = (roleId: string) => {
         // Use real database data if available, otherwise fallback to hardcoded
         if (userProfile?.role_name) {
@@ -46,7 +53,7 @@ export const MyProfile = () => {
         const role = allRoles.find(r => r.id === roleId);
         return role ? role.name : 'Not specified';
     };
-    
+
     const getShipName = (shipId: string) => {
         // Use real database data if available, otherwise fallback to ship list
         if (userProfile?.ship_name) {
@@ -76,7 +83,7 @@ export const MyProfile = () => {
         console.log('MyProfile: Ship not found, returning Not specified');
         return 'Not specified';
     };
-    
+
     const [profile, setProfile] = useState({
         displayName: '',
         avatar: '',
@@ -110,10 +117,10 @@ export const MyProfile = () => {
             console.log('MyProfile: Bio from database:', userProfile.bio);
             console.log('MyProfile: Phone from database:', userProfile.phone);
             console.log('MyProfile: Profile photo from database:', userProfile.profile_photo);
-            
+
             const avatarValue = userProfile.profile_photo ? getProfilePhotoUrl(userProfile.profile_photo) : (currentUser?.photoURL || '');
             console.log('MyProfile: Setting avatar to:', avatarValue);
-            
+
             setProfile(prev => ({
                 ...prev,
                 displayName: userProfile.display_name || currentUser?.displayName || '',
@@ -140,7 +147,7 @@ export const MyProfile = () => {
                 roleId: userProfile.role_id || '',
                 currentShipId: userProfile.current_ship_id || ''
             }));
-            
+
             console.log('MyProfile: Profile state updated with:', {
                 displayName: userProfile.display_name || currentUser?.displayName || '',
                 avatar: userProfile.profile_photo ? 'Profile photo data present' : 'No profile photo',
@@ -175,7 +182,7 @@ export const MyProfile = () => {
     const [isEditingAssignment, setIsEditingAssignment] = useState(false);
     const [isSavingContact, setIsSavingContact] = useState(false);
     const [isSavingAboutMe, setIsSavingAboutMe] = useState(false);
-    
+
     // Custom dropdown states for Current Assignment
     const [showCruiseLineDropdown, setShowCruiseLineDropdown] = useState(false);
     const [showShipDropdown, setShowShipDropdown] = useState(false);
@@ -208,7 +215,7 @@ export const MyProfile = () => {
 
     const handleSave = async () => {
         setIsLoading(true);
-        
+
         try {
             // Always save job information (department, role, etc.) regardless of photo changes
             console.log('Updating job information...');
@@ -220,7 +227,7 @@ export const MyProfile = () => {
                 currentShipId: profile.currentShipId
             });
             console.log('Job information updated successfully');
-            
+
             // Save profile details (bio, contacts, social media, additional photos)
             const profileDetailsData = {
                 bio: toNull(profile.bio),
@@ -233,7 +240,7 @@ export const MyProfile = () => {
                 additionalPhotos: profile.photos || [],
                 additionalPhotosCount: (profile.photos || []).length
             };
-            
+
             console.log('Profile details data:', profileDetailsData);
             console.log('Checking for undefined values:');
             Object.keys(profileDetailsData).forEach(key => {
@@ -242,9 +249,9 @@ export const MyProfile = () => {
                     console.error(`UNDEFINED FOUND: ${key} = ${value}`);
                 }
             });
-            
+
             await updateProfileDetails(profileDetailsData);
-            
+
             setIsEditing(false);
             console.log('Profile updated successfully');
         } catch (error: any) {
@@ -259,7 +266,7 @@ export const MyProfile = () => {
 
     const handleSocialMediaSave = async (socialMediaData: any) => {
         setIsLoading(true);
-        
+
         // Clean and validate the data before sending
         const cleanedData = {
             bio: toNull(profile.bio),
@@ -271,9 +278,9 @@ export const MyProfile = () => {
             website: toNull(socialMediaData.website),
             additionalPhotos: profile.photos || []
         };
-        
+
         try {
-            
+
             console.log('Cleaned social media data:', cleanedData);
             console.log('Checking for undefined values:');
             Object.keys(cleanedData).forEach(key => {
@@ -282,25 +289,25 @@ export const MyProfile = () => {
                     console.error(`UNDEFINED FOUND: ${key} = ${value}`);
                 }
             });
-            
+
             console.log('About to send cleaned data to API:', cleanedData);
             await updateProfileDetails(cleanedData);
-            
+
             setProfile(prev => ({ ...prev, socialMedia: cleanedData }));
             setIsEditingSocialMedia(false);
             console.log('Social media updated successfully');
-            
+
             // Show success message
             alert('Social media links saved successfully!');
-            
+
         } catch (error: any) {
             console.error('Failed to update social media:', error);
             console.error('Error details:', error.response?.data);
             console.error('Request data sent:', cleanedData);
-            
+
             // Better error handling
             let errorMessage = 'Failed to update social media. Please try again.';
-            
+
             if (error.response?.status === 500) {
                 errorMessage = 'Server error occurred. The backend may be experiencing issues. Please try again later.';
             } else if (error.response?.data?.error) {
@@ -308,7 +315,7 @@ export const MyProfile = () => {
             } else if (error.message) {
                 errorMessage = error.message;
             }
-            
+
             alert(`Error: ${errorMessage}`);
         } finally {
             setIsLoading(false);
@@ -317,10 +324,10 @@ export const MyProfile = () => {
 
     const handleProfileEditSave = async (profileData: any) => {
         setIsLoading(true);
-        
+
         try {
             console.log('Saving profile data:', profileData);
-            
+
             // Save job information (department, role, etc.) to database
             await updateUserProfile({
                 displayName: profileData.displayName,
@@ -329,18 +336,18 @@ export const MyProfile = () => {
                 roleId: profileData.roleId || '',
                 currentShipId: profile.currentShipId // Use current ship from profile state, not form data
             });
-            
+
             // Note: bio and phone are handled in separate Contact and About Me sections
-            
+
             // Update local state
-            setProfile(prev => ({ 
-                ...prev, 
+            setProfile(prev => ({
+                ...prev,
                 displayName: profileData.displayName,
                 departmentId: profileData.departmentId,
                 roleId: profileData.roleId
                 // Don't update currentShipId here since it's not part of Personal Information
             }));
-            
+
             setIsEditingProfile(false);
             console.log('Profile updated successfully in database');
         } catch (error: any) {
@@ -489,21 +496,21 @@ export const MyProfile = () => {
                                                 Cruise Line
                                             </label>
                                             <div className="relative">
-                                                <div 
+                                                <div
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg cursor-pointer hover:border-[#069B93] focus-within:border-[#069B93] focus-within:ring-1 focus-within:ring-[#069B93] transition-colors"
                                                     onClick={() => setShowCruiseLineDropdown(!showCruiseLineDropdown)}
                                                 >
                                                     <div className="flex items-center justify-between">
                                                         <span className={profile.currentCruiseLineId ? 'text-gray-900' : 'text-gray-500'}>
-                                                            {profile.currentCruiseLineId ? 
-                                                                cruiseLines.find(line => line.id === profile.currentCruiseLineId)?.name || 'Choose a cruise line' 
+                                                            {profile.currentCruiseLineId ?
+                                                                cruiseLines.find(line => line.id === profile.currentCruiseLineId)?.name || 'Choose a cruise line'
                                                                 : 'Choose a cruise line'
                                                             }
                                                         </span>
-                                                        <svg 
+                                                        <svg
                                                             className={`w-5 h-5 text-gray-400 transition-transform ${showCruiseLineDropdown ? 'rotate-180' : ''}`}
-                                                            fill="none" 
-                                                            stroke="currentColor" 
+                                                            fill="none"
+                                                            stroke="currentColor"
                                                             viewBox="0 0 24 24"
                                                         >
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -530,8 +537,8 @@ export const MyProfile = () => {
                                                                         key={line.id}
                                                                         className="px-3 py-2 hover:bg-[#069B93]/10 cursor-pointer text-sm"
                                                                         onClick={() => {
-                                                                            setProfile(prev => ({ 
-                                                                                ...prev, 
+                                                                            setProfile(prev => ({
+                                                                                ...prev,
                                                                                 currentCruiseLineId: line.id,
                                                                                 currentShipId: '' // Reset ship when cruise line changes
                                                                             }));
@@ -553,23 +560,22 @@ export const MyProfile = () => {
                                                 Ship
                                             </label>
                                             <div className="relative">
-                                                <div 
-                                                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg cursor-pointer hover:border-[#069B93] focus-within:border-[#069B93] focus-within:ring-1 focus-within:ring-[#069B93] transition-colors ${
-                                                        !profile.currentCruiseLineId ? 'bg-gray-100 cursor-not-allowed' : ''
-                                                    }`}
+                                                <div
+                                                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg cursor-pointer hover:border-[#069B93] focus-within:border-[#069B93] focus-within:ring-1 focus-within:ring-[#069B93] transition-colors ${!profile.currentCruiseLineId ? 'bg-gray-100 cursor-not-allowed' : ''
+                                                        }`}
                                                     onClick={() => profile.currentCruiseLineId && setShowShipDropdown(!showShipDropdown)}
                                                 >
                                                     <div className="flex items-center justify-between">
                                                         <span className={profile.currentShipId ? 'text-gray-900' : 'text-gray-500'}>
-                                                            {profile.currentShipId ? 
-                                                                allShips.find(ship => ship.id === profile.currentShipId)?.name || 'Choose a ship' 
+                                                            {profile.currentShipId ?
+                                                                allShips.find(ship => ship.id === profile.currentShipId)?.name || 'Choose a ship'
                                                                 : 'Choose a ship'
                                                             }
                                                         </span>
-                                                        <svg 
+                                                        <svg
                                                             className={`w-5 h-5 text-gray-400 transition-transform ${showShipDropdown ? 'rotate-180' : ''}`}
-                                                            fill="none" 
-                                                            stroke="currentColor" 
+                                                            fill="none"
+                                                            stroke="currentColor"
                                                             viewBox="0 0 24 24"
                                                         >
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -590,7 +596,7 @@ export const MyProfile = () => {
                                                         </div>
                                                         <div className="max-h-48 overflow-y-auto">
                                                             {allShips
-                                                                .filter(ship => 
+                                                                .filter(ship =>
                                                                     ship.cruise_line_id === profile.currentCruiseLineId &&
                                                                     ship.name.toLowerCase().includes(shipSearchTerm.toLowerCase())
                                                                 )
@@ -599,9 +605,9 @@ export const MyProfile = () => {
                                                                         key={ship.id}
                                                                         className="px-3 py-2 hover:bg-[#069B93]/10 cursor-pointer text-sm"
                                                                         onClick={() => {
-                                                                            setProfile(prev => ({ 
-                                                                                ...prev, 
-                                                                                currentShipId: ship.id 
+                                                                            setProfile(prev => ({
+                                                                                ...prev,
+                                                                                currentShipId: ship.id
                                                                             }));
                                                                             setShowShipDropdown(false);
                                                                             setShipSearchTerm('');
@@ -634,7 +640,7 @@ export const MyProfile = () => {
                                                             roleId: profile.roleId || '',
                                                             currentShipId: profile.currentShipId || ''
                                                         };
-                                                        
+
                                                         console.log('Updating assignment with data:', updateData);
                                                         await updateUserProfile(updateData);
                                                         setIsEditingAssignment(false);
@@ -644,11 +650,10 @@ export const MyProfile = () => {
                                                     }
                                                 }}
                                                 disabled={!profile.currentShipId}
-                                                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                                                    !profile.currentShipId 
-                                                        ? 'bg-gray-400 text-white cursor-not-allowed' 
+                                                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${!profile.currentShipId
+                                                        ? 'bg-gray-400 text-white cursor-not-allowed'
                                                         : 'text-white bg-[#069B93] hover:bg-[#058a7a]'
-                                                }`}
+                                                    }`}
                                             >
                                                 Update
                                             </button>
@@ -710,7 +715,7 @@ export const MyProfile = () => {
                                         {isEditingProfile ? 'Cancel' : 'Edit'}
                                     </button>
                                 </div>
-                                
+
                                 {isEditingProfile ? (
                                     <ProfileEdit
                                         initialData={{
@@ -790,7 +795,7 @@ export const MyProfile = () => {
                                         </p>
                                     </div>
                                 )}
-                                
+
                                 {isEditingAboutMe && (
                                     <div className="flex space-x-3 pt-4 border-t border-gray-200">
                                         <button
@@ -819,11 +824,10 @@ export const MyProfile = () => {
                                                 }
                                             }}
                                             disabled={isSavingAboutMe}
-                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                                                isSavingAboutMe 
-                                                    ? 'bg-gray-400 text-white cursor-not-allowed' 
+                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isSavingAboutMe
+                                                    ? 'bg-gray-400 text-white cursor-not-allowed'
                                                     : 'text-white bg-[#069B93] hover:bg-[#058a7a]'
-                                            }`}
+                                                }`}
                                         >
                                             {isSavingAboutMe ? 'Updating...' : 'Update'}
                                         </button>
@@ -900,8 +904,8 @@ export const MyProfile = () => {
                                                 <input
                                                     type="email"
                                                     value={profile.contacts.email}
-                                                    onChange={(e) => setProfile(prev => ({ 
-                                                        ...prev, 
+                                                    onChange={(e) => setProfile(prev => ({
+                                                        ...prev,
                                                         contacts: { ...prev.contacts, email: e.target.value }
                                                     }))}
                                                     className="w-full text-gray-700 font-medium bg-transparent border-none p-0 focus:outline-none"
@@ -923,8 +927,8 @@ export const MyProfile = () => {
                                                 <input
                                                     type="tel"
                                                     value={profile.contacts.phone}
-                                                    onChange={(e) => setProfile(prev => ({ 
-                                                        ...prev, 
+                                                    onChange={(e) => setProfile(prev => ({
+                                                        ...prev,
                                                         contacts: { ...prev.contacts, phone: e.target.value }
                                                     }))}
                                                     placeholder="Add phone number"
@@ -936,7 +940,7 @@ export const MyProfile = () => {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 {isEditingContact && (
                                     <div className="flex space-x-3 pt-4 border-t border-gray-200">
                                         <button
@@ -965,11 +969,10 @@ export const MyProfile = () => {
                                                 }
                                             }}
                                             disabled={isSavingContact}
-                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                                                isSavingContact 
-                                                    ? 'bg-gray-400 text-white cursor-not-allowed' 
+                                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isSavingContact
+                                                    ? 'bg-gray-400 text-white cursor-not-allowed'
                                                     : 'text-white bg-[#069B93] hover:bg-[#058a7a]'
-                                            }`}
+                                                }`}
                                         >
                                             {isSavingContact ? 'Updating...' : 'Update'}
                                         </button>
@@ -993,7 +996,7 @@ export const MyProfile = () => {
                                         {isEditingSocialMedia ? 'Cancel' : 'Edit'}
                                     </button>
                                 </div>
-                                
+
                                 {isEditingSocialMedia ? (
                                     <SocialMediaLinks
                                         initialData={profile.socialMedia}

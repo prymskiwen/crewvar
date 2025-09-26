@@ -1,16 +1,30 @@
-import { useCrewOnboard, ICrewMember } from '../api/crewApi';
 import { getProfilePhotoUrl } from '../../../utils/imageUtils';
 import { Link } from 'react-router-dom';
 import logo from '../../../assets/images/Home/logo.png';
-import { useSendConnectionRequest } from '../../connections/api/connectionApi';
-import { useFavorites } from '../../../context/FavoritesContext';
 import { toast } from 'react-toastify';
 import { useState } from 'react';
 
+// TODO: Define ICrewMember interface
+interface ICrewMember {
+    id: string;
+    name: string;
+    role: string;
+    department: string;
+    avatar?: string;
+}
+
 export const TodayOnBoardPage = () => {
-    const { data: crewData, isLoading: crewLoading, error: crewError } = useCrewOnboard();
-    const sendConnectionRequestMutation = useSendConnectionRequest();
-    const { addFavorite, isFavorite } = useFavorites();
+    // TODO: Implement Firebase crew onboard functionality
+    const crewData: ICrewMember[] = [];
+    const crewLoading = false;
+    const crewError = null;
+    const sendConnectionRequestMutation = () => {
+        // Placeholder function
+    };
+    const addFavorite = () => {
+        // Placeholder function
+    };
+    const isFavorite = () => false;
     const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
     const [favoriteLoadingStates, setFavoriteLoadingStates] = useState<Record<string, boolean>>({});
     const [searchQuery, setSearchQuery] = useState('');

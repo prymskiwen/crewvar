@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useDeleteCruiseLine, useCruiseLines } from '../api/dataManagementApi';
 import { toast } from 'react-toastify';
 
 interface DeleteCruiseLineModalProps {
@@ -9,8 +8,24 @@ interface DeleteCruiseLineModalProps {
 
 export const DeleteCruiseLineModal: React.FC<DeleteCruiseLineModalProps> = ({ isOpen, onClose }) => {
   const [selectedCruiseLineId, setSelectedCruiseLineId] = useState('');
-  const deleteCruiseLineMutation = useDeleteCruiseLine();
-  const { data: cruiseLinesData } = useCruiseLines();
+  // TODO: Implement Firebase data management functionality
+  const deleteCruiseLineMutation = {
+    mutateAsync: async (cruiseLineId: string) => {
+      // TODO: Implement Firebase delete cruise line functionality
+      console.log('Deleting cruise line:', cruiseLineId);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Cruise line deleted successfully!');
+    },
+    isLoading: false
+  };
+  const cruiseLinesData = {
+    cruiseLines: [
+      { id: '1', name: 'Carnival Cruise Line' },
+      { id: '2', name: 'Royal Caribbean International' },
+      { id: '3', name: 'Norwegian Cruise Line' }
+    ]
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,6 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNotifications, INotification } from '../context/NotificationContext';
+
+// TODO: Define INotification interface
+interface INotification {
+    id: string;
+    type: string;
+    title: string;
+    message: string;
+    isRead: boolean;
+    createdAt: string;
+}
 
 interface NotificationBellProps {
     className?: string;
@@ -10,14 +19,19 @@ export const NotificationBell = ({ className = '' }: NotificationBellProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
-    const { 
-        unreadCount, 
-        notifications, 
-        isLoading, 
-        markAsRead, 
-        markAllAsRead, 
-        removeNotification
-    } = useNotifications();
+    // TODO: Implement Firebase notifications functionality
+    const unreadCount = 0;
+    const notifications: INotification[] = [];
+    const isLoading = false;
+    const markAsRead = () => {
+        // Placeholder function
+    };
+    const markAllAsRead = () => {
+        // Placeholder function
+    };
+    const removeNotification = () => {
+        // Placeholder function
+    };
 
     // Close dropdown when clicking outside
     useEffect(() => {

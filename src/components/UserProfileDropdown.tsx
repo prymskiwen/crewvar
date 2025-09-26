@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useUserProfile } from '../features/auth/api/userProfile';
-import { useNotifications } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContextFirebase';
 import { defaultAvatar } from '../utils/images';
 import { HiChevronDown, HiUser, HiLogout } from 'react-icons/hi';
 import bellIcon from '../assets/images/Home/bell.png';
@@ -15,8 +14,8 @@ export const UserProfileDropdown = ({ onSignOut }: UserProfileDropdownProps) => 
     const [isOpen, setIsOpen] = useState(false);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const { data: userProfile, isLoading } = useUserProfile();
-    const { unreadCount } = useNotifications();
+    const { userProfile } = useAuth();
+    const unreadCount = 0; // TODO: Implement Firebase notifications
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -42,7 +41,7 @@ export const UserProfileDropdown = ({ onSignOut }: UserProfileDropdownProps) => 
         setIsOpen(false); // Close profile dropdown when opening notifications
     };
 
-    if (isLoading) {
+    if (!userProfile) {
         return (
             <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
@@ -63,8 +62,8 @@ export const UserProfileDropdown = ({ onSignOut }: UserProfileDropdownProps) => 
         return photoUrl; // Fallback
     };
 
-    const profileImage = getFullPhotoUrl(userProfile?.profile_photo);
-    const displayName = userProfile?.display_name || 'User';
+    const profileImage = getFullPhotoUrl(userProfile?.profilePhoto);
+    const displayName = userProfile?.displayName || 'User';
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -101,18 +100,17 @@ export const UserProfileDropdown = ({ onSignOut }: UserProfileDropdownProps) => 
                     <span className="hidden sm:block text-sm font-medium text-gray-700">
                         {displayName}
                     </span>
-                    <HiChevronDown 
-                        className={`w-4 h-4 text-gray-500 transition-transform ${
-                            isOpen ? 'rotate-180' : ''
-                        }`} 
+                    <HiChevronDown
+                        className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''
+                            }`}
                     />
                 </button>
             </div>
 
             {/* Notification Dropdown */}
-            <NotificationDropdown 
-                isOpen={isNotificationOpen} 
-                onClose={() => setIsNotificationOpen(false)} 
+            <NotificationDropdown
+                isOpen={isNotificationOpen}
+                onClose={() => setIsNotificationOpen(false)}
             />
 
             {/* Dropdown Menu */}
@@ -147,7 +145,7 @@ export const UserProfileDropdown = ({ onSignOut }: UserProfileDropdownProps) => 
                             <HiUser className="w-4 h-4" />
                             <span>My Profile</span>
                         </Link>
-                        
+
                         <button
                             onClick={handleSignOut}
                             className="flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"

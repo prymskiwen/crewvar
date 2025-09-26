@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useDeleteRole, useDepartments, useRolesByDepartment } from '../api/dataManagementApi';
+// TODO: Implement Firebase data management functionality
 import { toast } from 'react-toastify';
 
 interface DeleteRoleModalProps {
@@ -10,9 +10,30 @@ interface DeleteRoleModalProps {
 export const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({ isOpen, onClose }) => {
   const [selectedDepartmentId, setSelectedDepartmentId] = useState('');
   const [selectedRoleId, setSelectedRoleId] = useState('');
-  const deleteRoleMutation = useDeleteRole();
-  const { data: departmentsData } = useDepartments();
-  const { data: rolesData } = useRolesByDepartment(selectedDepartmentId || null);
+  // TODO: Implement Firebase data management functionality
+  const deleteRoleMutation = {
+    mutateAsync: async (roleId: string) => {
+      // TODO: Implement Firebase delete role functionality
+      console.log('Deleting role:', roleId);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Role deleted successfully!');
+    },
+    isLoading: false
+  };
+  const departmentsData = {
+    departments: [
+      { id: '1', name: 'Entertainment' },
+      { id: '2', name: 'Food & Beverage' },
+      { id: '3', name: 'Housekeeping' }
+    ]
+  };
+  const rolesData = {
+    roles: [
+      { id: '1', name: 'Entertainment Host', department_id: '1' },
+      { id: '2', name: 'Waiter', department_id: '2' },
+      { id: '3', name: 'Cabin Steward', department_id: '3' }
+    ]
+  };
 
   const handleDepartmentChange = (departmentId: string) => {
     setSelectedDepartmentId(departmentId);

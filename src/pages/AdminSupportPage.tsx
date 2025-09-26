@@ -1,22 +1,59 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContextFirebase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { HiEye, HiReply, HiCheckCircle, HiXCircle, HiClock, HiSearch } from 'react-icons/hi';
-import { 
-  getAdminSupportTickets, 
-  updateTicketStatus, 
-  addTicketResponse, 
-  SupportTicket
-} from '../features/support/api/supportApi';
+// Support API functions will be implemented with Firebase
+interface SupportTicket {
+    id: string;
+    title: string;
+    subject: string;
+    description: string;
+    status: 'open' | 'in_progress' | 'resolved' | 'closed';
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    category: string;
+    userId: string;
+    userName: string;
+    user_name: string;
+    userEmail: string;
+    user_email: string;
+    createdAt: string;
+    created_at: string;
+    updatedAt: string;
+    admin_response?: string;
+    admin_name?: string;
+    tickets?: SupportTicket[];
+    responses: Array<{
+        id: string;
+        message: string;
+        isAdmin: boolean;
+        createdAt: string;
+    }>;
+}
 import SupportDropdown from '../components/SupportDropdown';
 import logo from '../assets/images/Home/logo.png';
+
+// Placeholder functions - to be implemented with Firebase
+const getAdminSupportTickets = async (): Promise<SupportTicket[]> => {
+    // TODO: Implement with Firebase Firestore
+    return [];
+};
+
+const updateTicketStatus = async (ticketId: string, status: string): Promise<void> => {
+    // TODO: Implement with Firebase Firestore
+    console.log('Update ticket status:', ticketId, status);
+};
+
+const addTicketResponse = async (ticketId: string, message: string): Promise<void> => {
+    // TODO: Implement with Firebase Firestore
+    console.log('Add ticket response:', ticketId, message);
+};
 
 
 const AdminSupportPage = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
-    
+
     // Current user context
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -49,17 +86,11 @@ const AdminSupportPage = () => {
         const loadData = async () => {
             setIsLoading(true);
             try {
-                
-                const ticketsResponse = await getAdminSupportTickets({
-                    page: 1,
-                    limit: 50,
-                    status: statusFilter,
-                    priority: priorityFilter,
-                    search: searchTerm
-                });
-                
+
+                const ticketsResponse = await getAdminSupportTickets();
+
                 // Admin support tickets loaded
-                setTickets(ticketsResponse.tickets || []);
+                setTickets(ticketsResponse || []);
             } catch (error: any) {
                 console.error('❌ Failed to load support tickets:', error);
                 console.error('Error details:', error.response?.data);
@@ -84,13 +115,13 @@ const AdminSupportPage = () => {
     const handleUpdateStatus = async (ticketId: string, status: string) => {
         try {
             await updateTicketStatus(ticketId, status);
-            
-            setTickets(prev => prev.map(ticket => 
-                ticket.id === ticketId 
+
+            setTickets(prev => prev.map(ticket =>
+                ticket.id === ticketId
                     ? { ...ticket, status: status as any, updated_at: new Date().toISOString() }
                     : ticket
             ));
-            
+
             toast.success(`Ticket ${status.replace('_', ' ')} successfully`);
         } catch (error: any) {
             console.error('Failed to update ticket status:', error);
@@ -106,10 +137,10 @@ const AdminSupportPage = () => {
             const result = await addTicketResponse(selectedTicket.id, adminResponse);
             console.log('Response submitted successfully:', result);
 
-            setTickets(prev => prev.map(ticket => 
-                ticket.id === selectedTicket.id 
-                    ? { 
-                        ...ticket, 
+            setTickets(prev => prev.map(ticket =>
+                ticket.id === selectedTicket.id
+                    ? {
+                        ...ticket,
                         admin_response: adminResponse,
                         admin_id: currentUser?.uid,
                         status: 'in_progress',
@@ -177,9 +208,9 @@ const AdminSupportPage = () => {
             <div className="bg-teal-600 text-white p-3 sm:p-4 sticky top-0 z-10">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2 sm:space-x-3">
-                        <img 
-                            src={logo} 
-                            alt="Crewvar Logo" 
+                        <img
+                            src={logo}
+                            alt="Crewvar Logo"
                             className="h-6 sm:h-8 w-auto"
                         />
                         <h1 className="text-lg sm:text-xl font-bold">Support Management</h1>
@@ -200,9 +231,9 @@ const AdminSupportPage = () => {
                 <div className="hidden sm:block mb-6 lg:mb-8">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                            <img 
-                                src={logo} 
-                                alt="Crewvar Logo" 
+                            <img
+                                src={logo}
+                                alt="Crewvar Logo"
                                 className="h-10 w-auto"
                             />
                             <h1 className="text-3xl font-bold text-[#069B93]">Support Management</h1>
@@ -253,7 +284,7 @@ const AdminSupportPage = () => {
                             Support Tickets ({filteredTickets.length})
                         </h2>
                     </div>
-                    
+
                     {filteredTickets.length === 0 ? (
                         <div className="p-6 sm:p-8 text-center">
                             <p className="text-sm sm:text-base text-gray-600">No tickets found matching your criteria.</p>
@@ -345,7 +376,7 @@ const AdminSupportPage = () => {
                                     </button>
                                 </div>
                             </div>
-                            
+
                             <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     <div>

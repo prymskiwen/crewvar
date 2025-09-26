@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContextFirebase';
 
 interface AdminGuardProps {
     children: React.ReactNode;
@@ -9,34 +9,34 @@ interface AdminGuardProps {
 export const AdminGuard = ({ children }: AdminGuardProps) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { currentUser, isLoading } = useAuth();
+    const { currentUser, userProfile, loading } = useAuth();
 
     useEffect(() => {
         // Don't redirect while loading
-        if (isLoading) return;
+        if (loading) return;
 
         // If user is not authenticated, let other guards handle it
         if (!currentUser) return;
 
         // If user is admin, they should only access admin routes
-        if (currentUser.isAdmin) {
+        if (userProfile?.isAdmin) {
             const isAdminRoute = location.pathname.startsWith('/admin');
-            
+
             if (!isAdminRoute) {
                 console.log('Admin user accessing non-admin route, redirecting to admin page');
-                navigate('/admin', { 
+                navigate('/admin', {
                     replace: true,
-                    state: { 
+                    state: {
                         from: location.pathname,
                         reason: 'Admin users can only access admin pages'
                     }
                 });
             }
         }
-    }, [currentUser, isLoading, location.pathname, navigate]);
+    }, [currentUser, userProfile, loading, location.pathname, navigate]);
 
     // If user is admin and not on admin route, show loading while redirecting
-    if (currentUser?.isAdmin && !location.pathname.startsWith('/admin')) {
+    if (userProfile?.isAdmin && !location.pathname.startsWith('/admin')) {
         return (
             <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#B9F3DF' }}>
                 <div className="text-center">

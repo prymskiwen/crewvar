@@ -1,13 +1,17 @@
 import { useState } from "react";
-import { usePrivacy } from "../context/PrivacyContext";
+// TODO: Implement Firebase privacy functionality
 
 export const BlockedUsersManager = () => {
-    const { blockedUsers, unblockUser } = usePrivacy();
-    const [isLoading, setIsLoading] = useState<{[key: string]: boolean}>({});
+    // TODO: Implement Firebase privacy functionality
+    const blockedUsers: any[] = [];
+    const unblockUser = () => {
+        // Placeholder function
+    };
+    const [isLoading, setIsLoading] = useState<{ [key: string]: boolean }>({});
 
     const handleUnblock = async (blockedUserId: string) => {
         setIsLoading(prev => ({ ...prev, [blockedUserId]: true }));
-        
+
         try {
             await unblockUser(blockedUserId);
             console.log(`Unblocked user ${blockedUserId}`);
@@ -64,7 +68,7 @@ export const BlockedUsersManager = () => {
                                     {isLoading[block.blockedUserId] ? 'Unblocking...' : 'Unblock'}
                                 </button>
                             </div>
-                            
+
                             {block.isMutual && (
                                 <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
                                     <p className="text-xs text-blue-700">
@@ -86,7 +90,7 @@ export const BlockedUsersManager = () => {
                     <div>
                         <h4 className="font-medium text-red-900">Blocking Policy</h4>
                         <p className="text-sm text-red-700 mt-1">
-                            When you block a user, they become invisible to you and you become invisible to them. 
+                            When you block a user, they become invisible to you and you become invisible to them.
                             This is a mutual action that cannot be undone by the blocked user.
                         </p>
                     </div>

@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
-import { useUploadProfilePhoto } from '../features/upload/api/uploadApi';
+import { uploadProfilePhoto } from '../firebase/storage';
+import { useAuth } from '../context/AuthContextFirebase';
 
 interface ProfilePhotoUploadProps {
     currentPhoto?: string;
@@ -9,18 +10,19 @@ interface ProfilePhotoUploadProps {
     showInstructions?: boolean;
 }
 
-export const ProfilePhotoUpload = ({ 
-    currentPhoto, 
-    onPhotoChange, 
+export const ProfilePhotoUpload = ({
+    currentPhoto,
+    onPhotoChange,
     className = '',
     size = 'large',
     showInstructions = true
 }: ProfilePhotoUploadProps) => {
     const [isDragOver, setIsDragOver] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    
-    const { mutate: uploadPhoto, isLoading: isUploading, error } = useUploadProfilePhoto();
+    const { currentUser } = useAuth();
 
     const sizeClasses = {
         small: 'w-16 h-16',
@@ -46,24 +48,36 @@ export const ProfilePhotoUpload = ({
         const previewUrl = URL.createObjectURL(file);
         setPreview(previewUrl);
 
-        // Upload file
-        uploadPhoto(file, {
-            onSuccess: (response) => {
-                console.log('Upload successful, response:', response);
-                console.log('File URL from response:', response.fileUrl);
-                onPhotoChange(response.fileUrl);
-                // Clean up preview URL
-                URL.revokeObjectURL(previewUrl);
-                setPreview(null);
-            },
-            onError: (error) => {
-                console.error('Upload error:', error);
-                // Clean up preview on error
-                URL.revokeObjectURL(previewUrl);
-                setPreview(null);
-            }
-        });
-    }, [uploadPhoto, onPhotoChange]);
+        // Upload file with Firebase
+        if (!currentUser) return;
+
+        setIsUploading(true);
+        setUploadProgress(0);
+
+        try {
+            const downloadURL = await uploadProfilePhoto(file, currentUser.uid, (progress) => {
+                setUploadProgress(Math.round((progress.bytesTransferred / progress.totalBytes) * 100));
+            });
+
+            console.log('Upload successful:', downloadURL);
+            onPhotoChange(downloadURL);
+            setPreview(null);
+            setUploadProgress(0);
+
+            // Clean up preview URL
+            URL.revokeObjectURL(previewUrl);
+        } catch (error) {
+            console.error('Upload failed:', error);
+            setPreview(null);
+            setUploadProgress(0);
+            alert('Upload failed. Please try again.');
+
+            // Clean up preview URL
+            URL.revokeObjectURL(previewUrl);
+        } finally {
+            setIsUploading(false);
+        }
+    }, [currentUser, onPhotoChange]);
 
     const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -75,7 +89,7 @@ export const ProfilePhotoUpload = ({
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
         setIsDragOver(false);
-        
+
         const file = e.dataTransfer.files[0];
         if (file) {
             handleFileSelect(file);
@@ -125,8 +139,8 @@ export const ProfilePhotoUpload = ({
                     relative rounded-full ${borderClasses}
                     cursor-pointer transition-all duration-200
                     flex items-center justify-center overflow-hidden
-                    ${isDragOver 
-                        ? 'border-[#069B93] bg-[#069B93]/10' 
+                    ${isDragOver
+                        ? 'border-[#069B93] bg-[#069B93]/10'
                         : className ? '' : 'border-gray-300 hover:border-[#069B93] hover:bg-gray-50'
                     }
                     ${isUploading ? 'opacity-50 pointer-events-none' : ''}
@@ -176,7 +190,10 @@ export const ProfilePhotoUpload = ({
                 {/* Upload overlay */}
                 {isUploading && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-                        <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <div className="text-center">
+                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                            <p className="text-white text-xs">{uploadProgress}%</p>
+                        </div>
                     </div>
                 )}
 
@@ -188,7 +205,7 @@ export const ProfilePhotoUpload = ({
                         </svg>
                     </div>
                 )}
-                
+
                 {/* Hover effect for upload area when no photo */}
                 {!displayPhoto && !isUploading && (
                     <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 rounded-full transition-all duration-200"></div>

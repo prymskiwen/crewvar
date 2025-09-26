@@ -1,24 +1,34 @@
 import { useState } from "react";
-import { useModeration } from "../context/ModerationContext";
+// TODO: Implement Firebase moderation functionality
 import { IReport } from "../types/moderation";
 
 export const ModerationDashboard = () => {
-    const { 
-        reports, 
-        suspiciousActivities, 
-        stats, 
-        updateReportStatus, 
-        performModerationAction,
-        markSuspiciousActivityResolved 
-    } = useModeration();
-    
+    // TODO: Implement Firebase moderation functionality
+    const reports: any[] = [];
+    const suspiciousActivities: any[] = [];
+    const stats = {
+        totalReports: 0,
+        pendingReports: 0,
+        resolvedReports: 0,
+        suspiciousActivities: 0
+    };
+    const updateReportStatus = () => {
+        // Placeholder function
+    };
+    const performModerationAction = () => {
+        // Placeholder function
+    };
+    const markSuspiciousActivityResolved = () => {
+        // Placeholder function
+    };
+
     const [activeTab, setActiveTab] = useState<'overview' | 'reports' | 'suspicious' | 'actions'>('overview');
     const [selectedReport, setSelectedReport] = useState<IReport | null>(null);
-    const [isLoading, setIsLoading] = useState<{[key: string]: boolean}>({});
+    const [isLoading, setIsLoading] = useState<{ [key: string]: boolean }>({});
 
     const handleUpdateReportStatus = async (reportId: string, status: IReport['status'], resolution?: string) => {
         setIsLoading(prev => ({ ...prev, [reportId]: true }));
-        
+
         try {
             await updateReportStatus(reportId, status, resolution);
             setSelectedReport(null);
@@ -31,7 +41,7 @@ export const ModerationDashboard = () => {
 
     const handlePerformAction = async (reportId: string, actionType: string, targetUserId: string, reason: string) => {
         setIsLoading(prev => ({ ...prev, [reportId]: true }));
-        
+
         try {
             await performModerationAction({
                 reportId,
@@ -50,7 +60,7 @@ export const ModerationDashboard = () => {
 
     const handleResolveSuspiciousActivity = async (activityId: string) => {
         setIsLoading(prev => ({ ...prev, [activityId]: true }));
-        
+
         try {
             await markSuspiciousActivityResolved(activityId);
         } catch (error) {
@@ -102,11 +112,10 @@ export const ModerationDashboard = () => {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id as any)}
-                                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                                        activeTab === tab.id
+                                    className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
                                             ? 'border-[#069B93] text-[#069B93]'
                                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                    }`}
+                                        }`}
                                 >
                                     {tab.label}
                                 </button>
@@ -273,11 +282,10 @@ export const ModerationDashboard = () => {
                                     <div key={activity.id} className="border border-gray-200 rounded-lg p-4 mb-4">
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center space-x-3">
-                                                <span className={`px-2 py-1 text-xs rounded-full ${
-                                                    activity.severity === 'high' ? 'bg-red-100 text-red-800' :
-                                                    activity.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                                    'bg-green-100 text-green-800'
-                                                }`}>
+                                                <span className={`px-2 py-1 text-xs rounded-full ${activity.severity === 'high' ? 'bg-red-100 text-red-800' :
+                                                        activity.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                                            'bg-green-100 text-green-800'
+                                                    }`}>
                                                     {activity.severity}
                                                 </span>
                                                 <span className="text-sm font-medium text-gray-900">

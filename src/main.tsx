@@ -10,17 +10,14 @@ import { persistor } from "./app/store";
 import { PersistGate } from "redux-persist/integration/react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { AxiosError } from "axios";
+// Removed axios import - now using Firebase
 
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             retry: (failureCount, error) => {
-                // Don't retry on 401 errors (authentication issues) or missing token errors
-                if (error instanceof AxiosError && error.response?.status === 401) {
-                    return false;
-                }
-                if (error instanceof Error && error.message === 'No authentication token available') {
+                // Don't retry on Firebase auth errors
+                if (error instanceof Error && error.message.includes('auth/')) {
                     return false;
                 }
                 // Retry up to 3 times for other errors
@@ -31,23 +28,23 @@ const queryClient = new QueryClient({
     },
     queryCache: new QueryCache({
         onError: (error) => {
-            if (error instanceof AxiosError) {
-                // Don't show toast for 401 errors to avoid spam
-                if (error.response?.status !== 401) {
-                    toast.error(error.message);
+            if (error instanceof Error) {
+                // Don't show toast for Firebase auth errors to avoid spam
+                if (error.message.includes('auth/')) {
+                    return;
                 }
-            } else if (error instanceof Error && error.message === 'No authentication token available') {
-                // Don't show toast for missing token errors
-                return;
-            } else if (error instanceof Error) {
                 toast.error(error.message);
             }
         },
     }),
     mutationCache: new MutationCache({
         onError: (error) => {
-            if (error instanceof AxiosError) {
-                toast.error(error.response?.data.message);
+            if (error instanceof Error) {
+                // Don't show toast for Firebase auth errors to avoid spam
+                if (error.message.includes('auth/')) {
+                    return;
+                }
+                toast.error(error.message);
             }
         },
     }),

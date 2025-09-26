@@ -1,8 +1,15 @@
 import { useState } from 'react';
-import { useCrewInPort, useLinkShips, ICrewMember } from '../api/portLinking';
-import { useCruiseLines, useShipsByCruiseLine } from '../../cruise/api/cruiseData';
 import { Spinner } from '../../../components/Elements/Spinner';
 import { getProfilePhotoUrl } from '../../../utils/imageUtils';
+
+// TODO: Define ICrewMember interface
+interface ICrewMember {
+    id: string;
+    name: string;
+    role: string;
+    department: string;
+    avatar?: string;
+}
 
 interface WhosInPortProps {
   className?: string;
@@ -15,10 +22,17 @@ export const WhosInPort = ({ className = "" }: WhosInPortProps) => {
   
   const today = new Date().toISOString().split('T')[0];
   
-  const { data: crewData, isLoading: crewLoading, error: crewError } = useCrewInPort(today);
-  const { data: cruiseLines = [], isLoading: cruiseLinesLoading } = useCruiseLines();
-  const { data: shipsByCruiseLine = [], isLoading: shipsByCruiseLineLoading } = useShipsByCruiseLine(selectedCruiseLineId);
-  const { mutateAsync: linkShips } = useLinkShips();
+  // TODO: Implement Firebase port linking functionality
+  const crewData: ICrewMember[] = [];
+  const crewLoading = false;
+  const crewError = null;
+  const cruiseLines: any[] = [];
+  const cruiseLinesLoading = false;
+  const shipsByCruiseLine: any[] = [];
+  const shipsByCruiseLineLoading = false;
+  const linkShips = () => {
+      // Placeholder function
+  };
   // Removed unused unlinkShips
 
   const handleLinkShips = async () => {

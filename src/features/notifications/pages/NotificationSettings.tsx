@@ -1,10 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useNotifications } from '../../../context/NotificationContext';
 import { HiArrowLeft, HiBell, HiMail, HiCheck } from 'react-icons/hi';
 import { Link } from 'react-router-dom';
 
 const NotificationSettings = () => {
-    const { preferences, updatePreferences } = useNotifications();
+    // TODO: Implement Firebase notification preferences
+    const preferences = {
+        email: true,
+        push: true,
+        connectionRequests: true,
+        messages: true,
+        announcements: true
+    };
+    const updatePreferences = () => {
+        // Placeholder function
+    };
     const [localPreferences, setLocalPreferences] = useState(preferences);
     const [isSaving, setIsSaving] = useState(false);
 

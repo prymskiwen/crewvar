@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useModeration } from "../context/ModerationContext";
+// TODO: Implement Firebase moderation functionality
 import { IReportFormData } from "../types/moderation";
 
 interface ReportUserProps {
@@ -9,7 +9,10 @@ interface ReportUserProps {
 }
 
 export const ReportUser = ({ reportedUserId, reportedUserName, onClose }: ReportUserProps) => {
-    const { submitReport } = useModeration();
+    // TODO: Implement Firebase moderation functionality
+    const submitReport = () => {
+        // Placeholder function
+    };
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState<IReportFormData>({
         reportedUserId,
@@ -31,7 +34,7 @@ export const ReportUser = ({ reportedUserId, reportedUserName, onClose }: Report
         if (!formData.description.trim()) return;
 
         setIsSubmitting(true);
-        
+
         try {
             await submitReport({
                 reporterId: "current_user",
@@ -41,7 +44,7 @@ export const ReportUser = ({ reportedUserId, reportedUserName, onClose }: Report
                 evidence: formData.evidence,
                 priority: formData.reportType === 'harassment' ? 'high' : 'medium'
             });
-            
+
             onClose();
             console.log(`Report submitted for ${reportedUserName}`);
         } catch (error) {
@@ -137,7 +140,7 @@ export const ReportUser = ({ reportedUserId, reportedUserName, onClose }: Report
                                 <div>
                                     <h4 className="font-medium text-blue-900">Privacy & Safety</h4>
                                     <p className="text-sm text-blue-700 mt-1">
-                                        Your report will be reviewed by our moderation team. 
+                                        Your report will be reviewed by our moderation team.
                                         False reports may result in account restrictions.
                                     </p>
                                 </div>

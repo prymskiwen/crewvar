@@ -1,9 +1,54 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContextFirebase';
 import { toast } from 'react-toastify';
-import { api } from '../app/api';
+// Removed old API import - now using Firebase
 import { getProfilePhotoUrl } from '../utils/imageUtils';
+
+// Placeholder Firebase functions - to be implemented
+const getUserDetails = async (userId: string): Promise<UserDetails> => {
+  // TODO: Implement with Firebase Firestore
+  console.log('Get user details for:', userId);
+  return {
+    id: userId,
+    email: '',
+    display_name: '',
+    profile_photo: '',
+    bio: '',
+    phone: '',
+    instagram: '',
+    twitter: '',
+    facebook: '',
+    snapchat: '',
+    website: '',
+    department_name: '',
+    role_name: '',
+    ship_name: '',
+    is_admin: false,
+    is_super_admin: false,
+    is_email_verified: false,
+    is_active: true,
+    is_banned: false,
+    ban_reason: '',
+    created_at: '',
+    updated_at: ''
+  };
+};
+
+const banUser = async (userId: string, reason: string): Promise<void> => {
+  // TODO: Implement with Firebase Firestore
+  console.log('Ban user:', userId, 'Reason:', reason);
+};
+
+const unbanUser = async (userId: string): Promise<void> => {
+  // TODO: Implement with Firebase Firestore
+  console.log('Unban user:', userId);
+};
+
+const deleteUser = async (userId: string, reason: string): Promise<void> => {
+  // TODO: Implement with Firebase Firestore
+  console.log('Delete user:', userId, 'Reason:', reason);
+};
 
 interface UserDetails {
   id: string;
@@ -17,6 +62,9 @@ interface UserDetails {
   facebook?: string;
   snapchat?: string;
   website?: string;
+  department_name?: string;
+  role_name?: string;
+  ship_name?: string;
   is_admin: boolean;
   is_super_admin: boolean;
   is_email_verified: boolean;
@@ -56,8 +104,12 @@ export const AdminUserDetail = () => {
     setError(null);
 
     try {
-      const { data } = await api.get(`/admin/users/${userId}`);
-      setUser(data.user);
+      if (!userId) {
+        setError('User ID is required');
+        return;
+      }
+      const data = await getUserDetails(userId);
+      setUser(data);
     } catch (err: any) {
       console.error('Failed to load user details:', err);
       setError(err.message);
@@ -71,10 +123,14 @@ export const AdminUserDetail = () => {
     const reason = prompt('Enter ban reason:');
     if (!reason) return;
 
+    if (!userId) {
+      toast.error('User ID is required');
+      return;
+    }
     setActionLoading(true);
     try {
-      await api.post(`/admin/users/${userId}/ban`, { reason });
-      
+      await banUser(userId, reason);
+
       toast.success('User banned successfully');
       loadUserDetails(); // Refresh data
     } catch (err: any) {
@@ -85,10 +141,14 @@ export const AdminUserDetail = () => {
   };
 
   const handleUnbanUser = async () => {
+    if (!userId) {
+      toast.error('User ID is required');
+      return;
+    }
     setActionLoading(true);
     try {
-      await api.post(`/admin/users/${userId}/unban`);
-      
+      await unbanUser(userId);
+
       toast.success('User unbanned successfully');
       loadUserDetails(); // Refresh data
     } catch (err: any) {
@@ -106,10 +166,14 @@ export const AdminUserDetail = () => {
       return;
     }
 
+    if (!userId) {
+      toast.error('User ID is required');
+      return;
+    }
     setActionLoading(true);
     try {
-      await api.post(`/admin/users/${userId}/delete`, { reason });
-      
+      await deleteUser(userId, reason);
+
       toast.success('User deleted successfully');
       navigate('/admin');
     } catch (err: any) {
@@ -244,11 +308,10 @@ export const AdminUserDetail = () => {
                     <h5 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Status</h5>
                     <div className="mt-2 space-y-2">
                       <div className="flex items-center space-x-2">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          user.is_banned ? 'bg-red-100 text-red-800' : 
-                          user.is_active ? 'bg-green-100 text-green-800' : 
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.is_banned ? 'bg-red-100 text-red-800' :
+                          user.is_active ? 'bg-green-100 text-green-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
                           {user.is_banned ? 'Banned' : user.is_active ? 'Active' : 'Inactive'}
                         </span>
                         {user.is_admin && (

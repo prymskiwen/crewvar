@@ -1,7 +1,16 @@
 import { useRef, useEffect } from 'react';
-import { useNotifications, INotification } from '../context/NotificationContext';
 import { HiBell, HiCheck, HiX, HiCog } from 'react-icons/hi';
 import { Link } from 'react-router-dom';
+
+// TODO: Define INotification interface
+interface INotification {
+    id: string;
+    type: string;
+    title: string;
+    message: string;
+    isRead: boolean;
+    createdAt: string;
+}
 
 interface NotificationDropdownProps {
     isOpen: boolean;
@@ -9,14 +18,19 @@ interface NotificationDropdownProps {
 }
 
 export const NotificationDropdown = ({ isOpen, onClose }: NotificationDropdownProps) => {
-    const { 
-        notifications, 
-        unreadCount, 
-        markAsRead, 
-        markAllAsRead, 
-        removeNotification,
-        isLoading 
-    } = useNotifications();
+    // TODO: Implement Firebase notifications functionality
+    const notifications: INotification[] = [];
+    const unreadCount = 0;
+    const markAsRead = () => {
+        // Placeholder function
+    };
+    const markAllAsRead = () => {
+        // Placeholder function
+    };
+    const removeNotification = () => {
+        // Placeholder function
+    };
+    const isLoading = false;
     
     const dropdownRef = useRef<HTMLDivElement>(null);
 

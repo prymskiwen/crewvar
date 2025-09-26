@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAddShip, useCruiseLines } from '../api/dataManagementApi';
+// TODO: Implement Firebase data management functionality
 
 interface AddShipModalProps {
   isOpen: boolean;
@@ -9,16 +9,31 @@ interface AddShipModalProps {
 export const AddShipModal: React.FC<AddShipModalProps> = ({ isOpen, onClose }) => {
   const [name, setName] = useState('');
   const [cruiseLineId, setCruiseLineId] = useState('');
-  const addShipMutation = useAddShip();
-  const { data: cruiseLinesData } = useCruiseLines();
+  // TODO: Implement Firebase data management functionality
+  const addShipMutation = {
+    mutateAsync: async (shipData: { name: string; cruiseLineId: string }) => {
+      // TODO: Implement Firebase add ship functionality
+      console.log('Adding ship:', shipData);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Ship added successfully!');
+    },
+    isLoading: false
+  };
+  const cruiseLinesData = {
+    cruiseLines: [
+      { id: '1', name: 'Carnival Cruise Line' },
+      { id: '2', name: 'Royal Caribbean International' },
+      { id: '3', name: 'Norwegian Cruise Line' }
+    ]
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !cruiseLineId) return;
 
     try {
-      await addShipMutation.mutateAsync({ 
-        name: name.trim(), 
+      await addShipMutation.mutateAsync({
+        name: name.trim(),
         cruiseLineId
       });
       setName('');

@@ -1,7 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
-import { useUserProfile as useCrewUserProfile } from "../api/crewApi";
-import { useConnectionStatus, useSendConnectionRequest } from "../../connections/api/connectionApi";
 import { getProfilePhotoUrl } from "../../../utils/imageUtils";
 import logo from "../../../assets/images/Home/logo.png";
 import { toast } from "react-toastify";
@@ -9,9 +7,14 @@ import { toast } from "react-toastify";
 export const CrewMemberProfile = () => {
     const { userId } = useParams<{ userId: string }>();
     const navigate = useNavigate();
-    const { data: crewProfile, isLoading: profileLoading, error } = useCrewUserProfile(userId || '');
-    const { data: connectionStatus } = useConnectionStatus(userId || '');
-    const sendConnectionRequest = useSendConnectionRequest();
+    // TODO: Implement Firebase crew profile and connection functionality
+    const crewProfile = null;
+    const profileLoading = false;
+    const error = null;
+    const connectionStatus = null;
+    const sendConnectionRequest = () => {
+        // Placeholder function
+    };
     const [connectionMessage, setConnectionMessage] = useState('');
     const [showMessageInput, setShowMessageInput] = useState(false);
 

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useCruiseLines, useShipsByCruiseLine } from "../features/cruise/api/cruiseData";
 
 interface ShipSelectionProps {
     selectedCruiseLineId?: string;
@@ -174,8 +173,11 @@ export const ShipSelection = ({
     disabled = false,
     className = ""
 }: ShipSelectionProps) => {
-    const { data: cruiseLines = [], isLoading: cruiseLinesLoading } = useCruiseLines();
-    const { data: availableShips = [], isLoading: shipsLoading } = useShipsByCruiseLine(selectedCruiseLineId);
+    // TODO: Implement Firebase cruise data functionality
+    const cruiseLines: any[] = [];
+    const cruiseLinesLoading = false;
+    const availableShips: any[] = [];
+    const shipsLoading = false;
 
     // Reset ship selection when cruise line changes
     useEffect(() => {

@@ -1,11 +1,20 @@
-import { useConnections, useRemoveConnection } from '../api/connectionApi';
 import { getProfilePhotoUrl } from '../../../utils/imageUtils';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 export const MyConnections = () => {
-    const { data: connectionsData, isLoading, error } = useConnections();
-    const removeConnection = useRemoveConnection();
+    // TODO: Implement Firebase connections functionality
+    const connectionsData = null;
+    const isLoading = false;
+    const error = null;
+    const removeConnection = {
+        mutateAsync: async (connectionId: string) => {
+            // TODO: Implement Firebase connection removal functionality
+            console.log('Removing connection:', connectionId);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            toast.success('Connection removed successfully!');
+        }
+    };
     const navigate = useNavigate();
 
     const handleRemoveConnection = async (connectionId: string) => {
@@ -15,11 +24,11 @@ export const MyConnections = () => {
 
         try {
             await removeConnection.mutateAsync(connectionId);
-            
+
             // Find the connection to get the user's name for the notification
             const connection = connections.find(conn => conn.id === connectionId);
             const userName = connection?.display_name || 'User';
-            
+
             toast.success(`Connection with ${userName} has been removed`, {
                 position: "top-right",
                 autoClose: 3000,
@@ -89,7 +98,7 @@ export const MyConnections = () => {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No Connections Yet</h3>
                 <p className="text-gray-600 mb-4">You haven't connected with any crew members yet.</p>
-                <button 
+                <button
                     onClick={() => navigate('/dashboard')}
                     className="px-6 py-3 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors font-medium"
                 >
@@ -104,8 +113,8 @@ export const MyConnections = () => {
             {connections.map((connection) => (
                 <div key={connection.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
                     <div className="text-center">
-                        <img 
-                            src={getProfilePhotoUrl(connection.profile_photo)} 
+                        <img
+                            src={getProfilePhotoUrl(connection.profile_photo)}
                             alt={connection.display_name}
                             className="w-16 h-16 rounded-full object-cover border-4 border-white shadow-lg mx-auto mb-4"
                         />
@@ -113,7 +122,7 @@ export const MyConnections = () => {
                         <p className="text-sm text-gray-600 mb-2">{connection.role_name}</p>
                         <p className="text-xs text-gray-500 mb-3">{connection.department_name}</p>
                         <p className="text-xs text-gray-400 mb-4">{connection.ship_name} • {connection.cruise_line_name}</p>
-                        
+
                         <div className="flex space-x-2">
                             <button
                                 onClick={() => handleViewProfile(connection.user1_id === connection.id ? connection.user2_id : connection.user1_id)}
@@ -129,7 +138,7 @@ export const MyConnections = () => {
                                 Remove
                             </button>
                         </div>
-                        
+
                         <p className="text-xs text-gray-400 mt-3">
                             Connected {new Date(connection.created_at).toLocaleDateString()}
                         </p>

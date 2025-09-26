@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useFavorites } from "../context/FavoritesContext";
+// TODO: Implement Firebase favorites functionality
 
 interface FavoriteButtonProps {
     userId: string;
@@ -8,19 +8,26 @@ interface FavoriteButtonProps {
     showText?: boolean;
 }
 
-export const FavoriteButton = ({ 
-    userId, 
-    userName, 
+export const FavoriteButton = ({
+    userId,
+    userName,
     size = 'md'
 }: FavoriteButtonProps) => {
-    const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+    // TODO: Implement Firebase favorites functionality
+    const isFavorite = () => false;
+    const addFavorite = () => {
+        // Placeholder function
+    };
+    const removeFavorite = () => {
+        // Placeholder function
+    };
     const [isLoading, setIsLoading] = useState(false);
-    
+
     const isFavorited = isFavorite(userId);
 
     const handleToggleFavorite = async () => {
         setIsLoading(true);
-        
+
         try {
             if (isFavorited) {
                 removeFavorite(userId);
@@ -54,8 +61,8 @@ export const FavoriteButton = ({
                 ${getSizeClasses()}
                 flex items-center justify-center
                 rounded-full border-2 transition-all duration-200
-                ${isFavorited 
-                    ? 'bg-yellow-100 border-yellow-400 text-yellow-600 hover:bg-yellow-200' 
+                ${isFavorited
+                    ? 'bg-yellow-100 border-yellow-400 text-yellow-600 hover:bg-yellow-200'
                     : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200 hover:border-gray-400'
                 }
                 ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
@@ -78,12 +85,12 @@ export const FavoriteButton = ({
 export const FavoriteButtonWithText = ({ userId }: FavoriteButtonProps) => {
     const { isFavorite, addFavorite, removeFavorite } = useFavorites();
     const [isLoading, setIsLoading] = useState(false);
-    
+
     const isFavorited = isFavorite(userId);
 
     const handleToggleFavorite = async () => {
         setIsLoading(true);
-        
+
         try {
             if (isFavorited) {
                 removeFavorite(userId);
@@ -104,8 +111,8 @@ export const FavoriteButtonWithText = ({ userId }: FavoriteButtonProps) => {
             className={`
                 flex items-center space-x-2 px-4 py-2 rounded-lg
                 border-2 transition-all duration-200 font-medium
-                ${isFavorited 
-                    ? 'bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100' 
+                ${isFavorited
+                    ? 'bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100'
                     : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-gray-400'
                 }
                 ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}

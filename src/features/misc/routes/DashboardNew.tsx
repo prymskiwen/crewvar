@@ -1,17 +1,59 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
-import { useQuickCheckIn } from '../../../context/QuickCheckInContext';
+import { useAuth } from '../../../context/AuthContextFirebase';
 import { HiUsers, HiLocationMarker, HiChat, HiBell, HiMenu, HiX, HiShieldCheck } from 'react-icons/hi';
-import { useCrewInPort, useLinkShips } from '../../port/api/portLinking';
-import { useCrewOnboard } from '../../crew/api/crewApi';
 import { ConnectionPendingCard } from '../../connections/components/ConnectionPendingCard';
 import { getProfilePhotoUrl } from '../../../utils/imageUtils';
 import { UserProfileDropdown } from '../../../components/UserProfileDropdown';
 import { ShipSelection } from '../../../components/ShipSelection';
 
+// TODO: Implement Firebase hooks for crew data
+const useCrewOnboard = () => {
+    return {
+        data: { crew: [] },
+        isLoading: false,
+        error: null
+    };
+};
+
+const useCrewInPort = (_date: string) => {
+    return {
+        data: { crew: [] },
+        isLoading: false,
+        error: null
+    };
+};
+
+const useLinkShips = () => {
+    return {
+        mutateAsync: async (data: any) => {
+            console.log('TODO: Implement linkShips with Firebase', data);
+            return Promise.resolve();
+        }
+    };
+};
+
+// Type definitions
+interface CrewMember {
+    id: string;
+    display_name: string;
+    role_name?: string;
+    department_name?: string;
+    profile_photo?: string;
+    ship_name?: string;
+    cruise_line_name?: string;
+}
+
 const CrewMemberCard = ({ member }: {
-    member: any;
+    member: {
+        id: string;
+        name: string;
+        role: string;
+        department: string;
+        avatar: string;
+        shipName?: string;
+        cruiseLineName?: string;
+    };
 }) => {
     return (
         <div className="flex items-center justify-between p-2 lg:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group">
@@ -44,7 +86,7 @@ const CrewMemberCard = ({ member }: {
             </div>
             <div className="flex items-center space-x-1 lg:space-x-2 flex-shrink-0">
                 <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded">✓</span>
-                <button 
+                <button
                     onClick={() => window.location.href = `/crew/${member.id}`}
                     className="px-2 py-1 lg:px-3 lg:py-1.5 text-xs lg:text-sm bg-[#069B93] text-white rounded hover:bg-[#058a7a] transition-colors"
                 >
@@ -58,7 +100,7 @@ const CrewMemberCard = ({ member }: {
 // Today on Board Card Component
 const TodayOnBoardCard = ({ onConnectClick }: { onConnectClick: () => void }) => {
     const { data: crewData, isLoading: crewLoading, error: crewError } = useCrewOnboard();
-    
+
     const crew = crewData?.crew || [];
 
     const handleViewAll = () => {
@@ -119,11 +161,11 @@ const TodayOnBoardCard = ({ onConnectClick }: { onConnectClick: () => void }) =>
                     </button>
                 </div>
             </div>
-            
+
             <div className="space-y-1 lg:space-y-3 mb-3 lg:mb-4">
                 {crew.length > 0 ? (
                     <div className="grid grid-cols-1 gap-1 lg:gap-3">
-                        {crew.slice(0, 8).map((member) => (
+                        {crew.slice(0, 8).map((member: CrewMember) => (
                             <CrewMemberCard key={member.id} member={{
                                 id: member.id,
                                 name: member.display_name,
@@ -147,7 +189,7 @@ const TodayOnBoardCard = ({ onConnectClick }: { onConnectClick: () => void }) =>
                     </div>
                 )}
             </div>
-            
+
             {/* View All Button */}
             {crew.length > 0 && (
                 <div className="flex justify-center">
@@ -159,7 +201,7 @@ const TodayOnBoardCard = ({ onConnectClick }: { onConnectClick: () => void }) =>
                     </button>
                 </div>
             )}
-            
+
         </div>
     );
 };
@@ -169,11 +211,11 @@ const WhosInPortCard = () => {
     const [showLinkModal, setShowLinkModal] = useState(false);
     const [selectedCruiseLineId, setSelectedCruiseLineId] = useState("");
     const [selectedShipId, setSelectedShipId] = useState("");
-    
+
     const today = new Date().toISOString().split('T')[0];
     const { data: crewData, isLoading: crewLoading } = useCrewInPort(today);
     const { mutateAsync: linkShips } = useLinkShips();
-    
+
     const crew = crewData?.crew || [];
 
     const handleViewAll = () => {
@@ -228,16 +270,16 @@ const WhosInPortCard = () => {
                         </button>
                     </div>
                 </div>
-                
+
                 <div className="space-y-1 lg:space-y-3 mb-3 lg:mb-4">
                     {crew.length > 0 ? (
                         <div className="grid grid-cols-1 gap-1 lg:gap-3">
-                            {crew.slice(0, 8).map((member) => (
+                            {crew.slice(0, 8).map((member: CrewMember) => (
                                 <CrewMemberCard key={member.id} member={{
                                     id: member.id,
                                     name: member.display_name,
-                                    role: member.ship_name,
-                                    department: member.cruise_line_name,
+                                    role: member.ship_name || 'Not specified',
+                                    department: member.cruise_line_name || 'Not specified',
                                     avatar: getProfilePhotoUrl(member.profile_photo),
                                     shipName: member.ship_name,
                                     cruiseLineName: member.cruise_line_name
@@ -256,7 +298,7 @@ const WhosInPortCard = () => {
                         </div>
                     )}
                 </div>
-                
+
                 {/* View All Button */}
                 {crew.length > 0 && (
                     <div className="flex justify-center">
@@ -268,15 +310,15 @@ const WhosInPortCard = () => {
                         </button>
                     </div>
                 )}
-                
+
             </div>
-            
+
             {/* Link Ships Modal */}
             {showLinkModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl p-8 w-full max-w-md mx-4 shadow-2xl">
                         <h3 className="text-xl font-semibold text-gray-900 mb-6">Who's docked with you today?</h3>
-                        
+
                         <div className="space-y-6">
                             <ShipSelection
                                 selectedCruiseLineId={selectedCruiseLineId}
@@ -287,7 +329,7 @@ const WhosInPortCard = () => {
                                 disabled={false}
                             />
                         </div>
-                        
+
                         <div className="flex space-x-3 mt-8">
                             <button
                                 onClick={() => setShowLinkModal(false)}
@@ -338,12 +380,12 @@ const DashboardSidebar = ({ isOpen, onToggle, setShowCheckInDialog }: { isOpen: 
         <>
             {/* Mobile overlay */}
             {isOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-[9998] lg:hidden"
                     onClick={onToggle}
                 />
             )}
-            
+
             {/* Sidebar */}
             <div className={sidebarClasses}>
                 <div className="p-6">
@@ -356,7 +398,7 @@ const DashboardSidebar = ({ isOpen, onToggle, setShowCheckInDialog }: { isOpen: 
                             <HiX className="w-6 h-6" />
                         </button>
                     </div>
-                    
+
                     <nav className="space-y-2">
                         {menuItems.map((item) => {
                             // Special handling for Update where you are - show QuickCheckIn dialog
@@ -378,7 +420,7 @@ const DashboardSidebar = ({ isOpen, onToggle, setShowCheckInDialog }: { isOpen: 
                                     </button>
                                 );
                             }
-                            
+
                             // Regular navigation items
                             return (
                                 <Link
@@ -406,7 +448,10 @@ const DashboardSidebar = ({ isOpen, onToggle, setShowCheckInDialog }: { isOpen: 
 
 const DashboardNew = () => {
     const { signOut } = useAuth();
-    const { setShowCheckInDialog } = useQuickCheckIn();
+    // TODO: Implement Firebase quick check-in functionality
+    const setShowCheckInDialog = () => {
+        // Placeholder function
+    };
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const toggleSidebar = () => {
@@ -427,7 +472,7 @@ const DashboardNew = () => {
             <div className="flex flex-1">
                 {/* Sidebar */}
                 <DashboardSidebar isOpen={sidebarOpen} onToggle={toggleSidebar} setShowCheckInDialog={setShowCheckInDialog} />
-                
+
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col">
                     {/* Simple Top Bar */}
@@ -443,7 +488,7 @@ const DashboardNew = () => {
                             <UserProfileDropdown onSignOut={handleSignOut} />
                         </div>
                     </div>
-                    
+
                     <div className="p-3 sm:p-4 lg:p-6 xl:p-8 flex-1 lg:ml-72">
                         {/* Welcome Section - Compact Desktop Design */}
                         <div className="mb-4 lg:mb-6">

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContextFirebase";
 import { toast } from "react-toastify";
 
 const LoginForm = () => {
@@ -16,10 +16,10 @@ const LoginForm = () => {
 
         try {
             console.log('Attempting login with:', { email, password });
-            
+
             // Use backend authentication
             await signIn(email, password);
-            
+
             console.log('Login successful!');
             toast.success('🎉 Welcome back! You have successfully signed in.', {
                 position: "top-right",
@@ -29,17 +29,17 @@ const LoginForm = () => {
                 pauseOnHover: true,
                 draggable: true,
             });
-            
+
             // Let OnboardingGuard handle the navigation based on user status
             // OnboardingGuard will redirect admins to /admin and regular users to /dashboard
             navigate("/dashboard");
-            
+
         } catch (error: any) {
             console.error('Login error:', error);
-            
+
             // Handle different types of errors with user-friendly messages
             let userFriendlyMessage = 'Login failed. Please try again.';
-            
+
             if (error.response?.status === 401) {
                 userFriendlyMessage = 'Invalid email or password. Please check your credentials and try again.';
             } else if (error.response?.status === 403 && error.response?.data?.requiresVerification) {
@@ -53,7 +53,7 @@ const LoginForm = () => {
                     pauseOnHover: true,
                     draggable: true,
                 });
-                
+
                 // Redirect to verification pending page
                 navigate('/auth/verification-pending', {
                     state: { email: email }
@@ -78,7 +78,7 @@ const LoginForm = () => {
                     userFriendlyMessage = error.response.data.error;
                 }
             }
-            
+
             toast.error(userFriendlyMessage, {
                 position: "top-right",
                 autoClose: 5000,
@@ -104,11 +104,11 @@ const LoginForm = () => {
             draggable: true,
         });
     };
-    
+
     return (
         <div className="w-full max-w-md mx-auto">
             <form onSubmit={handleLogin} className="space-y-4">
-                
+
                 <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                         Email Address
@@ -123,7 +123,7 @@ const LoginForm = () => {
                         required
                     />
                 </div>
-                
+
                 <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                         Password
@@ -138,16 +138,16 @@ const LoginForm = () => {
                         required
                     />
                 </div>
-                
-                <button 
+
+                <button
                     type="submit"
                     disabled={isLoading}
                     className="w-full font-semibold text-sm bg-dark text-white transition hover:bg-opacity-90 rounded-xl py-3 px-4 mb-2 disabled:opacity-50"
                 >
                     {isLoading ? "Signing In..." : "Sign In"}
                 </button>
-                
-                <button 
+
+                <button
                     type="button"
                     onClick={handleDemoAccount}
                     className="w-full font-semibold text-sm bg-gray-100 text-dark transition-colors hover:bg-gray-200 rounded-xl py-3 px-4"

@@ -1,8 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useCruiseLines, useAllShips, useShipsByCruiseLine } from "../../cruise/api/cruiseData";
-import { useAllCrewQuery } from "../../connections/api/crewSearchApi";
-import { useSendConnectionRequest } from "../../connections/api/connectionApi";
 import { toast } from "react-toastify";
 import logo from "../../../assets/images/Home/logo.png";
 import { getProfilePhotoUrl } from "../../../utils/imageUtils";
@@ -18,12 +15,12 @@ interface CustomDropdownProps {
     maxHeight?: string;
 }
 
-const CustomDropdown = ({ 
-    value, 
-    onChange, 
-    options, 
-    placeholder, 
-    disabled = false, 
+const CustomDropdown = ({
+    value,
+    onChange,
+    options,
+    placeholder,
+    disabled = false,
     label,
     maxHeight = "200px"
 }: CustomDropdownProps) => {
@@ -86,13 +83,13 @@ const CustomDropdown = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
                 {label}
             </label>
-            
+
             {/* Input Field */}
-            <div 
+            <div
                 className={`
                     w-full px-3 py-3 border rounded-lg cursor-pointer
-                    ${disabled 
-                        ? 'bg-gray-100 cursor-not-allowed border-gray-200 text-gray-500' 
+                    ${disabled
+                        ? 'bg-gray-100 cursor-not-allowed border-gray-200 text-gray-500'
                         : 'bg-white border-gray-300 hover:border-teal-500 focus-within:border-teal-500 focus-within:ring-1 focus-within:ring-teal-500'
                     }
                     transition-colors
@@ -103,10 +100,10 @@ const CustomDropdown = ({
                     <span className={`${selectedOption ? 'text-gray-900' : 'text-gray-500'}`}>
                         {selectedOption ? selectedOption.name : placeholder}
                     </span>
-                    <svg 
+                    <svg
                         className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
+                        fill="none"
+                        stroke="currentColor"
                         viewBox="0 0 24 24"
                     >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -129,22 +126,21 @@ const CustomDropdown = ({
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none"
                         />
                     </div>
-                    
+
                     {/* Options List */}
-                    <div 
+                    <div
                         className="overflow-y-auto"
                         style={{ maxHeight }}
                     >
                         {/* All Option */}
                         <div
-                            className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 transition-colors ${
-                                value === '' ? 'bg-teal-500 text-white hover:bg-teal-600' : 'text-gray-900'
-                            }`}
+                            className={`px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 transition-colors ${value === '' ? 'bg-teal-500 text-white hover:bg-teal-600' : 'text-gray-900'
+                                }`}
                             onClick={() => handleOptionClick('')}
                         >
                             All {label}s
                         </div>
-                        
+
                         {filteredOptions.length === 0 ? (
                             <div className="px-3 py-2 text-sm text-gray-500">
                                 No options found
@@ -177,36 +173,43 @@ export const ExploreShips = () => {
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
     const observerRef = useRef<HTMLDivElement>(null);
-    
-    // Connection request mutation
-    const sendConnectionRequestMutation = useSendConnectionRequest();
 
-    // Fetch real data
-    const { data: cruiseLines, isLoading: cruiseLinesLoading } = useCruiseLines();
-    const { data: allShips, isLoading: shipsLoading } = useAllShips();
-    
+    // TODO: Implement Firebase connection functionality
+    const sendConnectionRequestMutation = {
+        mutateAsync: () => {
+            // Placeholder function
+        }
+    };
+
+    // TODO: Implement Firebase cruise data functionality
+    const cruiseLines: any[] = [];
+    const cruiseLinesLoading = false;
+    const allShips: any[] = [];
+    const shipsLoading = false;
+
     // Get the cruise line ID from the selected name
     const selectedCruiseLineId = cruiseLines?.find(cl => cl.name === selectedCruiseLine)?.id || '';
-    const { data: shipsByCruiseLine, isLoading: shipsByCruiseLineLoading } = useShipsByCruiseLine(selectedCruiseLineId);
-    
-    const {
-        data: crewData,
-        isLoading: crewLoading,
-        isFetchingNextPage,
-        hasNextPage,
-        fetchNextPage
-    } = useAllCrewQuery();
+    const shipsByCruiseLine: any[] = [];
+    const shipsByCruiseLineLoading = false;
+
+    const crewData: any[] = [];
+    const crewLoading = false;
+    const isFetchingNextPage = false;
+    const hasNextPage = false;
+    const fetchNextPage = () => {
+        // Placeholder function
+    };
 
     // Connection request handler
     const handleConnect = async (memberId: string, memberName: string) => {
         try {
             setLoadingStates(prev => ({ ...prev, [memberId]: true }));
-            
+
             await sendConnectionRequestMutation.mutateAsync({
                 receiverId: memberId,
                 message: `Hi ${memberName}! I'd like to connect with you.`
             });
-            
+
             toast.success(`Connection request sent to ${memberName}!`);
         } catch (error: any) {
             console.error('Failed to send connection request:', error);
@@ -244,16 +247,16 @@ export const ExploreShips = () => {
     // Filter crew members based on selections (client-side filtering)
     const filteredCrew = useMemo(() => {
         if (!allCrew) return [];
-        
+
         return allCrew.filter(member => {
             const matchesCruiseLine = !selectedCruiseLine || member.cruise_line_name === selectedCruiseLine;
             const matchesShip = !selectedShip || member.ship_name === selectedShip;
-            const matchesSearch = !searchQuery || 
+            const matchesSearch = !searchQuery ||
                 member.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 member.department_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 member.role_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 member.ship_name.toLowerCase().includes(searchQuery.toLowerCase());
-            
+
             return matchesCruiseLine && matchesShip && matchesSearch;
         });
     }, [allCrew, selectedCruiseLine, selectedShip, searchQuery]);
@@ -315,9 +318,9 @@ export const ExploreShips = () => {
                         </div>
                     </div>
                     <Link to="/dashboard" className="flex items-center hover:bg-teal-700 rounded-lg px-2 sm:px-3 py-2 transition-colors">
-                        <img 
-                            src={logo} 
-                            alt="Crewvar Logo" 
+                        <img
+                            src={logo}
+                            alt="Crewvar Logo"
                             className="h-5 sm:h-6 w-auto brightness-0 invert"
                             style={{ filter: 'brightness(0) invert(1)' }}
                         />
@@ -329,7 +332,7 @@ export const ExploreShips = () => {
                 {/* Search Section */}
                 <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-4">
                     <h2 className="text-base sm:text-lg font-semibold text-teal-600 mb-3">Search & Filter</h2>
-                    
+
                     <div className="space-y-3">
                         {/* Search Input */}
                         <div>
@@ -401,8 +404,8 @@ export const ExploreShips = () => {
                                 </div>
                                 <p className="text-gray-500 text-base">No matching results found</p>
                                 <p className="text-gray-400 text-sm mt-1">
-                                    {searchQuery || selectedCruiseLine || selectedShip 
-                                        ? "Try adjusting your search or filters" 
+                                    {searchQuery || selectedCruiseLine || selectedShip
+                                        ? "Try adjusting your search or filters"
                                         : "No friends data available"}
                                 </p>
                             </div>
@@ -415,8 +418,8 @@ export const ExploreShips = () => {
                                             <div className="flex items-center space-x-3 flex-1 min-w-0">
                                                 {/* Avatar */}
                                                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden flex-shrink-0">
-                                                    <img 
-                                                        src={getProfilePhotoUrl(member.profile_photo)} 
+                                                    <img
+                                                        src={getProfilePhotoUrl(member.profile_photo)}
                                                         alt={member.display_name}
                                                         className="w-full h-full object-cover"
                                                         onError={(e) => {
@@ -434,7 +437,7 @@ export const ExploreShips = () => {
                                                         }}
                                                     />
                                                 </div>
-                                                
+
                                                 {/* Member Info */}
                                                 <div className="flex-1 min-w-0">
                                                     <h3 className="text-sm sm:text-base font-semibold text-gray-900 truncate">
@@ -448,7 +451,7 @@ export const ExploreShips = () => {
                                                     </p>
                                                 </div>
                                             </div>
-                                            
+
                                             {/* Action Buttons */}
                                             <div className="flex space-x-2 sm:flex-shrink-0">
                                                 <button
@@ -468,7 +471,7 @@ export const ExploreShips = () => {
                                         </div>
                                     </div>
                                 ))}
-                                
+
                                 {/* Infinite scroll loading indicator */}
                                 {isFetchingNextPage && (
                                     <div className="flex justify-center py-4">
@@ -478,7 +481,7 @@ export const ExploreShips = () => {
                                         </div>
                                     </div>
                                 )}
-                                
+
                                 {/* Infinite scroll trigger */}
                                 <div ref={observerRef} className="h-4"></div>
                             </div>

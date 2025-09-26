@@ -1,8 +1,5 @@
 import { useState } from "react";
-import { useFavorites } from "../context/FavoritesContext";
 import { IFavoriteAlert } from "../types/favorites";
-import { useConnections } from "../features/connections/api/connectionApi";
-import { IConnection } from "../features/connections/api/connectionApi";
 
 interface FavoritesAlertsProps {
     onViewProfile?: (userId: string) => void;
@@ -10,12 +7,17 @@ interface FavoritesAlertsProps {
 }
 
 export const FavoritesAlerts = ({ onViewProfile, onStartChat }: FavoritesAlertsProps) => {
-    const { alerts, unreadAlertsCount, markAlertAsRead } = useFavorites();
-    const { data: connectionsData } = useConnections();
+    // TODO: Implement Firebase favorites functionality
+    const alerts: IFavoriteAlert[] = [];
+    const unreadAlertsCount = 0;
+    const markAlertAsRead = () => {
+        // Placeholder function
+    };
+    const connectionsData = null;
     const [filter, setFilter] = useState<'all' | 'unread' | 'same_ship' | 'same_port'>('all');
 
     // Get connected users for display names
-    const connectedUsers = connectionsData?.connections?.map((conn: IConnection) => {
+    const connectedUsers = connectionsData?.connections?.map((conn: any) => {
         const otherUserId = conn.user1_id === 'current-user-id' ? conn.user2_id : conn.user1_id;
         return {
             id: otherUserId,

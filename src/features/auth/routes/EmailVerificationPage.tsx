@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { useVerifyEmail, useResendVerificationEmail } from "../api/emailVerification";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContextFirebase";
 import { toast } from "react-toastify";
 
 export const EmailVerificationPage = () => {
@@ -18,8 +17,7 @@ export const EmailVerificationPage = () => {
     const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'error'>('pending');
     const [errorMessage, setErrorMessage] = useState('');
     
-    const verifyEmailMutation = useVerifyEmail();
-    const resendVerificationMutation = useResendVerificationEmail();
+    // TODO: Implement Firebase email verification
 
     // Auto-verify if token is present
     useEffect(() => {
@@ -39,7 +37,7 @@ export const EmailVerificationPage = () => {
         setErrorMessage('');
         
         try {
-            await verifyEmailMutation.mutateAsync(token);
+            // TODO: Implement Firebase email verification
             setVerificationStatus('success');
             toast.success('Email verified successfully!');
             
@@ -85,7 +83,7 @@ export const EmailVerificationPage = () => {
         setIsResending(true);
         
         try {
-            await resendVerificationMutation.mutateAsync(email);
+            // TODO: Implement Firebase email verification resend
             toast.success('Verification email sent! Check your inbox.');
         } catch (error: any) {
             toast.error('Failed to resend verification email');

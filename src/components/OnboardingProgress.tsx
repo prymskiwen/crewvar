@@ -1,10 +1,10 @@
-import { useUserProfile } from "../features/auth/api/userProfile";
+import { useAuth } from "../context/AuthContextFirebase";
 import { Link } from "react-router-dom";
 
 export const OnboardingProgress = () => {
-    const { data: userProfile, isLoading } = useUserProfile();
+    const { userProfile, loading } = useAuth();
 
-    if (isLoading || !userProfile) {
+    if (loading || !userProfile) {
         return null;
     }
 

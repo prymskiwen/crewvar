@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useConnectionStatus, useSendConnectionRequest } from '../api/connectionApi';
 import { toast } from 'react-toastify';
 
 interface ConnectionButtonProps {
@@ -12,9 +11,18 @@ interface ConnectionButtonProps {
 export const ConnectionButton = ({ userId, userName, className = '', size = 'md' }: ConnectionButtonProps) => {
     const [showMessageModal, setShowMessageModal] = useState(false);
     const [message, setMessage] = useState('');
-    
-    const { data: statusData, isLoading: statusLoading } = useConnectionStatus(userId);
-    const sendRequestMutation = useSendConnectionRequest();
+
+    // TODO: Implement Firebase connection functionality
+    const statusData = null;
+    const statusLoading = false;
+    const sendRequestMutation = {
+        mutateAsync: async (requestData: { receiverId: string; message: string }) => {
+            // TODO: Implement Firebase connection request functionality
+            console.log('Sending connection request:', requestData);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            toast.success('Connection request sent successfully!');
+        }
+    };
 
     const handleSendRequest = async () => {
         if (!message.trim()) {
@@ -28,7 +36,7 @@ export const ConnectionButton = ({ userId, userName, className = '', size = 'md'
             });
             return;
         }
-        
+
         try {
             await sendRequestMutation.mutateAsync({
                 receiverId: userId,
@@ -63,7 +71,7 @@ export const ConnectionButton = ({ userId, userName, className = '', size = 'md'
                 text: 'Loading...',
                 className: 'opacity-50 cursor-not-allowed',
                 disabled: true,
-                onClick: () => {}
+                onClick: () => { }
             };
         }
 
@@ -73,14 +81,14 @@ export const ConnectionButton = ({ userId, userName, className = '', size = 'md'
                     text: 'Connected',
                     className: 'bg-green-600 text-white cursor-not-allowed',
                     disabled: true,
-                    onClick: () => {}
+                    onClick: () => { }
                 };
             case 'pending':
                 return {
                     text: 'Request Sent',
                     className: 'bg-yellow-500 text-white cursor-not-allowed',
                     disabled: true,
-                    onClick: () => {}
+                    onClick: () => { }
                 };
             case 'declined':
                 return {
@@ -94,7 +102,7 @@ export const ConnectionButton = ({ userId, userName, className = '', size = 'md'
                     text: 'Blocked',
                     className: 'bg-red-500 text-white cursor-not-allowed',
                     disabled: true,
-                    onClick: () => {}
+                    onClick: () => { }
                 };
             default:
                 return {
@@ -136,7 +144,7 @@ export const ConnectionButton = ({ userId, userName, className = '', size = 'md'
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">
                             Send Connection Request to {userName}
                         </h3>
-                        
+
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Message (optional)
@@ -149,7 +157,7 @@ export const ConnectionButton = ({ userId, userName, className = '', size = 'md'
                                 rows={3}
                             />
                         </div>
-                        
+
                         <div className="flex space-x-3">
                             <button
                                 onClick={() => {

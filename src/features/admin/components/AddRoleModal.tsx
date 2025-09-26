@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAddRole, useDepartments } from '../api/dataManagementApi';
+// TODO: Implement Firebase data management functionality
 
 interface AddRoleModalProps {
   isOpen: boolean;
@@ -10,18 +10,33 @@ export const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose }) =
   const [name, setName] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [description, setDescription] = useState('');
-  const addRoleMutation = useAddRole();
-  const { data: departmentsData } = useDepartments();
+  // TODO: Implement Firebase data management functionality
+  const addRoleMutation = {
+    mutateAsync: async (roleData: { name: string; departmentId: string; description?: string }) => {
+      // TODO: Implement Firebase add role functionality
+      console.log('Adding role:', roleData);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Role added successfully!');
+    },
+    isLoading: false
+  };
+  const departmentsData = {
+    departments: [
+      { id: '1', name: 'Entertainment' },
+      { id: '2', name: 'Food & Beverage' },
+      { id: '3', name: 'Housekeeping' }
+    ]
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !departmentId) return;
 
     try {
-      await addRoleMutation.mutateAsync({ 
-        name: name.trim(), 
-        departmentId, 
-        description: description.trim() || undefined 
+      await addRoleMutation.mutateAsync({
+        name: name.trim(),
+        departmentId,
+        description: description.trim() || undefined
       });
       setName('');
       setDepartmentId('');

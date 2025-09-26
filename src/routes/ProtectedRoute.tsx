@@ -1,5 +1,5 @@
 import { Navigate, useLocation, Outlet } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContextFirebase";
 
 export const ProtectedRoute = () => {
     const { currentUser } = useAuth();

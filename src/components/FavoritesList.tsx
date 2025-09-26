@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useFavorites } from "../context/FavoritesContext";
+// TODO: Implement Firebase favorites functionality
 
 interface FavoritesListProps {
     onViewProfile?: (userId: string) => void;
@@ -7,12 +7,16 @@ interface FavoritesListProps {
 }
 
 export const FavoritesList = ({ onViewProfile, onStartChat }: FavoritesListProps) => {
-    const { favorites, removeFavorite } = useFavorites();
+    // TODO: Implement Firebase favorites functionality
+    const favorites: any[] = [];
+    const removeFavorite = () => {
+        // Placeholder function
+    };
     const [searchTerm, setSearchTerm] = useState("");
 
     const filteredFavorites = favorites.filter(favorite => {
         if (!searchTerm) return true;
-        
+
         const displayName = favorite.favoriteUser?.displayName || `User ${favorite.favoriteUserId.slice(-4)}`;
         return displayName.toLowerCase().includes(searchTerm.toLowerCase());
     });
@@ -59,7 +63,7 @@ export const FavoritesList = ({ onViewProfile, onStartChat }: FavoritesListProps
                             {searchTerm ? 'No favorites match your search' : 'No favorites yet'}
                         </p>
                         <p className="text-sm text-gray-400 mt-2">
-                            {searchTerm 
+                            {searchTerm
                                 ? 'Try adjusting your search terms'
                                 : 'Add crew members to your favorites to get alerts when you\'re sailing together!'
                             }
@@ -78,8 +82,8 @@ export const FavoritesList = ({ onViewProfile, onStartChat }: FavoritesListProps
                                 <div className="flex items-center space-x-3 sm:space-x-4">
                                     <div className="relative flex-shrink-0">
                                         {user.profilePhoto ? (
-                                            <img 
-                                                src={user.profilePhoto} 
+                                            <img
+                                                src={user.profilePhoto}
                                                 alt={user.displayName}
                                                 className="w-10 h-10 lg:w-12 lg:h-12 rounded-full object-cover"
                                             />
@@ -92,7 +96,7 @@ export const FavoritesList = ({ onViewProfile, onStartChat }: FavoritesListProps
                                         )}
                                         <div className="absolute -bottom-1 -right-1 w-3 h-3 lg:w-4 lg:h-4 bg-green-500 border-2 border-white rounded-full"></div>
                                     </div>
-                                    
+
                                     <div className="flex-1 min-w-0">
                                         <h3 className="font-semibold text-gray-900 truncate text-sm lg:text-base">
                                             {user.displayName}
@@ -105,7 +109,7 @@ export const FavoritesList = ({ onViewProfile, onStartChat }: FavoritesListProps
                                         </p>
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex items-center justify-between sm:justify-end space-x-2">
                                     <div className="flex items-center space-x-1">
                                         <span className="text-yellow-500 text-sm">⭐</span>
@@ -113,7 +117,7 @@ export const FavoritesList = ({ onViewProfile, onStartChat }: FavoritesListProps
                                             Added {new Date(favorite.createdAt).toLocaleDateString()}
                                         </span>
                                     </div>
-                                    
+
                                     <div className="flex items-center space-x-1 lg:space-x-2">
                                         {onViewProfile && (
                                             <button
@@ -154,7 +158,7 @@ export const FavoritesList = ({ onViewProfile, onStartChat }: FavoritesListProps
                     <div>
                         <h4 className="font-medium text-blue-900">Favorites & Alerts</h4>
                         <p className="text-sm text-blue-700 mt-1">
-                            We'll notify you when your favorite crew members are on the same ship or in the same port as you. 
+                            We'll notify you when your favorite crew members are on the same ship or in the same port as you.
                             This helps you stay connected with your crew family!
                         </p>
                     </div>

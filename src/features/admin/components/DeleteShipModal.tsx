@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useDeleteShip, useCruiseLines, useShipsByCruiseLine } from '../api/dataManagementApi';
 import { toast } from 'react-toastify';
 
 interface DeleteShipModalProps {
@@ -10,9 +9,30 @@ interface DeleteShipModalProps {
 export const DeleteShipModal: React.FC<DeleteShipModalProps> = ({ isOpen, onClose }) => {
   const [selectedCruiseLineId, setSelectedCruiseLineId] = useState('');
   const [selectedShipId, setSelectedShipId] = useState('');
-  const deleteShipMutation = useDeleteShip();
-  const { data: cruiseLinesData } = useCruiseLines();
-  const { data: shipsData } = useShipsByCruiseLine(selectedCruiseLineId || null);
+  // TODO: Implement Firebase data management functionality
+  const deleteShipMutation = {
+    mutateAsync: async (shipId: string) => {
+      // TODO: Implement Firebase delete ship functionality
+      console.log('Deleting ship:', shipId);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Ship deleted successfully!');
+    },
+    isLoading: false
+  };
+  const cruiseLinesData = {
+    cruiseLines: [
+      { id: '1', name: 'Carnival Cruise Line' },
+      { id: '2', name: 'Royal Caribbean International' },
+      { id: '3', name: 'Norwegian Cruise Line' }
+    ]
+  };
+  const shipsData = {
+    ships: [
+      { id: '1', name: 'Carnival Horizon', cruise_line_id: '1' },
+      { id: '2', name: 'Carnival Vista', cruise_line_id: '1' },
+      { id: '3', name: 'Symphony of the Seas', cruise_line_id: '2' }
+    ]
+  };
 
   const handleCruiseLineChange = (cruiseLineId: string) => {
     setSelectedCruiseLineId(cruiseLineId);

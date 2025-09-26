@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { IChatRoom } from "../features/chat/api/chatApi";
+import { IChatRoom } from "../types/chat.d";
 
 interface ChatListProps {
     chatRooms: IChatRoom[];

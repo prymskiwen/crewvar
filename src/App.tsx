@@ -2,12 +2,9 @@ import { ToastContainer } from "react-toastify";
 import { AuthProvider } from "./context/AuthContextFirebase";
 import { RealtimeProvider } from "./context/RealtimeContextFirebase";
 import { AppRoutes } from "./routes";
-import { OnboardingGuard } from "./components/OnboardingGuard";
-import { AdminGuard } from "./components/AdminGuard";
-import { BanGuard } from "./components/BanGuard";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import Footer from "./components/Footer";
-import ScrollToTop from "./components/ScrollToTop";
+import { OnboardingGuard, AdminGuard, BanGuard } from "./guards";
+import { ErrorBoundary } from "./components/ui";
+import { Footer, ScrollToTop } from "./components/layout";
 
 const AppContent = () => {
     return (

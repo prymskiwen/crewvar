@@ -4,6 +4,20 @@
  * Common utility functions used throughout the CrewVar application
  */
 
+// Browser utilities
+export * from './browser';
+
+// Data processing utilities
+export * from './data';
+
+// Image utilities
+export * from './images';
+
+// Core utilities
+export * from './errorHandler';
+export * from './storageFallback';
+export * from './validation';
+
 // Date formatting utilities without external dependencies
 
 /**

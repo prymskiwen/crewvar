@@ -845,3 +845,174 @@ export const getRolesByDepartment = async (departmentId: string): Promise<Role[]
         throw error;
     }
 };
+
+// Admin Statistics Functions
+
+export interface AdminStats {
+    users: {
+        total: number;
+        active: number;
+        banned: number;
+        unverified: number;
+    };
+    messages: {
+        total: number;
+        today: number;
+    };
+    connections: {
+        total: number;
+        pending: number;
+    };
+    reports: {
+        total: number;
+        pending: number;
+    };
+}
+
+// Get admin statistics
+export const getAdminStats = async (): Promise<AdminStats> => {
+    try {
+        // Initialize default values
+        let totalUsers = 0;
+        let activeUsers = 0;
+        let bannedUsers = 0;
+        let unverifiedUsers = 0;
+        let totalMessages = 0;
+        let todayMessages = 0;
+        let totalConnections = 0;
+        let pendingConnections = 0;
+        let totalReports = 0;
+        let pendingReports = 0;
+
+        // Get all users for user statistics
+        try {
+            const usersRef = collection(db, 'users');
+            const usersSnapshot = await getDocs(usersRef);
+
+            usersSnapshot.forEach((doc) => {
+                const data = doc.data();
+                totalUsers++;
+
+                if (data.isBanned || data.is_banned) {
+                    bannedUsers++;
+                } else if (data.isActive !== false) {
+                    activeUsers++;
+                }
+
+                if (!data.emailVerified && !data.is_email_verified) {
+                    unverifiedUsers++;
+                }
+            });
+        } catch (error) {
+            console.warn('Error fetching users for stats:', error);
+        }
+
+        // Get messages statistics
+        try {
+            const messagesRef = collection(db, 'chatMessages');
+            const messagesSnapshot = await getDocs(messagesRef);
+            totalMessages = messagesSnapshot.size;
+
+            // Calculate today's messages
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            todayMessages = Array.from(messagesSnapshot.docs).filter(doc => {
+                const messageData = doc.data();
+                const messageDate = messageData.createdAt?.toDate?.() || new Date(messageData.created_at);
+                return messageDate >= today;
+            }).length;
+        } catch (error) {
+            console.warn('Error fetching messages for stats:', error);
+        }
+
+        // Get connections statistics
+        try {
+            const connectionsRef = collection(db, 'connections');
+            const connectionsSnapshot = await getDocs(connectionsRef);
+            totalConnections = connectionsSnapshot.size;
+        } catch (error) {
+            console.warn('Error fetching connections for stats:', error);
+        }
+
+        // Get connection requests for pending connections
+        try {
+            const connectionRequestsRef = collection(db, 'connectionRequests');
+            const connectionRequestsSnapshot = await getDocs(connectionRequestsRef);
+            pendingConnections = connectionRequestsSnapshot.size;
+        } catch (error) {
+            console.warn('Error fetching connection requests for stats:', error);
+        }
+
+        // Get reports statistics
+        try {
+            const reportsRef = collection(db, 'reports');
+            const reportsSnapshot = await getDocs(reportsRef);
+            totalReports = reportsSnapshot.size;
+
+            // Calculate pending reports (assuming reports have a status field)
+            pendingReports = Array.from(reportsSnapshot.docs).filter(doc => {
+                const reportData = doc.data();
+                return reportData.status !== 'resolved' && reportData.status !== 'closed';
+            }).length;
+        } catch (error) {
+            console.warn('Error fetching reports for stats:', error);
+        }
+
+        return {
+            users: {
+                total: totalUsers,
+                active: activeUsers,
+                banned: bannedUsers,
+                unverified: unverifiedUsers
+            },
+            messages: {
+                total: totalMessages,
+                today: todayMessages
+            },
+            connections: {
+                total: totalConnections,
+                pending: pendingConnections
+            },
+            reports: {
+                total: totalReports,
+                pending: pendingReports
+            }
+        };
+    } catch (error) {
+        console.error('Error fetching admin stats:', error);
+        throw error;
+    }
+};
+
+// Support Statistics Functions
+
+export interface SupportStats {
+    openTickets: number;
+    inProgressTickets: number;
+    resolvedTickets: number;
+    closedTickets: number;
+    totalTickets: number;
+    resolvedToday: number;
+}
+
+// Get support statistics
+export const getSupportStats = async (): Promise<SupportStats> => {
+    try {
+        // Get support tickets from a support collection
+        // For now, we'll use a placeholder implementation
+        // In a real app, you'd have a support/tickets collection
+
+        // This is a placeholder - you would implement based on your support system
+        return {
+            openTickets: 0,
+            inProgressTickets: 0,
+            resolvedTickets: 0,
+            closedTickets: 0,
+            totalTickets: 0,
+            resolvedToday: 0
+        };
+    } catch (error) {
+        console.error('Error fetching support stats:', error);
+        throw error;
+    }
+};

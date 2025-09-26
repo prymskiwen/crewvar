@@ -1,18 +1,19 @@
 import { BiSortAlt2 } from "react-icons/bi";
 import { ChangeEvent, Dispatch, SetStateAction } from "react";
+import { SortSelectBoxProps } from '../../types';
 
 type Props = {
-  sortOption: string;
-  setSortOption: Dispatch<
-    SetStateAction<"PRICE_ASC" | "PRICE_DESC" | "DEFAULT">
-  >;
+    sortOption: string;
+    setSortOption: Dispatch<
+        SetStateAction<"PRICE_ASC" | "PRICE_DESC" | "DEFAULT">
+    >;
 };
 
 export const SortSelectBox = (props: Props) => {
     const sortOptions = [
-        {name: "Price: Low to high", value: "PRICE_ASC"},
-        {name: "Price: High to low", value: "PRICE_DESC"},
-        {name: "Newest", value: "DEFAULT" }
+        { name: "Price: Low to high", value: "PRICE_ASC" },
+        { name: "Price: High to low", value: "PRICE_DESC" },
+        { name: "Newest", value: "DEFAULT" }
     ];
 
     return (

@@ -1,5 +1,6 @@
 import { FiChevronDown } from "react-icons/fi";
 import { ChangeEvent } from "react";
+import { CategorySelectBoxProps } from '../../types';
 
 type Props = {
     selectedDepartment?: string;

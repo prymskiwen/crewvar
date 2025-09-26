@@ -90,20 +90,30 @@ export const DeleteCruiseLineModal: React.FC<DeleteCruiseLineModalProps> = ({ is
               <label htmlFor="cruiseLine" className="block text-sm font-medium text-gray-700 mb-1">
                 Select Cruise Line to Delete:
               </label>
-              <select
-                id="cruiseLine"
-                value={selectedCruiseLineId}
-                onChange={(e) => setSelectedCruiseLineId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                required
-              >
-                <option value="">Choose a cruise line...</option>
-                {cruiseLinesData?.cruiseLines?.map((cruiseLine: any) => (
-                  <option key={cruiseLine.id} value={cruiseLine.id}>
-                    {cruiseLine.name}
+              {isLoading ? (
+                <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500 mr-2"></div>
+                  Loading cruise lines...
+                </div>
+              ) : (
+                <select
+                  id="cruiseLine"
+                  value={selectedCruiseLineId}
+                  onChange={(e) => setSelectedCruiseLineId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  required
+                  disabled={cruiseLines.length === 0}
+                >
+                  <option value="">
+                    {cruiseLines.length === 0 ? 'No cruise lines available' : 'Choose a cruise line...'}
                   </option>
-                ))}
-              </select>
+                  {cruiseLines.map((cruiseLine) => (
+                    <option key={cruiseLine.id} value={cruiseLine.id}>
+                      {cruiseLine.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">

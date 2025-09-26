@@ -6,14 +6,10 @@ import { OnboardingGuard } from "./components/OnboardingGuard";
 import { AdminGuard } from "./components/AdminGuard";
 import { BanGuard } from "./components/BanGuard";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { useBanNotifications } from "./hooks/useBanNotifications";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 
 const AppContent = () => {
-    // Initialize ban notifications
-    useBanNotifications();
-
     return (
         <ErrorBoundary>
             <ScrollToTop />

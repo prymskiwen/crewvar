@@ -75,20 +75,6 @@ export const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({ isOpen, onClos
     },
     isLoading: false
   };
-  const departmentsData = {
-    departments: [
-      { id: '1', name: 'Entertainment' },
-      { id: '2', name: 'Food & Beverage' },
-      { id: '3', name: 'Housekeeping' }
-    ]
-  };
-  const rolesData = {
-    roles: [
-      { id: '1', name: 'Entertainment Host', department_id: '1' },
-      { id: '2', name: 'Waiter', department_id: '2' },
-      { id: '3', name: 'Cabin Steward', department_id: '3' }
-    ]
-  };
 
   const handleDepartmentChange = (departmentId: string) => {
     setSelectedDepartmentId(departmentId);
@@ -141,7 +127,7 @@ export const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({ isOpen, onClos
                 required
               >
                 <option value="">Choose a department...</option>
-                {departmentsData?.departments?.map((department: any) => (
+                {departments.map((department) => (
                   <option key={department.id} value={department.id}>
                     {department.name}
                   </option>
@@ -162,9 +148,9 @@ export const DeleteRoleModal: React.FC<DeleteRoleModalProps> = ({ isOpen, onClos
                 disabled={!selectedDepartmentId}
               >
                 <option value="">Choose a role...</option>
-                {rolesData?.roles?.map((role: any) => (
+                {roles.map((role) => (
                   <option key={role.id} value={role.id}>
-                    {role.name}
+                    {role.name}{role.subcategoryId ? ` (${role.subcategoryId})` : ''}
                   </option>
                 ))}
               </select>

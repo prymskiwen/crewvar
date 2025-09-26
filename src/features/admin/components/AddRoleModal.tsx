@@ -10,6 +10,7 @@ interface AddRoleModalProps {
 export const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose }) => {
   const [name, setName] = useState('');
   const [departmentId, setDepartmentId] = useState('');
+  const [subcategoryId, setSubcategoryId] = useState('');
   const [description, setDescription] = useState('');
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +37,7 @@ export const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose }) =
   };
 
   const addRoleMutation = {
-    mutateAsync: async (roleData: { name: string; departmentId: string; description?: string }) => {
+    mutateAsync: async (roleData: { name: string; departmentId: string; subcategoryId?: string; description?: string }) => {
       setIsLoading(true);
       try {
         const roleId = await addRole(roleData);
@@ -61,10 +62,12 @@ export const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose }) =
       await addRoleMutation.mutateAsync({
         name: name.trim(),
         departmentId,
+        subcategoryId: subcategoryId || undefined,
         description: description.trim() || undefined
       });
       setName('');
       setDepartmentId('');
+      setSubcategoryId('');
       setDescription('');
       onClose();
     } catch (error) {
@@ -108,20 +111,44 @@ export const AddRoleModal: React.FC<AddRoleModalProps> = ({ isOpen, onClose }) =
               <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1">
                 Department *
               </label>
-              <select
-                id="department"
-                value={departmentId}
-                onChange={(e) => setDepartmentId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              >
-                <option value="">Select a department</option>
-                {departmentsData?.departments?.map((department: any) => (
-                  <option key={department.id} value={department.id}>
-                    {department.name}
+              {isLoadingDepartments ? (
+                <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
+                  Loading departments...
+                </div>
+              ) : (
+                <select
+                  id="department"
+                  value={departmentId}
+                  onChange={(e) => setDepartmentId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                  disabled={departments.length === 0}
+                >
+                  <option value="">
+                    {departments.length === 0 ? 'No departments available' : 'Select a department'}
                   </option>
-                ))}
-              </select>
+                  {departments.map((department) => (
+                    <option key={department.id} value={department.id}>
+                      {department.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="subcategory" className="block text-sm font-medium text-gray-700 mb-1">
+                Subcategory (Optional)
+              </label>
+              <input
+                type="text"
+                id="subcategory"
+                value={subcategoryId}
+                onChange={(e) => setSubcategoryId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g., Entertainment, Food Service, Housekeeping"
+              />
             </div>
 
             <div>

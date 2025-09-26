@@ -413,7 +413,9 @@ export interface Role {
     id: string;
     name: string;
     departmentId: string;
+    subcategoryId?: string;
     description?: string;
+    isActive: boolean;
     createdAt: any;
     updatedAt: any;
 }
@@ -421,6 +423,13 @@ export interface Role {
 export interface CruiseLine {
     id: string;
     name: string;
+    companyCode?: string;
+    headquarters?: string;
+    foundedYear?: number;
+    fleetSize?: number;
+    website?: string;
+    logoUrl?: string;
+    isActive: boolean;
     createdAt: any;
     updatedAt: any;
 }
@@ -429,7 +438,17 @@ export interface Ship {
     id: string;
     name: string;
     cruiseLineId: string;
-    port?: string;
+    shipCode?: string;
+    lengthMeters?: number;
+    widthMeters?: number;
+    grossTonnage?: number;
+    yearBuilt?: number;
+    refurbishedYear?: number;
+    homePort?: string;
+    shipType?: string;
+    company?: string;
+    capacity?: number;
+    isActive: boolean;
     createdAt: any;
     updatedAt: any;
 }
@@ -497,11 +516,26 @@ export const getCruiseLines = async (): Promise<CruiseLine[]> => {
 };
 
 // Add new cruise line
-export const addCruiseLine = async (cruiseLineData: { name: string }): Promise<string> => {
+export const addCruiseLine = async (cruiseLineData: {
+    name: string;
+    companyCode?: string;
+    headquarters?: string;
+    foundedYear?: number;
+    fleetSize?: number;
+    website?: string;
+    logoUrl?: string;
+}): Promise<string> => {
     try {
         const cruiseLinesRef = collection(db, 'cruiseLines');
         const docRef = await addDoc(cruiseLinesRef, {
             name: cruiseLineData.name.trim(),
+            companyCode: cruiseLineData.companyCode?.trim() || '',
+            headquarters: cruiseLineData.headquarters?.trim() || '',
+            foundedYear: cruiseLineData.foundedYear || null,
+            fleetSize: cruiseLineData.fleetSize || null,
+            website: cruiseLineData.website?.trim() || '',
+            logoUrl: cruiseLineData.logoUrl?.trim() || '',
+            isActive: true,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
         });
@@ -541,13 +575,36 @@ export const getShips = async (): Promise<Ship[]> => {
 };
 
 // Add new ship
-export const addShip = async (shipData: { name: string; cruiseLineId: string; port?: string }): Promise<string> => {
+export const addShip = async (shipData: {
+    name: string;
+    cruiseLineId: string;
+    shipCode?: string;
+    lengthMeters?: number;
+    widthMeters?: number;
+    grossTonnage?: number;
+    yearBuilt?: number;
+    refurbishedYear?: number;
+    homePort?: string;
+    shipType?: string;
+    company?: string;
+    capacity?: number;
+}): Promise<string> => {
     try {
         const shipsRef = collection(db, 'ships');
         const docRef = await addDoc(shipsRef, {
             name: shipData.name.trim(),
             cruiseLineId: shipData.cruiseLineId,
-            port: shipData.port?.trim() || '',
+            shipCode: shipData.shipCode?.trim() || '',
+            lengthMeters: shipData.lengthMeters || null,
+            widthMeters: shipData.widthMeters || null,
+            grossTonnage: shipData.grossTonnage || null,
+            yearBuilt: shipData.yearBuilt || null,
+            refurbishedYear: shipData.refurbishedYear || null,
+            homePort: shipData.homePort?.trim() || '',
+            shipType: shipData.shipType?.trim() || '',
+            company: shipData.company?.trim() || '',
+            capacity: shipData.capacity || null,
+            isActive: true,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
         });
@@ -570,13 +627,15 @@ export const deleteShip = async (shipId: string): Promise<void> => {
 };
 
 // Add new role
-export const addRole = async (roleData: { name: string; departmentId: string; description?: string }): Promise<string> => {
+export const addRole = async (roleData: { name: string; departmentId: string; subcategoryId?: string; description?: string }): Promise<string> => {
     try {
         const rolesRef = collection(db, 'roles');
         const docRef = await addDoc(rolesRef, {
             name: roleData.name.trim(),
             departmentId: roleData.departmentId,
+            subcategoryId: roleData.subcategoryId || null,
             description: roleData.description?.trim() || '',
+            isActive: true,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
         });

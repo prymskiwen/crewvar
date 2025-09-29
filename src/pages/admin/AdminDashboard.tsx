@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContextFirebase';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContextFirebase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { getUsers, banUser, unbanUser, User, getAdminStats, AdminStats, getSupportStats, SupportStats } from '../firebase/firestore';
+import { getUsers, banUser, unbanUser, User, getAdminStats, AdminStats, getSupportStats, SupportStats } from '../../firebase/firestore';
 import {
   BulkMessagingModal,
   AdminAppBar,
@@ -14,7 +14,7 @@ import {
   DataManagementTab,
   SupportTab,
   SettingsTab
-} from '../components/admin';
+} from '../../components/admin';
 
 export const AdminDashboard = () => {
   const { currentUser, logout } = useAuth();

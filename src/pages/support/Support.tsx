@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { HiMail, HiChat, HiClock, HiCheckCircle } from 'react-icons/hi';
-import { SupportDropdown } from '../components/support';
-import logo from '../assets/images/Home/logo.png';
+import SupportDropdown from '../../components/support/SupportDropdown';
+import logo from '../../assets/images/Home/logo.png';
 
 const SupportPage = () => {
     const navigate = useNavigate();
@@ -203,7 +203,7 @@ const SupportPage = () => {
                                         <SupportDropdown
                                             label="Category"
                                             value={formData.category}
-                                            onChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                                            onChange={(value: any) => setFormData(prev => ({ ...prev, category: value }))}
                                             options={categories}
                                             placeholder="Select category"
                                             required
@@ -212,7 +212,7 @@ const SupportPage = () => {
                                         <SupportDropdown
                                             label="Priority"
                                             value={formData.priority}
-                                            onChange={(value) => setFormData(prev => ({ ...prev, priority: value as 'low' | 'medium' | 'high' | 'urgent' }))}
+                                            onChange={(value: any) => setFormData(prev => ({ ...prev, priority: value as 'low' | 'medium' | 'high' | 'urgent' }))}
                                             options={priorities}
                                             placeholder="Select priority"
                                             required
@@ -248,14 +248,7 @@ const SupportPage = () => {
                                             disabled={isSubmitting}
                                             className="w-full sm:w-auto px-6 sm:px-8 py-2 sm:py-3 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2 text-sm sm:text-base"
                                         >
-                                            {isSubmitting ? (
-                                                <>
-                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                                    <span>Submitting...</span>
-                                                </>
-                                            ) : (
-                                                <span>Submit Ticket</span>
-                                            )}
+                                            {isSubmitting ? 'Submitting...' : 'Submit Ticket'}
                                         </button>
                                     </div>
                                 </form>

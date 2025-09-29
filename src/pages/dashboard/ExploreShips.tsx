@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import logo from "../../assets/images/Home/logo.png";
-import { getProfilePhotoUrl } from "../../utils/imageUtils";
+import { getProfilePhotoUrl } from "../../utils/images";
 
 // Custom Dropdown Component for Mobile-Friendly Selection
 interface CustomDropdownProps {

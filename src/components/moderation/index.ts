@@ -1,2 +1,2 @@
-export { default as ModerationDashboard } from './ModerationDashboard';
-export { default as BlockedUsersManager } from './BlockedUsersManager';
+export { ModerationDashboard } from './ModerationDashboard';
+export { BlockedUsersManager } from './BlockedUsersManager';

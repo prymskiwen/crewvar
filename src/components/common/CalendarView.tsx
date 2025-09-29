@@ -1,5 +1,5 @@
-import { ICruiseAssignment } from "../types/calendar";
-import { formatDateRange, getDaysDifference } from "../data/calendar-data";
+import { ICruiseAssignment } from "../../types/calendar";
+import { formatDateRange, getDaysDifference } from "../../data/utilities/calendar-data";
 import { HiPencil, HiCalendar } from "react-icons/hi";
 
 interface CalendarViewProps {
@@ -8,8 +8,8 @@ interface CalendarViewProps {
     className?: string;
 }
 
-export const CalendarView = ({ 
-    onAddAssignment, 
+export const CalendarView = ({
+    onAddAssignment,
     onEditAssignment,
     className = ""
 }: CalendarViewProps) => {
@@ -43,11 +43,11 @@ export const CalendarView = ({
         // Current assignments first
         if (a.status === 'current' && b.status !== 'current') return -1;
         if (b.status === 'current' && a.status !== 'current') return 1;
-        
+
         // Then upcoming assignments
         if (a.status === 'upcoming' && b.status === 'completed') return -1;
         if (b.status === 'upcoming' && a.status === 'completed') return 1;
-        
+
         // Within same status, sort by start date
         return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
     });
@@ -104,11 +104,11 @@ export const CalendarView = ({
                                                 {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
                                             </span>
                                         </div>
-                                        
+
                                         <div className="text-sm text-gray-600 mb-2">
                                             {getCruiseLineName(assignment)}
                                         </div>
-                                        
+
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-sm text-gray-500">
                                             <div className="flex items-center space-x-1">
                                                 <span className="font-medium">Dates:</span>
@@ -119,14 +119,14 @@ export const CalendarView = ({
                                                 <span>{getDaysDifference(assignment.startDate, assignment.endDate)} days</span>
                                             </div>
                                         </div>
-                                        
+
                                         {assignment.description && (
                                             <div className="mt-2 text-sm text-gray-600">
                                                 <span className="font-medium">Notes:</span> {assignment.description}
                                             </div>
                                         )}
                                     </div>
-                                    
+
                                     {/* Edit Button */}
                                     <div className="flex items-center space-x-2">
                                         <button

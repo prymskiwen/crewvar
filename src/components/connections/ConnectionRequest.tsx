@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { IUserProfile } from "../types/connections";
-import { sampleConnectionContext } from "../data/connections-data";
-import { ReportUser } from "./ReportUser";
+import { IUserProfile } from "../../types/connections";
+import { sampleConnectionContext } from "../../data/samples/connections-data";
+import { ReportUserModal } from "../reports/ReportUserModal";
 
 interface ConnectionRequestProps {
     profile: IUserProfile;
@@ -12,21 +12,22 @@ interface ConnectionRequestProps {
     isLoading?: boolean;
 }
 
-export const ConnectionRequest = ({ 
-    profile, 
-    onSendRequest, 
-    onCancelRequest, 
+export const ConnectionRequest = ({
+    profile,
+    onSendRequest,
+    onCancelRequest,
     requestStatus,
-    isLoading = false 
+    isLoading = false
 }: ConnectionRequestProps) => {
     const navigate = useNavigate();
     // TODO: Implement Firebase privacy functionality
-    const isUserVerified = true;
-    const isUserActive = true;
-    const isUserBlocked = false;
-    const isInDeclineCooldown = false;
-    const blockUser = () => {
+    const isUserVerified = (_userId: string) => true;
+    const isUserActive = (_userId: string) => true;
+    const isUserBlocked = (_userId: string, _targetUserId: string) => false;
+    const isInDeclineCooldown = (_userId: string, _targetUserId: string) => false;
+    const blockUser = (userId: string, reason?: string) => {
         // Placeholder function
+        console.log('Blocking user:', userId, 'Reason:', reason);
     };
     const [showRequestForm, setShowRequestForm] = useState(false);
     const [message, setMessage] = useState("");
@@ -34,8 +35,8 @@ export const ConnectionRequest = ({
     const [showReportModal, setShowReportModal] = useState(false);
 
     // Privacy checks
-    const canSeeProfile = isUserVerified("current_user") && isUserActive("current_user") && 
-                         isUserVerified(profile.id) && isUserActive(profile.id);
+    const canSeeProfile = isUserVerified("current_user") && isUserActive("current_user") &&
+        isUserVerified(profile.id) && isUserActive(profile.id);
     const isBlocked = isUserBlocked("current_user", profile.id);
     const inCooldown = isInDeclineCooldown("current_user", profile.id);
 
@@ -44,7 +45,7 @@ export const ConnectionRequest = ({
             console.log("Cannot send request: Privacy rules prevent interaction");
             return;
         }
-        
+
         if (message.trim()) {
             onSendRequest(profile.id, message.trim());
             setMessage("");
@@ -113,7 +114,7 @@ export const ConnectionRequest = ({
                         <p className="text-sm text-gray-600 truncate">{profile.role}</p>
                     </div>
                 </div>
-                
+
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                     <div className="flex items-center space-x-2">
                         <span className="text-yellow-600">🔒</span>
@@ -140,7 +141,7 @@ export const ConnectionRequest = ({
                         <p className="text-sm text-gray-600 truncate">{profile.role}</p>
                     </div>
                 </div>
-                
+
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                     <div className="flex items-center space-x-2">
                         <span className="text-red-600">🚫</span>
@@ -157,9 +158,9 @@ export const ConnectionRequest = ({
         <div className="bg-gray-50 rounded-lg p-4 hover:shadow-md transition-shadow">
             <div className="flex items-center space-x-3 mb-3">
                 <div className="relative">
-                    <img 
-                        src={profile.avatar} 
-                        alt={profile.displayName} 
+                    <img
+                        src={profile.avatar}
+                        alt={profile.displayName}
                         className="w-12 h-12 rounded-full object-cover"
                     />
                     {profile.isOnline && (
@@ -172,7 +173,7 @@ export const ConnectionRequest = ({
                     <p className="text-xs text-gray-500 truncate">{profile.subcategory}</p>
                 </div>
             </div>
-            
+
             <div className="mb-3">
                 <p className="text-sm text-gray-700">
                     <span className="font-medium">Ship:</span> {profile.shipName}
@@ -212,11 +213,10 @@ export const ConnectionRequest = ({
                     <button
                         onClick={() => setShowRequestForm(true)}
                         disabled={isDisabled || isLoading}
-                        className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                            isDisabled || isLoading 
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                                : getButtonStyle()
-                        }`}
+                        className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isDisabled || isLoading
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : getButtonStyle()
+                            }`}
                     >
                         {isLoading ? 'Sending...' : getButtonText()}
                     </button>
@@ -272,7 +272,7 @@ export const ConnectionRequest = ({
                             Report
                         </button>
                     </div>
-                    
+
                     {showBlockOption && (
                         <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                             <p className="text-sm text-red-800 mb-3">
@@ -300,10 +300,15 @@ export const ConnectionRequest = ({
 
             {/* Report Modal */}
             {showReportModal && (
-                <ReportUser
+                <ReportUserModal
+                    isOpen={showReportModal}
                     reportedUserId={profile.id}
                     reportedUserName={profile.displayName}
                     onClose={() => setShowReportModal(false)}
+                    onReport={(data) => {
+                        console.log('Report submitted:', data);
+                        setShowReportModal(false);
+                    }}
                 />
             )}
         </div>

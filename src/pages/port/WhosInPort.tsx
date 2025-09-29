@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { getProfilePhotoUrl } from '../../../utils/imageUtils';
 import { Link } from 'react-router-dom';
-import logo from '../../../assets/images/Home/logo.png';
 import { toast } from 'react-toastify';
+import { LoadingPage } from '../../components/ui';
+import logo from '../../assets/images/Home/logo.png';
+import { getProfilePhotoUrl } from '../../utils/images';
 
 // TODO: Define ICrewMember interface
 interface ICrewMember {
@@ -130,20 +131,7 @@ export const WhosInPortPage = () => {
     });
 
     if (crewLoading) {
-        return (
-            <div className="min-h-screen" style={{ backgroundColor: '#B9F3DF' }}>
-                <div className="container mx-auto px-4 py-8">
-                    <div className="flex items-center justify-center py-20">
-                        <div className="text-center">
-                            <div className="w-16 h-16 bg-[#069B93] rounded-full flex items-center justify-center mx-auto mb-4">
-                                <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                            </div>
-                            <p className="text-[#069B93] font-medium">Loading crew in port...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
+        return <LoadingPage message="Loading crew in port..." showLogo={true} />;
     }
 
     if (crewError) {

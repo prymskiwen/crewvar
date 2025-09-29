@@ -1,6 +1,5 @@
 // Dashboard pages
-export { Home, ExploreShips, Chat, PortConnections, ShipAssignment } from './dashboard';
-export { Dashboard, DashboardNew } from './dashboard';
+export { Dashboard, Home, ExploreShips, Chat, PortConnections, ShipAssignment } from './dashboard';
 
 // Profile pages  
 export { Onboarding, MyProfile, Favorites, Privacy, Moderation } from './profile';

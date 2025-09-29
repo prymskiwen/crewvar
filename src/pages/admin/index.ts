@@ -1,3 +1,3 @@
-export { default as AdminDashboard } from './AdminDashboard';
+export { AdminDashboard } from './AdminDashboard';
 export { default as AdminSupport } from './AdminSupport';
-export { default as AdminUserDetail } from './AdminUserDetail';
+export { AdminUserDetail } from './AdminUserDetail';

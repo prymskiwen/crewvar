@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
-import { uploadProfilePhoto } from '../firebase/storage';
-import { shouldShowStorageWarning } from '../utils/storageFallback';
-import { useAuth } from '../context/AuthContextFirebase';
+import { uploadProfilePhoto } from '../../firebase/storage';
+import { shouldShowStorageWarning } from '../../utils/storageFallback';
+import { useAuth } from '../../context/AuthContextFirebase';
 
 interface ProfilePhotoUploadProps {
     currentPhoto?: string;
@@ -60,7 +60,7 @@ export const ProfilePhotoUpload = ({
         setUploadProgress(0);
 
         try {
-            const downloadURL = await uploadProfilePhoto(file, currentUser.uid, (progress) => {
+            const downloadURL = await uploadProfilePhoto(file, currentUser.uid, (progress: any) => {
                 setUploadProgress(Math.round((progress.bytesTransferred / progress.totalBytes) * 100));
             });
 

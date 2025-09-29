@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { IFavoriteAlert } from "../types/favorites";
+import { IFavoriteAlert } from "../../types/favorites";
 
 interface FavoritesAlertsProps {
     onViewProfile?: (userId: string) => void;

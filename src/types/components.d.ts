@@ -180,6 +180,8 @@ export interface ProfileEditProps {
     onSave: (data: any) => void;
     onCancel: () => void;
     isLoading?: boolean;
+    initialData?: any;
+    className?: string;
 }
 
 export interface ProfilePhotoUploadProps {

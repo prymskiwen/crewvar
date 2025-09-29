@@ -1,8 +1,10 @@
-import { getProfilePhotoUrl } from '../../../utils/imageUtils';
-import { Link } from 'react-router-dom';
-import logo from '../../../assets/images/Home/logo.png';
-import { toast } from 'react-toastify';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { LoadingPage } from '../../components/ui';
+
+import { getProfilePhotoUrl } from '../../utils/images';
+import logo from '../../assets/images/Home/logo.png';
 
 // TODO: Define ICrewMember interface
 interface ICrewMember {
@@ -107,20 +109,7 @@ export const TodayOnBoardPage = () => {
     };
 
     if (crewLoading) {
-        return (
-            <div className="min-h-screen" style={{ backgroundColor: '#B9F3DF' }}>
-                <div className="container mx-auto px-4 py-8">
-                    <div className="flex items-center justify-center py-20">
-                        <div className="text-center">
-                            <div className="w-16 h-16 bg-[#069B93] rounded-full flex items-center justify-center mx-auto mb-4">
-                                <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                            </div>
-                            <p className="text-[#069B93] font-medium">Loading possible friends...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
+        return <LoadingPage message="Loading possible friends..." showLogo={true} />;
     }
 
     if (crewError) {
@@ -302,8 +291,8 @@ export const TodayOnBoardPage = () => {
                                                         onClick={() => handleConnect(member.id, member.displayName)}
                                                         disabled={loadingStates[member.id]}
                                                         className={`flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg transition-colors font-medium shadow-sm hover:shadow-md ${loadingStates[member.id]
-                                                                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                                                                : 'bg-[#069B93] text-white hover:bg-[#058a7a]'
+                                                            ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                                            : 'bg-[#069B93] text-white hover:bg-[#058a7a]'
                                                             }`}
                                                     >
                                                         {loadingStates[member.id] ? 'Sending...' : 'Connect'}
@@ -318,10 +307,10 @@ export const TodayOnBoardPage = () => {
                                                         onClick={() => handleAddToFavorites(member.id, member.displayName)}
                                                         disabled={favoriteLoadingStates[member.id] || isFavorite(member.id)}
                                                         className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg transition-colors font-medium ${isFavorite(member.id)
-                                                                ? 'bg-yellow-100 text-yellow-700 border border-yellow-300 cursor-not-allowed'
-                                                                : favoriteLoadingStates[member.id]
-                                                                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                                                                    : 'bg-yellow-500 text-white hover:bg-yellow-600'
+                                                            ? 'bg-yellow-100 text-yellow-700 border border-yellow-300 cursor-not-allowed'
+                                                            : favoriteLoadingStates[member.id]
+                                                                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                                                                : 'bg-yellow-500 text-white hover:bg-yellow-600'
                                                             }`}
                                                     >
                                                         {isFavorite(member.id) ? '⭐' : favoriteLoadingStates[member.id] ? '...' : '⭐'}

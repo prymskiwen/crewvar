@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { HiArrowLeft, HiBell, HiMail, HiCheck } from 'react-icons/hi';
 import { Link } from 'react-router-dom';
+import { HiArrowLeft, HiBell, HiMail, HiCheck } from 'react-icons/hi';
 
 const NotificationSettings = () => {
     // TODO: Implement Firebase notification preferences

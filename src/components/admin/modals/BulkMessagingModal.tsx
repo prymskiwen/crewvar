@@ -15,19 +15,22 @@ export const BulkMessagingModal: React.FC<BulkMessagingModalProps> = ({ isOpen, 
   const [currentPage, setCurrentPage] = useState(1);
 
   // TODO: Implement Firebase admin messaging functionality
+  const [isSending, setIsSending] = useState(false);
   const sendBulkMessageMutation = {
     mutateAsync: async (messageData: { subject: string; message: string; targetUsers: string[] }) => {
       // TODO: Implement Firebase bulk messaging functionality
       console.log('Sending bulk message:', messageData);
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast.success('Bulk message sent successfully!');
-    }
+    },
+    isLoading: isSending
   };
-  const usersData = null;
+
+  // TODO: Implement Firebase users data fetching
   const isLoading = false;
 
-  const users = usersData?.users || [];
-  const pagination = usersData?.pagination;
+  const users: any[] = [];
+  const pagination: { pages: number } | null = { pages: 1 };
 
   // Filter users based on search
   const filteredUsers = useMemo(() => {
@@ -77,10 +80,11 @@ export const BulkMessagingModal: React.FC<BulkMessagingModalProps> = ({ isOpen, 
     }
 
     try {
+      setIsSending(true);
       await sendBulkMessageMutation.mutateAsync({
-        userIds: selectedUsers,
+        targetUsers: selectedUsers,
         message: message.trim(),
-        subject: subject.trim() || undefined
+        subject: subject.trim() || 'No Subject'
       });
 
       // Reset form
@@ -90,7 +94,10 @@ export const BulkMessagingModal: React.FC<BulkMessagingModalProps> = ({ isOpen, 
       setStep('select');
       onClose();
     } catch (error) {
-      // Error handled by mutation
+      console.error('Error sending bulk message:', error);
+      toast.error('Failed to send message. Please try again.');
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -200,7 +207,7 @@ export const BulkMessagingModal: React.FC<BulkMessagingModalProps> = ({ isOpen, 
               </div>
 
               {/* Pagination */}
-              {pagination && pagination.pages > 1 && (
+              {pagination && pagination?.pages && pagination.pages > 1 && (
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
@@ -210,11 +217,11 @@ export const BulkMessagingModal: React.FC<BulkMessagingModalProps> = ({ isOpen, 
                     Previous
                   </button>
                   <span className="text-sm text-gray-600">
-                    Page {currentPage} of {pagination.pages}
+                    Page {currentPage} of {pagination?.pages || 1}
                   </span>
                   <button
-                    onClick={() => setCurrentPage(prev => Math.min(pagination.pages, prev + 1))}
-                    disabled={currentPage === pagination.pages}
+                    onClick={() => setCurrentPage(prev => Math.min(pagination?.pages || 1, prev + 1))}
+                    disabled={currentPage === (pagination?.pages || 1)}
                     className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded disabled:opacity-50"
                   >
                     Next

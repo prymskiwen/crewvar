@@ -1,2 +1,2 @@
 export { default as NotificationSettings } from './NotificationSettings';
-export { default as AllNotifications } from './AllNotifications';
+export { AllNotificationsPage as AllNotifications } from './AllNotifications';

@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useAuth } from "../context/AuthContextFirebase";
-import { IPortConnectionFormData } from "../types/port-connections";
+import { useAuth } from "../../context/AuthContextFirebase";
+import { IPortConnectionFormData } from "../../types/port-connections";
 
 interface PortConnectionFormProps {
     onClose: () => void;
@@ -19,9 +19,10 @@ const portConnectionValidationSchema = yup.object({
 export const PortConnectionForm = ({ onClose, onSuccess }: PortConnectionFormProps) => {
     const { currentUser } = useAuth();
     // TODO: Implement Firebase port connection functionality
-    const currentShip = null;
-    const addPortConnection = () => {
+    const currentShip: any = null;
+    const addPortConnection = (connectionData: any) => {
         // Placeholder function
+        console.log('Adding port connection:', connectionData);
     };
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedCruiseLineId, setSelectedCruiseLineId] = useState<string>("");

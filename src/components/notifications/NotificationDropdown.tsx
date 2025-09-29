@@ -21,17 +21,20 @@ export const NotificationDropdown = ({ isOpen, onClose }: NotificationDropdownPr
     // TODO: Implement Firebase notifications functionality
     const notifications: INotification[] = [];
     const unreadCount = 0;
-    const markAsRead = () => {
+    const markAsRead = (notificationId: string) => {
         // Placeholder function
+        console.log('Marking notification as read:', notificationId);
     };
     const markAllAsRead = () => {
         // Placeholder function
+        console.log('Marking all notifications as read');
     };
-    const removeNotification = () => {
+    const removeNotification = (notificationId: string) => {
         // Placeholder function
+        console.log('Removing notification:', notificationId);
     };
     const isLoading = false;
-    
+
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Close dropdown when clicking outside
@@ -85,13 +88,13 @@ export const NotificationDropdown = ({ isOpen, onClose }: NotificationDropdownPr
         const date = new Date(dateString);
         const now = new Date();
         const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-        
+
         if (diffInMinutes < 1) return 'Just now';
         if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-        
+
         const diffInHours = Math.floor(diffInMinutes / 60);
         if (diffInHours < 24) return `${diffInHours}h ago`;
-        
+
         const diffInDays = Math.floor(diffInHours / 24);
         return `${diffInDays}d ago`;
     };
@@ -99,7 +102,7 @@ export const NotificationDropdown = ({ isOpen, onClose }: NotificationDropdownPr
     if (!isOpen) return null;
 
     return (
-        <div 
+        <div
             ref={dropdownRef}
             className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-hidden"
         >
@@ -151,9 +154,8 @@ export const NotificationDropdown = ({ isOpen, onClose }: NotificationDropdownPr
                     notifications.map((notification: INotification) => (
                         <div
                             key={notification.id}
-                            className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                                !notification.isRead ? 'bg-blue-50' : ''
-                            }`}
+                            className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${!notification.isRead ? 'bg-blue-50' : ''
+                                }`}
                         >
                             <div className="flex items-start space-x-3">
                                 <div className="flex-shrink-0">
@@ -161,7 +163,7 @@ export const NotificationDropdown = ({ isOpen, onClose }: NotificationDropdownPr
                                         {getNotificationIcon(notification.type)}
                                     </span>
                                 </div>
-                                
+
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
@@ -175,7 +177,7 @@ export const NotificationDropdown = ({ isOpen, onClose }: NotificationDropdownPr
                                                 {formatTimeAgo(notification.createdAt)}
                                             </p>
                                         </div>
-                                        
+
                                         <div className="flex items-center space-x-1 ml-2">
                                             {!notification.isRead && (
                                                 <button

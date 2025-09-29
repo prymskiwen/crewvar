@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContextFirebase';
+import { useAuth } from '../../context/AuthContextFirebase';
 
 interface BanNotificationProps {
   banInfo: {
@@ -37,7 +37,7 @@ export const BanNotification: React.FC<BanNotificationProps> = ({ banInfo }) => 
           </div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Account Suspended</h1>
           <p className="text-gray-600 mb-4">{banInfo.message}</p>
-          
+
           {banInfo.reason && (
             <div className="bg-gray-50 rounded-lg p-3 mb-4">
               <p className="text-sm text-gray-700">
@@ -45,14 +45,14 @@ export const BanNotification: React.FC<BanNotificationProps> = ({ banInfo }) => 
               </p>
             </div>
           )}
-          
+
           {!banInfo.isPermanent && banInfo.expiresAt && (
             <p className="text-sm text-gray-500 mb-4">
               Suspension expires: {new Date(banInfo.expiresAt).toLocaleDateString()}
             </p>
           )}
         </div>
-        
+
         <div className="space-y-2">
           <p className="text-sm text-gray-500">
             You will be automatically signed out in a few seconds.

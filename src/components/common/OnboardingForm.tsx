@@ -3,15 +3,15 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { Spinner } from "./Elements/Spinner";
+import { Spinner } from "../Elements/Spinner";
 import { ShipSelection } from "./ShipSelection";
-import { getProfilePhotoUrl } from "../utils/imageUtils";
+import { getProfilePhotoUrl } from "../../utils/images";
 import { AssignmentForm } from "./AssignmentForm";
 import { CalendarView } from "./CalendarView";
 import { MissingShipFeedback } from "./MissingShipFeedback";
-import { ISuggestedProfile } from "../types/onboarding";
-import { ICruiseAssignment } from "../types/calendar";
-import { useDepartments, useRolesByDepartment } from "../hooks/useDepartments";
+import { ISuggestedProfile } from "../../types/onboarding";
+import { ICruiseAssignment } from "../../types/calendar";
+import { useDepartments, useRolesByDepartment } from "../../hooks/useDepartments";
 
 // Dynamic validation schema based on whether user has existing profile
 const createValidationSchema = (hasExistingProfile: boolean) => yup.object({
@@ -527,7 +527,7 @@ const OnboardingForm = () => {
                                 <CustomDropdown
                                     value={watch("departmentId") || userProfile?.department_id || ''}
                                     onChange={(value) => setValue("departmentId", value)}
-                                    options={departments.map(dept => ({ id: dept.id, name: dept.name }))}
+                                    options={departments.map((dept: any) => ({ id: dept.id, name: dept.name }))}
                                     placeholder="Select your department"
                                     label="Department"
                                     maxHeight="200px"
@@ -557,7 +557,7 @@ const OnboardingForm = () => {
                                 <CustomDropdown
                                     value={watch("roleId") || userProfile?.role_id || ''}
                                     onChange={(value) => setValue("roleId", value)}
-                                    options={roles.map(role => ({ id: role.id, name: role.name }))}
+                                    options={roles.map((role: any) => ({ id: role.id, name: role.name }))}
                                     placeholder="Select your position"
                                     label="Position"
                                     maxHeight="200px"

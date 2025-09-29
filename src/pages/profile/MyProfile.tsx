@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../../context/AuthContextFirebase";
-import { SocialMediaLinks, SocialMediaDisplay } from "../../components/common";
-import { ProfileEdit, ProfilePhotoUpload, AdditionalPhotoUpload } from "../../components/users";
-// TODO: Implement Firebase job data and user profile functionality
 import { Link } from "react-router-dom";
 import { HiCalendar } from "react-icons/hi";
-import { getProfilePhotoUrl } from "../../utils/imageUtils";
+import { useAuth } from "../../context/AuthContextFirebase";
+import { SocialMediaLinks, SocialMediaDisplay } from "../../components/common";
+import { ProfileEdit, ProfilePhotoUpload } from "../../components/users";
+import { AdditionalPhotoUpload } from "../../components/users/AdditionalPhotoUpload";
+import { getProfilePhotoUrl } from "../../utils/images";
 
 export const MyProfile = () => {
     const { currentUser } = useAuth();
@@ -717,6 +717,7 @@ export const MyProfile = () => {
 
                                 {isEditingProfile ? (
                                     <ProfileEdit
+                                        user={profile}
                                         initialData={{
                                             displayName: profile.displayName,
                                             departmentId: profile.departmentId || '', // Remove the dept- prefix addition
@@ -847,7 +848,7 @@ export const MyProfile = () => {
                                         <AdditionalPhotoUpload
                                             key={index}
                                             currentPhoto={photo}
-                                            onPhotoChange={(photoUrl) => {
+                                            onPhotoChange={(photoUrl: any) => {
                                                 const newPhotos = [...profile.photos];
                                                 newPhotos[index] = photoUrl;
                                                 setProfile(prev => ({ ...prev, photos: newPhotos }));

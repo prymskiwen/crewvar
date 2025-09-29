@@ -1,5 +1,5 @@
-export { default as MyProfile } from './MyProfile';
-export { default as Onboarding } from './Onboarding';
-export { default as Favorites } from './Favorites';
-export { default as Privacy } from './Privacy';
-export { default as Moderation } from './Moderation';
+export { MyProfile } from './MyProfile';
+export { Onboarding } from './Onboarding';
+export { Favorites } from './Favorites';
+export { Privacy } from './Privacy';
+export { Moderation } from './Moderation';

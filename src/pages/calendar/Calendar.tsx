@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { CalendarView, AssignmentForm } from '../../../components/common';
-import { ICruiseAssignment } from '../../../types/calendar';
-import { HiPlus, HiArrowLeft } from 'react-icons/hi';
 import { Link } from 'react-router-dom';
+import { HiPlus, HiArrowLeft } from 'react-icons/hi';
+import { CalendarView, AssignmentForm } from '../../components/common';
+import { ICruiseAssignment } from '../../types/calendar';
 
 export const CalendarPage = () => {
     const [showAssignmentForm, setShowAssignmentForm] = useState(false);

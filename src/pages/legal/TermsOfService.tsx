@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import logo from '../../../assets/images/Home/logo.png';
+import logo from '../../assets/images/Home/logo.png';
 
 export const TermsOfService = () => {
     const sections = [
@@ -69,9 +69,9 @@ export const TermsOfService = () => {
                         </div>
                     </div>
                     <Link to="/dashboard" className="flex items-center hover:bg-teal-700 rounded-lg px-2 sm:px-3 py-2 transition-colors">
-                        <img 
-                            src={logo} 
-                            alt="Crewvar Logo" 
+                        <img
+                            src={logo}
+                            alt="Crewvar Logo"
                             className="h-5 sm:h-6 w-auto brightness-0 invert"
                             style={{ filter: 'brightness(0) invert(1)' }}
                         />
@@ -83,36 +83,36 @@ export const TermsOfService = () => {
             <div className="flex-1 overflow-hidden">
                 <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
 
-                {/* Terms Content */}
-                <div className="space-y-4 sm:space-y-6">
-                    {sections.map((section, index) => (
-                        <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                            <div className="p-4 sm:p-6 lg:p-8">
-                                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
-                                    {section.title}
-                                </h3>
-                                <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{section.content}</p>
+                    {/* Terms Content */}
+                    <div className="space-y-4 sm:space-y-6">
+                        {sections.map((section, index) => (
+                            <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                                <div className="p-4 sm:p-6 lg:p-8">
+                                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4">
+                                        {section.title}
+                                    </h3>
+                                    <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{section.content}</p>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
 
-                {/* Contact Section */}
-                <div className="mt-8 sm:mt-12 bg-gradient-to-r from-[#069B93] to-[#058a7a] rounded-2xl p-4 sm:p-6 lg:p-8 text-white text-center">
-                    <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Questions about our Terms?</h3>
-                    <p className="text-base sm:text-lg mb-4 sm:mb-6 opacity-90">
-                        If you have any questions about these Terms of Service, please don't hesitate to contact us.
-                    </p>
-                    <a 
-                        href="mailto:support@crewvar.com"
-                        className="inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 bg-white text-[#069B93] rounded-xl hover:bg-gray-100 transition-colors font-semibold text-sm sm:text-base"
-                    >
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        Contact Support
-                    </a>
-                </div>
+                    {/* Contact Section */}
+                    <div className="mt-8 sm:mt-12 bg-gradient-to-r from-[#069B93] to-[#058a7a] rounded-2xl p-4 sm:p-6 lg:p-8 text-white text-center">
+                        <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Questions about our Terms?</h3>
+                        <p className="text-base sm:text-lg mb-4 sm:mb-6 opacity-90">
+                            If you have any questions about these Terms of Service, please don't hesitate to contact us.
+                        </p>
+                        <a
+                            href="mailto:support@crewvar.com"
+                            className="inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 bg-white text-[#069B93] rounded-xl hover:bg-gray-100 transition-colors font-semibold text-sm sm:text-base"
+                        >
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Contact Support
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

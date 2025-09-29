@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "../../app/store";
-import { ICrewMember } from "../../types/crew-member";
+import { RootState } from "./store";
+import { ICrewMember } from "../types/crew-member";
 
 type State = { crewMembers: ICrewMember[]; }
 
@@ -13,13 +13,13 @@ export const favoritesSlice = createSlice({
         addFavorite: (state, action: PayloadAction<ICrewMember>) => {
             state.crewMembers.push(action.payload);
         },
-        removeFavorite: (state, action: PayloadAction<{id: string}>) => {
-            state.crewMembers = state.crewMembers.filter(favorite => favorite.id !== action.payload.id);
+        removeFavorite: (state, action: PayloadAction<{ id: string }>) => {
+            state.crewMembers = state.crewMembers.filter((favorite: ICrewMember) => favorite.id !== action.payload.id);
         },
-        updateFavorite: (state, action: PayloadAction<{oldId: string; updatedCrewMember: ICrewMember}>) => {
-            state.crewMembers = state.crewMembers.map(favorite => {
+        updateFavorite: (state, action: PayloadAction<{ oldId: string; updatedCrewMember: ICrewMember }>) => {
+            state.crewMembers = state.crewMembers.map((favorite: ICrewMember) => {
                 if (favorite.id === action.payload.oldId) {
-                    favorite = { ...action.payload.updatedCrewMember };   
+                    favorite = { ...action.payload.updatedCrewMember };
                 }
                 return favorite;
             });

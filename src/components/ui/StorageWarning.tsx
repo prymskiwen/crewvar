@@ -1,5 +1,5 @@
 import React from 'react';
-import { shouldShowStorageWarning } from '../utils/storageFallback';
+import { shouldShowStorageWarning } from '../../utils/storageFallback';
 
 interface StorageWarningProps {
     className?: string;

@@ -1,4 +1,4 @@
-import Showcase from "../components/Showcase";
+import Showcase from "../../components/common/Showcase";
 import Navbar from "../../components/Elements/Navbar";
 import newArrivals from "../../assets/images/Home/yourhomeatsea.png";
 import createProfile from "../../assets/images/Home/createprofile.png";
@@ -89,7 +89,7 @@ export const Home = () => {
                                 Why Crewvar?
                             </h2>
                             <p className="text-lg text-[#069B93] leading-relaxed">
-                            On every ship, there’s one place where the crew always ends up after a long day:
+                                On every ship, there’s one place where the crew always ends up after a long day:
                                 <span className="relative">
                                     the crew bar.
                                 </span> It’s where stories are shared, friendships are made, and laughs never end.

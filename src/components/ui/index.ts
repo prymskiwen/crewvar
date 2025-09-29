@@ -1,5 +1,7 @@
 export { default as LoadingSpinner } from './LoadingSpinner';
+export { default as LoadingPage } from './LoadingPage';
+export { default as LoadingButton } from './LoadingButton';
 export { default as ErrorBoundary } from './ErrorBoundary';
-export { default as StorageWarning } from './StorageWarning';
-export { default as SuccessNotification } from './SuccessNotification';
-export { default as BanNotification } from './BanNotification';
+export { StorageWarning } from './StorageWarning';
+export { SuccessNotification } from './SuccessNotification';
+export { BanNotification } from './BanNotification';

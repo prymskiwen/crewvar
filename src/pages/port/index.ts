@@ -1,1 +1,1 @@
-export { default as WhosInPort } from './WhosInPort';
+export { WhosInPortPage as WhosInPort } from './WhosInPort';

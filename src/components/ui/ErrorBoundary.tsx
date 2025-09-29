@@ -6,7 +6,7 @@
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { ErrorHandler, AppError } from '../utils/errorHandler';
+import { ErrorHandler } from '../../utils/errorHandler';
 
 interface ErrorBoundaryProps {
     children: ReactNode;

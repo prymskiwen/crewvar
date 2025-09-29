@@ -38,7 +38,7 @@ interface RealtimeProviderProps {
 }
 
 export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) => {
-    const { currentUser, userProfile } = useAuth();
+    const { currentUser, userProfile, loading } = useAuth();
     const [isConnected, setIsConnected] = useState(false);
     const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
     const [typingUsers, setTypingUsers] = useState<{ [roomId: string]: TypingUser[] }>({});
@@ -48,7 +48,8 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     const [unsubscribeFunctions, setUnsubscribeFunctions] = useState<(() => void)[]>([]);
 
     useEffect(() => {
-        if (currentUser && userProfile) {
+        // Only connect to realtime services after auth is fully loaded
+        if (currentUser && userProfile && !loading) {
             // Set user online
             setUserOnline(currentUser.uid, userProfile.displayName)
                 .then(() => {
@@ -71,7 +72,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
                 unsubscribeOnlineUsers();
             };
         }
-    }, [currentUser, userProfile]);
+    }, [currentUser, userProfile, loading]);
 
     const setUserStatus = async (status: 'online' | 'away' | 'offline') => {
         if (currentUser) {

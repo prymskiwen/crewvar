@@ -14,12 +14,14 @@ export const FavoriteButton = ({
     size = 'md'
 }: FavoriteButtonProps) => {
     // TODO: Implement Firebase favorites functionality
-    const isFavorite = () => false;
-    const addFavorite = () => {
+    const isFavorite = (_userId: string) => false;
+    const addFavorite = (userId: string) => {
         // Placeholder function
+        console.log('Adding favorite:', userId);
     };
-    const removeFavorite = () => {
+    const removeFavorite = (userId: string) => {
         // Placeholder function
+        console.log('Removing favorite:', userId);
     };
     const [isLoading, setIsLoading] = useState(false);
 
@@ -83,7 +85,16 @@ export const FavoriteButton = ({
 
 // Favorite Button with Text
 export const FavoriteButtonWithText = ({ userId }: FavoriteButtonProps) => {
-    const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+    // TODO: Implement Firebase favorites functionality
+    const isFavorite = (_userId: string) => false;
+    const addFavorite = (userId: string) => {
+        // Placeholder function
+        console.log('Adding favorite:', userId);
+    };
+    const removeFavorite = (userId: string) => {
+        // Placeholder function
+        console.log('Removing favorite:', userId);
+    };
     const [isLoading, setIsLoading] = useState(false);
 
     const isFavorited = isFavorite(userId);

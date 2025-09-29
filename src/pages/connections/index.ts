@@ -1,2 +1,2 @@
-export { default as MyConnections } from './MyConnections';
-export { default as PendingRequests } from './PendingRequests';
+export { MyConnectionsPage as MyConnections } from './MyConnections';
+export { PendingRequestsPage as PendingRequests } from './PendingRequests';

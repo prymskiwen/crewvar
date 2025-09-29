@@ -1,4 +1,4 @@
-import { PendingRequests } from "../components/PendingRequests";
+import { PendingRequests } from "../../components/connections/PendingRequests";
 
 export const PendingRequestsPage = () => {
     return (
@@ -20,7 +20,7 @@ export const PendingRequestsPage = () => {
                                 <h1 className="text-2xl font-bold">Connection Requests</h1>
                                 <p className="text-[#B9F3DF] mt-2">Manage your incoming connection requests</p>
                             </div>
-                            
+
                             <div className="p-6">
                                 <PendingRequests />
                             </div>

@@ -1,8 +1,8 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
-import { getProfilePhotoUrl } from "../../utils/imageUtils";
-import logo from "../../assets/images/Home/logo.png";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { getProfilePhotoUrl } from "../../utils/images";
+import logo from "../../assets/images/Home/logo.png";
 
 export const CrewMemberProfile = () => {
     const { userId } = useParams<{ userId: string }>();

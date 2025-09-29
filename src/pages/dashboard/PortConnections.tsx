@@ -1,4 +1,4 @@
-import { PortConnectionsDashboard } from "../../components/PortConnectionsDashboard";
+import { PortConnectionsDashboard } from "../../components/port/PortConnectionsDashboard";
 
 export const PortConnections = () => {
     return (

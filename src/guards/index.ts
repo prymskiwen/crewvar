@@ -1,3 +1,3 @@
-export { default as AdminGuard } from './AdminGuard';
-export { default as BanGuard } from './BanGuard';
-export { default as OnboardingGuard } from './OnboardingGuard';
+export { AdminGuard } from './AdminGuard';
+export { BanGuard } from './BanGuard';
+export { OnboardingGuard } from './OnboardingGuard';

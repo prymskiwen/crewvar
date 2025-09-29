@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { ShipSelection } from "./ShipSelection";
-import { IAssignmentFormData, ICruiseAssignment } from "../types/calendar";
+import { IAssignmentFormData, ICruiseAssignment } from "../../types/calendar";
 
 interface AssignmentFormProps {
     onClose: () => void;
@@ -21,25 +21,29 @@ const assignmentValidationSchema = yup.object({
     description: yup.string().optional()
 }) as yup.ObjectSchema<IAssignmentFormData>;
 
-export const AssignmentForm = ({ 
-    onClose, 
+export const AssignmentForm = ({
+    onClose,
     onSuccess,
     initialDate,
     className = "",
     editingAssignment = null
 }: AssignmentFormProps) => {
     // TODO: Implement Firebase calendar functionality
-    const addAssignment = () => {
-        // Placeholder function
+    const addAssignment = async (assignmentData: any) => {
+        // Placeholder function - TODO: Implement Firebase assignment creation
+        console.log('Adding assignment:', assignmentData);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
     };
-    const updateAssignment = () => {
-        // Placeholder function
+    const updateAssignment = async (assignmentId: string, assignmentData: any) => {
+        // Placeholder function - TODO: Implement Firebase assignment update
+        console.log('Updating assignment:', assignmentId, assignmentData);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
     };
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedCruiseLineId, setSelectedCruiseLineId] = useState<string>("");
 
     const isEditing = !!editingAssignment;
-    
+
     // Debug component lifecycle
     useEffect(() => {
         console.log('🚨 AssignmentForm MOUNTED - isEditing:', isEditing);
@@ -61,7 +65,7 @@ export const AssignmentForm = ({
 
     const watchedStartDate = watch("startDate");
     const watchedEndDate = watch("endDate");
-    
+
     // Debug validation errors
     useEffect(() => {
         if (Object.keys(errors).length > 0) {
@@ -77,7 +81,7 @@ export const AssignmentForm = ({
                 if (!isoDate) return new Date().toISOString().split('T')[0];
                 return new Date(isoDate).toISOString().split('T')[0];
             };
-            
+
             const formData = {
                 cruiseLineId: editingAssignment.cruiseLineId || "",
                 shipId: editingAssignment.shipId || "",
@@ -104,7 +108,7 @@ export const AssignmentForm = ({
         if (watchedStartDate && watchedEndDate) {
             const startDate = new Date(watchedStartDate);
             const endDate = new Date(watchedEndDate);
-            
+
             if (endDate <= startDate) {
                 const newEndDate = new Date(startDate);
                 newEndDate.setDate(newEndDate.getDate() + 1);
@@ -117,7 +121,7 @@ export const AssignmentForm = ({
         console.log('🚨 FORM SUBMITTED! This should not happen automatically!', data);
         console.log('🚨 isEditing:', isEditing, 'editingAssignment:', editingAssignment);
         setIsSubmitting(true);
-        
+
         try {
             if (isEditing && editingAssignment) {
                 // Update existing assignment
@@ -138,7 +142,7 @@ export const AssignmentForm = ({
                     status: 'upcoming'
                 });
             }
-            
+
             console.log('🚨 FORM SUCCESS - Calling onSuccess and onClose');
             onSuccess?.();
             onClose();
@@ -270,7 +274,7 @@ export const AssignmentForm = ({
                         <div>
                             <h4 className="font-medium text-green-900">Schedule Privacy</h4>
                             <p className="text-sm text-green-700 mt-1">
-                                Your cruise assignments help us suggest connections when you're on the same ship or in the same port. 
+                                Your cruise assignments help us suggest connections when you're on the same ship or in the same port.
                                 Only your current assignment is visible to others.
                             </p>
                         </div>
@@ -303,8 +307,8 @@ export const AssignmentForm = ({
                         disabled={isSubmitting}
                         className="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors disabled:opacity-50"
                     >
-                        {isSubmitting 
-                            ? (isEditing ? 'Updating Assignment...' : 'Adding Assignment...') 
+                        {isSubmitting
+                            ? (isEditing ? 'Updating Assignment...' : 'Adding Assignment...')
                             : (isEditing ? 'Update Assignment' : 'Add Assignment')
                         }
                     </button>

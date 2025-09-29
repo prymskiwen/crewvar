@@ -5,7 +5,7 @@
  */
 
 // Default avatar image
-import defaultAvatar from "../assets/images/Home/default-avatar.webp";
+import defaultAvatar from "../../assets/images/Home/default-avatar.webp";
 
 // Export default avatar
 export { defaultAvatar };

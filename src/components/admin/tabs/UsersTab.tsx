@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, banUser, unbanUser } from '../../../firebase/firestore';
-import { getProfilePhotoUrl } from '../../../utils/imageUtils';
-import { toast } from 'react-toastify';
+import { getProfilePhotoUrl } from '../../../utils/images';
 import { UsersTabProps } from '../../../types';
 
 export const UsersTab: React.FC<UsersTabProps> = ({

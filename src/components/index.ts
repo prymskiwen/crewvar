@@ -12,7 +12,7 @@ export * from './admin';
 export * from './auth';
 export * from './chat';
 export * from './connections';
-export * from './crew';
+// export * from './crew'; // No crew components currently available
 export * from './moderation';
 export * from './notifications';
 export * from './port';
@@ -24,4 +24,4 @@ export * from './users';
 export * from './Form';
 
 // Elements
-export * from './Elements';
+// export * from './Elements'; // No index.ts file available

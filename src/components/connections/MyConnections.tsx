@@ -1,20 +1,31 @@
-import { getProfilePhotoUrl } from '../../../utils/imageUtils';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+// TODO: Import from utils when module resolution is fixed
+const getProfilePhotoUrl = (profilePhoto?: string, _userId?: string): string => {
+    if (profilePhoto && profilePhoto.trim() !== '') {
+        return profilePhoto;
+    }
+    return '/default-avatar.webp';
+};
 
 export const MyConnections = () => {
     // TODO: Implement Firebase connections functionality
-    const connectionsData = null;
+    const connectionsData = { connections: [] as any[] };
     const isLoading = false;
     const error = null;
+    const [isRemoving, setIsRemoving] = useState(false);
     const removeConnection = {
         mutateAsync: async (connectionId: string) => {
             // TODO: Implement Firebase connection removal functionality
             console.log('Removing connection:', connectionId);
             await new Promise(resolve => setTimeout(resolve, 1000));
             toast.success('Connection removed successfully!');
-        }
+        },
+        isLoading: isRemoving
     };
+
+    const connections = connectionsData.connections;
     const navigate = useNavigate();
 
     const handleRemoveConnection = async (connectionId: string) => {
@@ -23,10 +34,11 @@ export const MyConnections = () => {
         }
 
         try {
+            setIsRemoving(true);
             await removeConnection.mutateAsync(connectionId);
 
             // Find the connection to get the user's name for the notification
-            const connection = connections.find(conn => conn.id === connectionId);
+            const connection = connections.find((conn: any) => conn.id === connectionId);
             const userName = connection?.display_name || 'User';
 
             toast.success(`Connection with ${userName} has been removed`, {
@@ -57,6 +69,8 @@ export const MyConnections = () => {
                     border: '1px solid #fecaca'
                 }
             });
+        } finally {
+            setIsRemoving(false);
         }
     };
 
@@ -86,7 +100,6 @@ export const MyConnections = () => {
         );
     }
 
-    const connections = connectionsData?.connections || [];
 
     if (connections.length === 0) {
         return (
@@ -110,7 +123,7 @@ export const MyConnections = () => {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {connections.map((connection) => (
+            {connections.map((connection: any) => (
                 <div key={connection.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
                     <div className="text-center">
                         <img

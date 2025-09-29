@@ -1,18 +1,23 @@
 import { useState } from "react";
 // TODO: Implement Firebase privacy functionality
-import { IPrivacySettings } from "../types/privacy";
+import { IPrivacySettings } from "../../types/privacy";
 
 export const PrivacySettings = () => {
     // TODO: Implement Firebase privacy functionality
-    const privacySettings = {
-        profileVisibility: 'public',
-        showEmail: false,
-        showPhone: false,
-        allowConnectionRequests: true,
-        allowMessages: true
+    const privacySettings: IPrivacySettings = {
+        userId: 'current-user-id', // TODO: Get from auth context
+        isVerified: false,
+        isActive: true,
+        showOnlyTodayShip: false,
+        allowFutureShipVisibility: true,
+        declineRequestsSilently: false,
+        blockEnforcesInvisibility: false,
+        lastActiveDate: new Date().toISOString().split('T')[0],
+        verificationStatus: 'pending'
     };
-    const updatePrivacySettings = () => {
+    const updatePrivacySettings = (settings: IPrivacySettings) => {
         // Placeholder function
+        console.log('Updating privacy settings:', settings);
     };
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -58,7 +63,7 @@ export const PrivacySettings = () => {
                     <h3 className="text-lg font-medium text-gray-900 mb-3">Verification Status</h3>
                     <div className="flex items-center space-x-3">
                         <div className={`w-3 h-3 rounded-full ${settings.verificationStatus === 'verified' ? 'bg-green-500' :
-                                settings.verificationStatus === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
+                            settings.verificationStatus === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
                             }`}></div>
                         <span className="text-gray-700 capitalize">
                             {settings.verificationStatus === 'verified' ? '✅ Verified' :
@@ -89,7 +94,7 @@ export const PrivacySettings = () => {
                                 <input
                                     type="checkbox"
                                     checked={settings.showOnlyTodayShip}
-                                    onChange={(e) => setSettings(prev => ({ ...prev, showOnlyTodayShip: e.target.checked }))}
+                                    onChange={(e) => setSettings((prev: IPrivacySettings) => ({ ...prev, showOnlyTodayShip: e.target.checked }))}
                                     className="w-4 h-4 text-[#069B93] border-gray-300 rounded focus:ring-[#069B93]"
                                 />
                             ) : (
@@ -113,7 +118,7 @@ export const PrivacySettings = () => {
                                 <input
                                     type="checkbox"
                                     checked={settings.allowFutureShipVisibility}
-                                    onChange={(e) => setSettings(prev => ({ ...prev, allowFutureShipVisibility: e.target.checked }))}
+                                    onChange={(e) => setSettings((prev: IPrivacySettings) => ({ ...prev, allowFutureShipVisibility: e.target.checked }))}
                                     className="w-4 h-4 text-[#069B93] border-gray-300 rounded focus:ring-[#069B93]"
                                 />
                             ) : (
@@ -143,7 +148,7 @@ export const PrivacySettings = () => {
                                 <input
                                     type="checkbox"
                                     checked={settings.declineRequestsSilently}
-                                    onChange={(e) => setSettings(prev => ({ ...prev, declineRequestsSilently: e.target.checked }))}
+                                    onChange={(e) => setSettings((prev: IPrivacySettings) => ({ ...prev, declineRequestsSilently: e.target.checked }))}
                                     className="w-4 h-4 text-[#069B93] border-gray-300 rounded focus:ring-[#069B93]"
                                 />
                             ) : (
@@ -167,7 +172,7 @@ export const PrivacySettings = () => {
                                 <input
                                     type="checkbox"
                                     checked={settings.blockEnforcesInvisibility}
-                                    onChange={(e) => setSettings(prev => ({ ...prev, blockEnforcesInvisibility: e.target.checked }))}
+                                    onChange={(e) => setSettings((prev: IPrivacySettings) => ({ ...prev, blockEnforcesInvisibility: e.target.checked }))}
                                     className="w-4 h-4 text-[#069B93] border-gray-300 rounded focus:ring-[#069B93]"
                                 />
                             ) : (

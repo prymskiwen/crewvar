@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../context/AuthContextFirebase";
-import { toast } from "react-toastify";
 
 export const EmailVerificationPage = () => {
     const navigate = useNavigate();

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import { useQuery } from "@tanstack/react-query";
 import { ShipSelection } from "../../components/common";
 
 export const ShipAssignment = () => {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 // TODO: Implement Firebase moderation functionality
-import { IReportFormData } from "../types/moderation";
+import { IReportFormData } from "../../types/moderation";
 
 interface ReportUserProps {
     reportedUserId: string;
@@ -10,8 +10,9 @@ interface ReportUserProps {
 
 export const ReportUser = ({ reportedUserId, reportedUserName, onClose }: ReportUserProps) => {
     // TODO: Implement Firebase moderation functionality
-    const submitReport = () => {
+    const submitReport = (reportData: any) => {
         // Placeholder function
+        console.log('Submitting report:', reportData);
     };
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState<IReportFormData>({
@@ -85,7 +86,7 @@ export const ReportUser = ({ reportedUserId, reportedUserName, onClose }: Report
                                             name="reportType"
                                             value={type.value}
                                             checked={formData.reportType === type.value}
-                                            onChange={(e) => setFormData(prev => ({ ...prev, reportType: e.target.value as any }))}
+                                            onChange={(e) => setFormData((prev: IReportFormData) => ({ ...prev, reportType: e.target.value as any }))}
                                             className="mt-1 w-4 h-4 text-[#069B93] border-gray-300 focus:ring-[#069B93]"
                                         />
                                         <div className="flex-1">
@@ -108,7 +109,7 @@ export const ReportUser = ({ reportedUserId, reportedUserName, onClose }: Report
                             </label>
                             <textarea
                                 value={formData.description}
-                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                                onChange={(e) => setFormData((prev: IReportFormData) => ({ ...prev, description: e.target.value }))}
                                 placeholder="Please provide more details about the issue..."
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#069B93] focus:ring-1 focus:ring-[#069B93] focus:outline-none resize-none"
                                 rows={4}

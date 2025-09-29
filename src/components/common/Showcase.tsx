@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import heroImage from "../../../assets/images/Home/hero.png";
+import heroImage from "../../assets/images/Home/hero.png";
 
 const Showcase = () => {
     return (
@@ -19,18 +19,18 @@ const Showcase = () => {
                                 Join now — it's free for crew
                             </Link>
                         </div>
-                        
+
                         {/* Right side - Empty space for image positioning */}
                         <div className="w-full md:w-[40%] lg:w-[30%] h-80 md:h-70"></div>
                     </div>
                 </div>
             </div>
-            
+
             {/* Image positioned absolutely outside the container */}
             <div className="absolute right-0 bottom-0 md:w-[60%] lg:w-[40%] z-0 pointer-events-none">
-                <img 
-                    src={heroImage} 
-                    alt="Crewvar Crew" 
+                <img
+                    src={heroImage}
+                    alt="Crewvar Crew"
                     className="h-full w-full object-contain object-bottom object-center md:object-right"
                     onError={(e) => {
                         console.error('Hero image failed to load, trying fallback:', e);

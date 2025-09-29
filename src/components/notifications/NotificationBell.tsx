@@ -23,14 +23,17 @@ export const NotificationBell = ({ className = '' }: NotificationBellProps) => {
     const unreadCount = 0;
     const notifications: INotification[] = [];
     const isLoading = false;
-    const markAsRead = () => {
+    const markAsRead = (notificationId: string) => {
         // Placeholder function
+        console.log('Marking notification as read:', notificationId);
     };
     const markAllAsRead = () => {
         // Placeholder function
+        console.log('Marking all notifications as read');
     };
-    const removeNotification = () => {
+    const removeNotification = (notificationId: string) => {
         // Placeholder function
+        console.log('Removing notification:', notificationId);
     };
 
     // Close dropdown when clicking outside
@@ -51,7 +54,7 @@ export const NotificationBell = ({ className = '' }: NotificationBellProps) => {
         if (!notification.isRead) {
             await markAsRead(notification.id);
         }
-        
+
         // Navigate based on notification type
         switch (notification.type) {
             case 'connection_request':
@@ -79,7 +82,7 @@ export const NotificationBell = ({ className = '' }: NotificationBellProps) => {
                 // Stay on current page for system notifications
                 break;
         }
-        
+
         setIsOpen(false);
     };
 
@@ -139,11 +142,11 @@ export const NotificationBell = ({ className = '' }: NotificationBellProps) => {
 
     return (
         <div className={`relative ${className}`} ref={dropdownRef}>
-                    {/* Notification Bell Button */}
-                    <button
-                        onClick={() => setIsOpen(!isOpen)}
-                        className="relative p-2 text-gray-600 hover:text-[#069B93] transition-colors"
-                    >
+            {/* Notification Bell Button */}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="relative p-2 text-gray-600 hover:text-[#069B93] transition-colors"
+            >
                 <svg
                     className="w-6 h-6"
                     fill="none"
@@ -157,7 +160,7 @@ export const NotificationBell = ({ className = '' }: NotificationBellProps) => {
                         d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zM9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1z"
                     />
                 </svg>
-                
+
                 {/* Unread Count Badge */}
                 {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
@@ -206,9 +209,8 @@ export const NotificationBell = ({ className = '' }: NotificationBellProps) => {
                                     <div
                                         key={notification.id}
                                         onClick={() => handleNotificationClick(notification)}
-                                        className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                                            !notification.isRead ? 'bg-blue-50' : ''
-                                        }`}
+                                        className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${!notification.isRead ? 'bg-blue-50' : ''
+                                            }`}
                                     >
                                         <div className="flex items-start space-x-3">
                                             <div className="flex-shrink-0">
@@ -219,9 +221,8 @@ export const NotificationBell = ({ className = '' }: NotificationBellProps) => {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1">
-                                                        <p className={`text-sm font-medium ${
-                                                            !notification.isRead ? 'text-gray-900' : 'text-gray-700'
-                                                        }`}>
+                                                        <p className={`text-sm font-medium ${!notification.isRead ? 'text-gray-900' : 'text-gray-700'
+                                                            }`}>
                                                             {notification.title}
                                                         </p>
                                                         <p className="text-sm text-gray-600 mt-1 line-clamp-2">
@@ -256,7 +257,7 @@ export const NotificationBell = ({ className = '' }: NotificationBellProps) => {
                     {/* Footer */}
                     {notifications.length > 0 && (
                         <div className="p-4 border-t border-gray-200">
-                            <button 
+                            <button
                                 onClick={() => navigate('/all-notifications')}
                                 className="w-full text-center text-[#069B93] hover:text-[#058a7a] text-sm font-medium"
                             >

@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContextFirebase';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContextFirebase';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { HiEye, HiReply, HiCheckCircle, HiXCircle, HiClock, HiSearch } from 'react-icons/hi';
-import { SupportTicket } from '../types';
-import { SupportDropdown } from '../components/support';
+import { SupportTicket } from '../../types';
+import { SupportDropdown } from '../../components/support';
 import logo from '../../assets/images/Home/logo.png';
 
 // Placeholder functions - to be implemented with Firebase

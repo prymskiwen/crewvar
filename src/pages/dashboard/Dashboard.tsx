@@ -1,13 +1,14 @@
+
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContextFirebase";
 import { NotificationBell } from "../../components/notifications";
 import { OnboardingProgress } from "../../components/common";
-import { useAuth } from "../../context/AuthContextFirebase";
-import { Link } from "react-router-dom";
+import { ConnectionButton } from "../../components/connections/ConnectionButton";
+import { ConnectionPendingCard } from "../../components/connections/ConnectionPendingCard";
+import { ConnectionRequestModal } from "../../components/connections/ConnectionRequestModal";
 import logo from "../../assets/images/Home/logo.png";
-import { getProfilePhotoUrl } from "../../utils/imageUtils";
-import { ConnectionButton } from "../../connections/components/ConnectionButton";
-import { ConnectionPendingCard } from "../../connections/components/ConnectionPendingCard";
-import { ConnectionRequestModal } from "../../connections/components/ConnectionRequestModal";
-import { useState } from "react";
+import { getProfilePhotoUrl } from "../../utils/images";
 
 // Test notification button component
 const TestNotificationButton = () => {

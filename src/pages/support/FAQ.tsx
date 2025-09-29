@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HiChevronDown, HiChevronUp, HiSearch } from 'react-icons/hi';
 import { SupportDropdown } from '../../components/support';
-import logo from '../assets/images/Home/logo.png';
+import logo from '../../assets/images/Home/logo.png';
 
 interface FAQItem {
     id: string;

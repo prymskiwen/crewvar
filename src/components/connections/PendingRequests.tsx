@@ -1,28 +1,41 @@
+import { useState } from 'react';
 import { toast } from 'react-toastify';
-import { getProfilePhotoUrl } from '../../../utils/imageUtils';
+
+// TODO: Import from utils when module resolution is fixed
+const getProfilePhotoUrl = (profilePhoto?: string, _userId?: string): string => {
+    if (profilePhoto && profilePhoto.trim() !== '') {
+        return profilePhoto;
+    }
+    return '/default-avatar.webp';
+};
 
 export const PendingRequests = () => {
     // TODO: Implement Firebase connections functionality
-    const pendingData = null;
+    const pendingData = { requests: [] as any[] };
     const isLoading = false;
     const error = null;
+    const [isResponding, setIsResponding] = useState(false);
     const respondToRequest = {
         mutateAsync: async (requestData: { requestId: string; action: 'accept' | 'decline' }) => {
-          // TODO: Implement Firebase connection request response functionality
-          console.log('Responding to connection request:', requestData);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          toast.success(`Connection request ${requestData.action}ed successfully!`);
-        }
+            // TODO: Implement Firebase connection request response functionality
+            console.log('Responding to connection request:', requestData);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            toast.success(`Connection request ${requestData.action}ed successfully!`);
+        },
+        isLoading: isResponding
     };
+
+    const requests = pendingData.requests;
 
     const handleRespondToRequest = async (requestId: string, action: 'accept' | 'decline') => {
         try {
+            setIsResponding(true);
             await respondToRequest.mutateAsync({ requestId, action });
-            
+
             // Find the request to get the user's name for the notification
-            const request = requests.find(req => req.id === requestId);
+            const request = requests.find((req: any) => req.id === requestId);
             const userName = request?.display_name || 'User';
-            
+
             if (action === 'accept') {
                 toast.success(`🎉 Connection accepted! You're now connected with ${userName}`, {
                     position: "top-right",
@@ -67,6 +80,8 @@ export const PendingRequests = () => {
                     border: '1px solid #fecaca'
                 }
             });
+        } finally {
+            setIsResponding(false);
         }
     };
 
@@ -92,7 +107,6 @@ export const PendingRequests = () => {
         );
     }
 
-    const requests = pendingData?.requests || [];
 
     if (requests.length === 0) {
         return (
@@ -110,11 +124,11 @@ export const PendingRequests = () => {
 
     return (
         <div className="space-y-4">
-            {requests.map((request) => (
+            {requests.map((request: any) => (
                 <div key={request.id} className="bg-white rounded-lg shadow-sm border p-6">
                     <div className="flex items-start space-x-4">
-                        <img 
-                            src={getProfilePhotoUrl(request.profile_photo)} 
+                        <img
+                            src={getProfilePhotoUrl(request.profile_photo)}
                             alt={request.display_name}
                             className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
                         />
@@ -131,13 +145,13 @@ export const PendingRequests = () => {
                                     </p>
                                 </div>
                             </div>
-                            
+
                             {request.message && (
                                 <div className="mt-3 p-3 bg-gray-50 rounded-lg">
                                     <p className="text-sm text-gray-700 italic">"{request.message}"</p>
                                 </div>
                             )}
-                            
+
                             <div className="flex space-x-3 mt-4">
                                 <button
                                     onClick={() => handleRespondToRequest(request.id, 'accept')}

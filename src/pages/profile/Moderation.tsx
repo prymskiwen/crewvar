@@ -1,4 +1,4 @@
-import { ModerationDashboard } from "../../components/ModerationDashboard";
+import { ModerationDashboard } from "../../components/moderation/ModerationDashboard";
 
 export const Moderation = () => {
     return (

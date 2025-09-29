@@ -1,7 +1,6 @@
-export { default as Dashboard } from './Dashboard';
-export { default as DashboardNew } from './DashboardNew';
-export { default as Home } from './Home';
-export { default as ExploreShips } from './ExploreShips';
-export { default as Chat } from './Chat';
-export { default as PortConnections } from './PortConnections';
-export { default as ShipAssignment } from './ShipAssignment';
+export { Dashboard } from './Dashboard';
+export { Home } from './Home';
+export { ExploreShips } from './ExploreShips';
+export { ChatPage as Chat } from './Chat';
+export { PortConnections } from './PortConnections';
+export { ShipAssignment } from './ShipAssignment';

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContextFirebase';
 import { toast } from 'react-toastify';
+
+import { useAuth } from '../../context/AuthContextFirebase';
 // Removed old API import - now using Firebase
-import { getProfilePhotoUrl } from '../utils/imageUtils';
+import { getProfilePhotoUrl } from '../../utils/images';
 
 // Placeholder Firebase functions - to be implemented
 const getUserDetails = async (userId: string): Promise<UserDetails> => {

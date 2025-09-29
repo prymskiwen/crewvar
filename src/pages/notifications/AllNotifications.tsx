@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import logo from '../../../assets/images/Home/logo.png';
+import { LoadingPage } from '../../components/ui';
+import logo from '../../assets/images/Home/logo.png';
 
 // TODO: Define INotification interface
 interface INotification {
@@ -290,12 +291,7 @@ export const AllNotificationsPage = () => {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading notifications...</p>
-                </div>
-            </div>
+            <LoadingPage message="Loading notifications..." backgroundColor="#f9fafb" />
         );
     }
 

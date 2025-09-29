@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContextFirebase';
-import { 
-    HiMenu, 
-    HiX, 
-    HiLocationMarker, 
-    HiUsers, 
-    HiUser, 
-    HiChat, 
-    HiHeart, 
+import { useAuth } from '../../context/AuthContextFirebase';
+import {
+    HiMenu,
+    HiX,
+    HiLocationMarker,
+    HiUsers,
+    HiUser,
+    HiChat,
+    HiHeart,
     HiBell,
     HiHome,
     HiChevronRight
@@ -78,7 +78,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isOpen, onTo
 
     // Debug logging
     console.log('DashboardSidebar rendered, isOpen:', isOpen);
-    
+
     const sidebarClasses = `
         fixed top-0 left-0 h-full bg-[#069B93] text-white z-[9999] transform transition-transform duration-300 ease-in-out
         lg:translate-x-0 lg:static lg:z-auto
@@ -102,7 +102,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isOpen, onTo
         <>
             {/* Mobile Overlay */}
             {isOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-black bg-opacity-50 z-[9998] lg:hidden"
                     onClick={onToggle}
                 />
@@ -132,15 +132,15 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isOpen, onTo
                         {sidebarItems.map((item) => {
                             const Icon = item.icon;
                             const isActive = location.pathname === item.path;
-                            
+
                             return (
                                 <li key={item.id}>
                                     <Link
                                         to={item.path}
                                         className={`
                                             flex items-center justify-between px-3 lg:px-4 py-2 lg:py-3 rounded-lg lg:rounded-xl transition-all duration-200 group
-                                            ${isActive 
-                                                ? 'bg-gradient-to-r from-[#069B93] to-[#058a7a] text-white shadow-lg' 
+                                            ${isActive
+                                                ? 'bg-gradient-to-r from-[#069B93] to-[#058a7a] text-white shadow-lg'
                                                 : 'text-gray-300 hover:bg-[#058a7a] hover:text-white'
                                             }
                                         `}
@@ -149,14 +149,14 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ isOpen, onTo
                                             <Icon className={`w-4 h-4 lg:w-5 lg:h-5 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`} />
                                             <span className="font-medium text-sm lg:text-base">{item.label}</span>
                                         </div>
-                                        
+
                                         {/* Badge for notifications */}
                                         {item.id === 'notifications' && (
                                             <div className="bg-red-500 text-white text-xs rounded-full w-4 h-4 lg:w-5 lg:h-5 flex items-center justify-center font-bold">
                                                 3
                                             </div>
                                         )}
-                                        
+
                                         {/* Active indicator */}
                                         {isActive && (
                                             <HiChevronRight className="w-3 h-3 lg:w-4 lg:h-4 text-white" />
@@ -221,7 +221,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
         <div className="min-h-screen bg-gray-50">
             {/* Sidebar */}
             <DashboardSidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
-            
+
             {/* Main Content */}
             <div className="lg:ml-72">
                 {/* Top Bar */}
@@ -236,7 +236,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                             </button>
                             <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Dashboard</h2>
                         </div>
-                        
+
                         {/* Right side actions */}
                         <div className="flex items-center space-x-3 lg:space-x-4">
                             <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
@@ -248,7 +248,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                         </div>
                     </div>
                 </div>
-                
+
                 {/* Page Content */}
                 <div className="p-4 lg:p-6">
                     {children}

@@ -13,7 +13,7 @@ import { defaultAvatar } from './images';
  * @param userId - User ID for fallback avatar generation
  * @returns Profile photo URL or default avatar
  */
-export const getProfilePhotoUrl = (profilePhoto?: string, userId?: string): string => {
+export const getProfilePhotoUrl = (profilePhoto?: string, _userId?: string): string => {
     if (profilePhoto && profilePhoto.trim() !== '') {
         return profilePhoto;
     }

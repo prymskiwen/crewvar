@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { IConnectionRequest, INotification } from "../types/connections";
-import { defaultAvatar } from "../utils/images";
-import { 
-    getPendingRequestsForUser, 
-    getSentRequestsForUser, 
+import { IConnectionRequest, INotification } from "../../types/connections";
+import { defaultAvatar } from "../../utils/images";
+import {
+    getPendingRequestsForUser,
+    getSentRequestsForUser,
     getNotificationsForUser,
     getUnreadNotificationsCount,
     sampleProfiles,
     sampleConnections,
     sampleConnectionRequests
-} from "../data/connections-data";
+} from "../../data/samples/connections-data";
 
 interface ConnectionRequestsProps {
     currentUserId: string;
@@ -19,11 +19,11 @@ interface ConnectionRequestsProps {
     onBlockUser: (userId: string) => void;
 }
 
-export const ConnectionRequests = ({ 
-    currentUserId, 
-    onAcceptRequest, 
-    onDeclineRequest, 
-    onBlockUser 
+export const ConnectionRequests = ({
+    currentUserId,
+    onAcceptRequest,
+    onDeclineRequest,
+    onBlockUser
 }: ConnectionRequestsProps) => {
     const navigate = useNavigate();
     const [pendingRequests, setPendingRequests] = useState<IConnectionRequest[]>([]);
@@ -42,34 +42,34 @@ export const ConnectionRequests = ({
 
     const handleAcceptRequest = (requestId: string) => {
         onAcceptRequest(requestId);
-        
+
         // Find the request to get the user ID
-        const request = pendingRequests.find(req => req.id === requestId);
+        const request = pendingRequests.find((req: IConnectionRequest) => req.id === requestId);
         if (request) {
             // Update the connection request status to accepted
-            const requestIndex = sampleConnectionRequests.findIndex(req => req.id === requestId);
+            const requestIndex = sampleConnectionRequests.findIndex((req: any) => req.id === requestId);
             if (requestIndex !== -1) {
                 sampleConnectionRequests[requestIndex].status = 'accepted';
                 sampleConnectionRequests[requestIndex].updatedAt = new Date().toISOString();
             }
-            
+
             // Add a new connection
             const newConnection = {
                 id: `conn_${Date.now()}`,
-                userId1: "current_user",
-                userId2: request.fromUserId,
-                createdAt: new Date().toISOString(),
-                status: "active" as const
+                user1_id: "current_user",
+                user2_id: request.fromUserId,
+                created_at: new Date().toISOString(),
+                status: "connected"
             };
             sampleConnections.push(newConnection);
-            
+
             // Update local state
             setPendingRequests(prev => prev.filter(req => req.id !== requestId));
             setUnreadCount(prev => Math.max(0, prev - 1));
-            
+
             // Navigate to the person's profile to show Level 2 access
-            navigate(`/profile/${request.fromUserId}`, { 
-                state: { connectionAccepted: true } 
+            navigate(`/profile/${request.fromUserId}`, {
+                state: { connectionAccepted: true }
             });
         }
     };
@@ -88,9 +88,9 @@ export const ConnectionRequests = ({
     };
 
     const markNotificationAsRead = (notificationId: string) => {
-        setNotifications(prev => 
-            prev.map(notif => 
-                notif.id === notificationId 
+        setNotifications(prev =>
+            prev.map(notif =>
+                notif.id === notificationId
                     ? { ...notif, isRead: true }
                     : notif
             )
@@ -113,31 +113,28 @@ export const ConnectionRequests = ({
             <div className="flex space-x-1 mb-6 bg-gray-100 rounded-lg p-1">
                 <button
                     onClick={() => setActiveTab('pending')}
-                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                        activeTab === 'pending'
-                            ? 'bg-white text-[#069B93] shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'pending'
+                        ? 'bg-white text-[#069B93] shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                        }`}
                 >
                     Pending ({pendingRequests.length})
                 </button>
                 <button
                     onClick={() => setActiveTab('sent')}
-                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                        activeTab === 'sent'
-                            ? 'bg-white text-[#069B93] shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'sent'
+                        ? 'bg-white text-[#069B93] shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                        }`}
                 >
                     Sent ({sentRequests.length})
                 </button>
                 <button
                     onClick={() => setActiveTab('notifications')}
-                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                        activeTab === 'notifications'
-                            ? 'bg-white text-[#069B93] shadow-sm'
-                            : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === 'notifications'
+                        ? 'bg-white text-[#069B93] shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                        }`}
                 >
                     Notifications ({unreadCount})
                 </button>
@@ -153,55 +150,55 @@ export const ConnectionRequests = ({
                             </div>
                         ) : (
                             pendingRequests.map((request) => {
-                                const requesterProfile = sampleProfiles.find(profile => profile.id === request.fromUserId);
+                                const requesterProfile = sampleProfiles.find((profile: any) => profile.id === request.fromUserId);
                                 return (
-                                <div key={request.id} className="border border-gray-200 rounded-lg p-4">
-                                    <div className="flex items-center space-x-3 mb-3">
-                                        <img 
-                                            src={requesterProfile?.avatar || defaultAvatar} 
-                                            alt={requesterProfile?.displayName || "User"}
-                                            className="w-10 h-10 rounded-full object-cover"
-                                        />
-                                        <div className="flex-1">
-                                            <h3 className="font-semibold text-gray-900">
-                                                {requesterProfile?.displayName || "Unknown User"}
-                                            </h3>
-                                            <p className="text-sm text-gray-600">
-                                                {requesterProfile?.role} • {requesterProfile?.department}
-                                            </p>
-                                            <p className="text-xs text-gray-500">
-                                                {new Date(request.createdAt).toLocaleDateString()}
-                                            </p>
+                                    <div key={request.id} className="border border-gray-200 rounded-lg p-4">
+                                        <div className="flex items-center space-x-3 mb-3">
+                                            <img
+                                                src={requesterProfile?.avatar || defaultAvatar}
+                                                alt={requesterProfile?.displayName || "User"}
+                                                className="w-10 h-10 rounded-full object-cover"
+                                            />
+                                            <div className="flex-1">
+                                                <h3 className="font-semibold text-gray-900">
+                                                    {requesterProfile?.displayName || "Unknown User"}
+                                                </h3>
+                                                <p className="text-sm text-gray-600">
+                                                    {requesterProfile?.role} • {requesterProfile?.department}
+                                                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    {new Date(request.createdAt).toLocaleDateString()}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                    
-                                    {request.message && (
-                                        <div className="mb-3 p-3 bg-gray-50 rounded-lg">
-                                            <p className="text-sm text-gray-700">"{request.message}"</p>
-                                        </div>
-                                    )}
 
-                                    <div className="flex space-x-2">
-                                        <button
-                                            onClick={() => handleAcceptRequest(request.id)}
-                                            className="px-4 py-2 text-sm font-medium text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors"
-                                        >
-                                            Accept
-                                        </button>
-                                        <button
-                                            onClick={() => handleDeclineRequest(request.id)}
-                                            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
-                                        >
-                                            Decline
-                                        </button>
-                                        <button
-                                            onClick={() => handleBlockUser(request.fromUserId)}
-                                            className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-                                        >
-                                            Block
-                                        </button>
+                                        {request.message && (
+                                            <div className="mb-3 p-3 bg-gray-50 rounded-lg">
+                                                <p className="text-sm text-gray-700">"{request.message}"</p>
+                                            </div>
+                                        )}
+
+                                        <div className="flex space-x-2">
+                                            <button
+                                                onClick={() => handleAcceptRequest(request.id)}
+                                                className="px-4 py-2 text-sm font-medium text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors"
+                                            >
+                                                Accept
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeclineRequest(request.id)}
+                                                className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+                                            >
+                                                Decline
+                                            </button>
+                                            <button
+                                                onClick={() => handleBlockUser(request.fromUserId)}
+                                                className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                                            >
+                                                Block
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
                                 );
                             })
                         )}
@@ -231,7 +228,7 @@ export const ConnectionRequests = ({
                                             Pending
                                         </span>
                                     </div>
-                                    
+
                                     {request.message && (
                                         <div className="mb-3 p-3 bg-gray-50 rounded-lg">
                                             <p className="text-sm text-gray-700">"{request.message}"</p>
@@ -251,19 +248,17 @@ export const ConnectionRequests = ({
                             </div>
                         ) : (
                             notifications.map((notification) => (
-                                <div 
-                                    key={notification.id} 
-                                    className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                                        notification.isRead 
-                                            ? 'border-gray-200 bg-white' 
-                                            : 'border-[#069B93] bg-[#069B93]/5'
-                                    }`}
+                                <div
+                                    key={notification.id}
+                                    className={`border rounded-lg p-4 cursor-pointer transition-colors ${notification.isRead
+                                        ? 'border-gray-200 bg-white'
+                                        : 'border-[#069B93] bg-[#069B93]/5'
+                                        }`}
                                     onClick={() => markNotificationAsRead(notification.id)}
                                 >
                                     <div className="flex items-start space-x-3">
-                                        <div className={`w-2 h-2 rounded-full mt-2 ${
-                                            notification.isRead ? 'bg-gray-300' : 'bg-[#069B93]'
-                                        }`}></div>
+                                        <div className={`w-2 h-2 rounded-full mt-2 ${notification.isRead ? 'bg-gray-300' : 'bg-[#069B93]'
+                                            }`}></div>
                                         <div className="flex-1">
                                             <h3 className="font-semibold text-gray-900">{notification.title}</h3>
                                             <p className="text-sm text-gray-600 mt-1">{notification.message}</p>

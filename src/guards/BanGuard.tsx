@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContextFirebase';
-import { BanNotification } from './BanNotification';
+import { BanNotification } from '../components/ui/BanNotification';
 import { useBanNotifications } from '../hooks/useBanNotifications';
 
 import { BanGuardProps } from '../types';

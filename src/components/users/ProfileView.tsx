@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { IUserProfile } from "../types/connections";
-import { FavoriteButton } from "./FavoriteButton";
+import { IUserProfile } from "../../types/connections";
+import { FavoriteButton } from "../common/FavoriteButton";
 
 interface ProfileViewProps {
     profile: IUserProfile;
@@ -12,8 +12,8 @@ interface ProfileViewProps {
     showFullProfile?: boolean; // Level 2 access
 }
 
-export const ProfileView = ({ 
-    profile, 
+export const ProfileView = ({
+    profile,
     connectionStatus = 'none',
     onSendRequest,
     onCancelRequest,
@@ -69,9 +69,9 @@ export const ProfileView = ({
             <div className="bg-gradient-to-r from-[#069B93] to-[#00A59E] p-6 text-white">
                 <div className="flex items-center space-x-4">
                     <div className="relative">
-                        <img 
-                            src={profile.avatar} 
-                            alt={profile.displayName} 
+                        <img
+                            src={profile.avatar}
+                            alt={profile.displayName}
                             className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
                         />
                         {profile.isOnline && (
@@ -125,10 +125,10 @@ export const ProfileView = ({
                             <div>
                                 <h2 className="text-lg font-semibold text-gray-900 mb-3">Photos</h2>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                    {profile.photos.map((photo, index) => (
-                                        <img 
+                                    {profile.photos.map((photo: any, index: number) => (
+                                        <img
                                             key={index}
-                                            src={photo} 
+                                            src={photo}
                                             alt={`${profile.displayName} photo ${index + 1}`}
                                             className="w-full h-32 object-cover rounded-lg"
                                         />
@@ -164,7 +164,7 @@ export const ProfileView = ({
                                                 <span className="text-white text-sm">🌐</span>
                                             </div>
                                             <div className="flex space-x-2">
-                                                {profile.contacts.social.map((social, index) => (
+                                                {profile.contacts.social.map((social: any, index: number) => (
                                                     <span key={index} className="text-gray-700">{social}</span>
                                                 ))}
                                             </div>
@@ -199,11 +199,10 @@ export const ProfileView = ({
                         <button
                             onClick={() => setShowRequestForm(true)}
                             disabled={isLoading}
-                            className={`w-full px-6 py-3 text-sm font-medium rounded-lg transition-colors ${
-                                isLoading 
-                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                                    : getButtonStyle()
-                            }`}
+                            className={`w-full px-6 py-3 text-sm font-medium rounded-lg transition-colors ${isLoading
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : getButtonStyle()
+                                }`}
                         >
                             {isLoading ? 'Sending...' : getButtonText()}
                         </button>
@@ -262,13 +261,13 @@ export const ProfileView = ({
                                 >
                                     ✓ Connected
                                 </button>
-                                <FavoriteButton 
-                                    userId={profile.id} 
+                                <FavoriteButton
+                                    userId={profile.id}
                                     userName={profile.displayName}
                                     size="md"
                                 />
                             </div>
-                            <button 
+                            <button
                                 onClick={() => navigate(`/chat/${profile.id}`)}
                                 className="w-full px-6 py-3 text-sm font-medium text-white bg-[#069B93] hover:bg-[#058a7a] rounded-lg transition-colors"
                             >

@@ -1,3 +1,3 @@
 export { default as AuthRoutes } from './Auth';
-export { EmailVerification } from './EmailVerification';
-export { VerificationPending } from './VerificationPending';
+export { EmailVerificationPage as EmailVerification } from './EmailVerification';
+export { VerificationPendingPage as VerificationPending } from './VerificationPending';

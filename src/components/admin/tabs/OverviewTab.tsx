@@ -1,5 +1,4 @@
 import React from 'react';
-import { AdminStats, SupportStats } from '../../../firebase/firestore';
 import { OverviewTabProps } from '../../../types';
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({

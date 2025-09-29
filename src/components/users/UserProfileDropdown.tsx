@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContextFirebase';
-import { defaultAvatar } from '../utils/images';
 import { HiChevronDown, HiUser, HiLogout } from 'react-icons/hi';
-import bellIcon from '../assets/images/Home/bell.png';
-import { NotificationDropdown } from './NotificationDropdown';
+import { useAuth } from '../../context/AuthContextFirebase';
+import { NotificationDropdown } from '../notifications/NotificationDropdown';
+import { defaultAvatar } from '../../utils/images';
+import bellIcon from '../../assets/images/Home/bell.png';
 
 interface UserProfileDropdownProps {
     onSignOut: () => void;

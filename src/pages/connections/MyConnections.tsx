@@ -1,4 +1,4 @@
-import { MyConnections } from "../components/MyConnections";
+import { MyConnections } from "../../components/connections/MyConnections";
 
 export const MyConnectionsPage = () => {
     return (
@@ -20,7 +20,7 @@ export const MyConnectionsPage = () => {
                                 <h1 className="text-2xl font-bold">My Connections</h1>
                                 <p className="text-[#B9F3DF] mt-2">View and manage your crew connections</p>
                             </div>
-                            
+
                             <div className="p-6">
                                 <MyConnections />
                             </div>

@@ -1,3 +1,4 @@
+import React from "react";
 import { ToastContainer } from "react-toastify";
 import { AuthProvider } from "./context/AuthContextFirebase";
 import { RealtimeProvider } from "./context/RealtimeContextFirebase";
@@ -6,7 +7,7 @@ import { OnboardingGuard, AdminGuard, BanGuard } from "./guards";
 import { ErrorBoundary } from "./components/ui";
 import { Footer, ScrollToTop } from "./components/layout";
 
-const AppContent = () => {
+const AppContent = React.memo(() => {
     return (
         <ErrorBoundary>
             <ScrollToTop />
@@ -22,9 +23,9 @@ const AppContent = () => {
             <Footer />
         </ErrorBoundary>
     );
-};
+});
 
-const App = () => {
+const App = React.memo(() => {
     return (
         <AuthProvider>
             <RealtimeProvider>
@@ -37,6 +38,6 @@ const App = () => {
             </RealtimeProvider>
         </AuthProvider>
     );
-};
+});
 
 export default App;

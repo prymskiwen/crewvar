@@ -1,4 +1,4 @@
-import { useAuth } from "../context/AuthContextFirebase";
+import { useAuth } from "../../context/AuthContextFirebase";
 import { Link } from "react-router-dom";
 
 export const OnboardingProgress = () => {
@@ -14,37 +14,37 @@ export const OnboardingProgress = () => {
             id: 'email',
             name: 'Email Verification',
             description: 'Verify your email address to ensure account security',
-            isCompleted: userProfile.is_email_verified || false
+            isCompleted: userProfile.isEmailVerified || false
         },
         {
             id: 'profilePhoto',
             name: 'Profile Photo',
             description: 'Add a profile photo so other crew members can recognize you',
-            isCompleted: !!userProfile.profile_photo
+            isCompleted: !!userProfile.profilePhoto
         },
         {
             id: 'displayName',
             name: 'Display Name',
             description: 'Set your display name as it will appear to other crew members',
-            isCompleted: !!userProfile.display_name
+            isCompleted: !!userProfile.displayName
         },
         {
             id: 'department',
             name: 'Department',
             description: 'Select your department (Food & Beverage, Entertainment, etc.)',
-            isCompleted: !!userProfile.department_id
+            isCompleted: !!userProfile.departmentId
         },
         {
             id: 'role',
             name: 'Role',
             description: 'Specify your specific role within your department',
-            isCompleted: !!userProfile.role_id
+            isCompleted: !!userProfile.roleId
         },
         {
             id: 'currentShip',
             name: 'Current Ship',
             description: 'Select your current ship assignment',
-            isCompleted: !!userProfile.current_ship_id
+            isCompleted: !!userProfile.currentShipId
         }
     ];
 
@@ -82,7 +82,7 @@ export const OnboardingProgress = () => {
                     <span>{progressPercentage}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                         className="bg-[#069B93] h-2 rounded-full transition-all duration-300"
                         style={{ width: `${progressPercentage}%` }}
                     ></div>
@@ -93,19 +93,17 @@ export const OnboardingProgress = () => {
             <div className="space-y-2">
                 {requirements.map((requirement) => (
                     <div key={requirement.id} className="flex items-center space-x-3">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                            requirement.isCompleted 
-                                ? 'bg-green-500' 
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${requirement.isCompleted
+                                ? 'bg-green-500'
                                 : 'bg-gray-200'
-                        }`}>
+                            }`}>
                             {requirement.isCompleted && (
                                 <span className="text-white text-xs">✓</span>
                             )}
                         </div>
                         <div className="flex-1">
-                            <p className={`text-sm font-medium ${
-                                requirement.isCompleted ? 'text-gray-500 line-through' : 'text-gray-900'
-                            }`}>
+                            <p className={`text-sm font-medium ${requirement.isCompleted ? 'text-gray-500 line-through' : 'text-gray-900'
+                                }`}>
                                 {requirement.name}
                             </p>
                             <p className="text-xs text-gray-500">

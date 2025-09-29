@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Spinner } from '../Elements/Spinner';
-import { getProfilePhotoUrl } from '../../utils/imageUtils';
+import { getProfilePhotoUrl } from '../../utils/images';
 import { ICrewMember, WhosInPortProps } from '../../types';
 
 export const WhosInPort = ({ className = "" }: WhosInPortProps) => {

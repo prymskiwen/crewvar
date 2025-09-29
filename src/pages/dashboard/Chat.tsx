@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { IChatRoom } from '../../../types/chat.d';
-import { useAuth } from '../../../context/AuthContextFirebase';
-import { getChatRooms } from '../../../firebase/firestore';
-import { ChatWindow } from '../../../components/chat';
 import { HiSearch, HiX, HiChevronDown, HiChevronUp } from 'react-icons/hi';
-import logo from '../../../assets/images/Home/logo.png';
+import { useAuth } from '../../context/AuthContextFirebase';
+import { getChatRooms } from '../../firebase/firestore';
+import { ChatWindow } from '../../components/chat';
+import { LoadingPage } from '../../components/ui';
+import { IChatRoom } from '../../types/chat.d';
+import logo from '../../assets/images/Home/logo.png';
 
 export const ChatPage: React.FC = () => {
   const { userId } = useParams<{ userId?: string }>();
@@ -158,12 +159,7 @@ export const ChatPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading chat rooms...</p>
-        </div>
-      </div>
+      <LoadingPage message="Loading chat rooms..." backgroundColor="#f9fafb" />
     );
   }
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 // TODO: Implement Firebase moderation functionality
-import { IReport } from "../types/moderation";
+import { IReport } from "../../types/moderation";
 
 export const ModerationDashboard = () => {
     // TODO: Implement Firebase moderation functionality
@@ -10,16 +10,21 @@ export const ModerationDashboard = () => {
         totalReports: 0,
         pendingReports: 0,
         resolvedReports: 0,
-        suspiciousActivities: 0
+        suspiciousActivities: 0,
+        suspiciousUsers: 0,
+        activeBans: 0
     };
-    const updateReportStatus = () => {
+    const updateReportStatus = (reportId: string, status: IReport['status'], resolution?: string) => {
         // Placeholder function
+        console.log('Updating report status:', { reportId, status, resolution });
     };
-    const performModerationAction = () => {
+    const performModerationAction = (actionData: { reportId: string; actionType: any; targetUserId: string; reason: string; isActive: boolean }) => {
         // Placeholder function
+        console.log('Performing moderation action:', actionData);
     };
-    const markSuspiciousActivityResolved = () => {
+    const markSuspiciousActivityResolved = (activityId: string) => {
         // Placeholder function
+        console.log('Marking suspicious activity resolved:', activityId);
     };
 
     const [activeTab, setActiveTab] = useState<'overview' | 'reports' | 'suspicious' | 'actions'>('overview');
@@ -113,8 +118,8 @@ export const ModerationDashboard = () => {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id as any)}
                                     className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
-                                            ? 'border-[#069B93] text-[#069B93]'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                        ? 'border-[#069B93] text-[#069B93]'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                         }`}
                                 >
                                     {tab.label}
@@ -283,8 +288,8 @@ export const ModerationDashboard = () => {
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center space-x-3">
                                                 <span className={`px-2 py-1 text-xs rounded-full ${activity.severity === 'high' ? 'bg-red-100 text-red-800' :
-                                                        activity.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                                            'bg-green-100 text-green-800'
+                                                    activity.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                                                        'bg-green-100 text-green-800'
                                                     }`}>
                                                     {activity.severity}
                                                 </span>

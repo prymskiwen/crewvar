@@ -1,7 +1,7 @@
 import { useState } from "react";
 // TODO: Implement Firebase port connection and quick check-in functionality
 import { PortConnectionForm } from "./PortConnectionForm";
-import { WhoInPort } from "./WhoInPort";
+import { WhosInPort } from "./WhosInPort";
 // import { getConnectionDuration } from "../data/port-connections-data";
 
 const getConnectionDuration = (_startTime: string, _endTime: string) => {
@@ -250,11 +250,7 @@ export const PortConnectionsDashboard = () => {
 
             {/* Who's in Port */}
             {currentConnections.length > 0 && (
-                <WhoInPort
-                    portName={currentConnections[0].portName}
-                    date={selectedDate}
-                    onConnect={handleConnect}
-                />
+                <WhosInPort className="mt-6" />
             )}
 
             {/* Port Form Modal */}

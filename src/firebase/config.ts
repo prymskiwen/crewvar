@@ -52,6 +52,7 @@ class FirebaseSingleton {
       try {
         this._app = initializeApp(firebaseConfig);
       } catch (error) {
+        console.error("Firebase initialization failed:", error);
         // If app already exists, get the existing instance
         this._app = initializeApp(firebaseConfig, 'default');
       }

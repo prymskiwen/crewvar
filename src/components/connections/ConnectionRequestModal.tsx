@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getProfilePhotoUrl } from '../../../utils/imageUtils';
+import { toast } from 'react-toastify';
+import { getProfilePhotoUrl } from '../../utils/images/imageUtils';
 
 interface ConnectionRequestModalProps {
     isOpen: boolean;
@@ -10,18 +11,20 @@ export const ConnectionRequestModal: React.FC<ConnectionRequestModalProps> = ({ 
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [requestMessage, setRequestMessage] = useState('');
-    
+
     // TODO: Implement Firebase crew search functionality
-    const crewData: any[] = [];
+    const crewData = { crew: [] as any[] };
     const isLoading = false;
     const error = null;
+    const [isSending, setIsSending] = useState(false);
     const sendRequestMutation = {
         mutateAsync: async (requestData: { receiverId: string; message: string }) => {
-          // TODO: Implement Firebase connection request functionality
-          console.log('Sending connection request:', requestData);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          toast.success('Connection request sent successfully!');
-        }
+            // TODO: Implement Firebase connection request functionality
+            console.log('Sending connection request:', requestData);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            toast.success('Connection request sent successfully!');
+        },
+        isLoading: isSending
     };
 
     // Reset state when modal opens/closes
@@ -37,17 +40,20 @@ export const ConnectionRequestModal: React.FC<ConnectionRequestModalProps> = ({ 
         if (!selectedUser) return;
 
         try {
+            setIsSending(true);
             await sendRequestMutation.mutateAsync({
                 receiverId: selectedUser.id,
-                message: requestMessage.trim() || undefined
+                message: requestMessage.trim() || ''
             });
-            
+
             // Success - close modal and reset
             onClose();
             setSelectedUser(null);
             setRequestMessage('');
         } catch (error) {
             console.error('Failed to send connection request:', error);
+        } finally {
+            setIsSending(false);
         }
     };
 
@@ -126,8 +132,8 @@ export const ConnectionRequestModal: React.FC<ConnectionRequestModalProps> = ({ 
                                 ) : error ? (
                                     <div className="text-center py-8">
                                         <p className="text-red-500 mb-4">Failed to load crew members</p>
-                                        <button 
-                                            onClick={() => window.location.reload()} 
+                                        <button
+                                            onClick={() => window.location.reload()}
                                             className="px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors text-sm"
                                         >
                                             Try Again
@@ -146,7 +152,7 @@ export const ConnectionRequestModal: React.FC<ConnectionRequestModalProps> = ({ 
                                         </p>
                                     </div>
                                 ) : (
-                                    crewData?.crew?.map((member) => (
+                                    crewData?.crew?.map((member: any) => (
                                         <div
                                             key={member.id}
                                             onClick={() => handleUserSelect(member)}
@@ -168,7 +174,7 @@ export const ConnectionRequestModal: React.FC<ConnectionRequestModalProps> = ({ 
                                                     {member.display_name}
                                                 </h4>
                                                 <p className="text-xs text-gray-600 truncate">
-                                                    {member.role_name && member.department_name 
+                                                    {member.role_name && member.department_name
                                                         ? `${member.role_name} • ${member.department_name}`
                                                         : member.role_name || member.department_name || 'Crew Member'
                                                     }
@@ -214,7 +220,7 @@ export const ConnectionRequestModal: React.FC<ConnectionRequestModalProps> = ({ 
                                         {selectedUser.display_name}
                                     </h3>
                                     <p className="text-sm text-gray-600">
-                                        {selectedUser.role_name && selectedUser.department_name 
+                                        {selectedUser.role_name && selectedUser.department_name
                                             ? `${selectedUser.role_name} • ${selectedUser.department_name}`
                                             : selectedUser.role_name || selectedUser.department_name || 'Crew Member'
                                         }

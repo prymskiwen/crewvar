@@ -26,6 +26,14 @@ const firebaseConfig = {
   databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL
 };
 
+// Validate required fields
+if (!firebaseConfig.apiKey) {
+  console.error('❌ VITE_FIREBASE_API_KEY is missing or undefined');
+}
+if (!firebaseConfig.projectId) {
+  console.error('❌ VITE_FIREBASE_PROJECT_ID is missing or undefined');
+}
+
 /**
  * Firebase singleton instance to prevent multiple initializations
  */
@@ -52,7 +60,8 @@ class FirebaseSingleton {
       try {
         this._app = initializeApp(firebaseConfig);
       } catch (error) {
-        console.error("Firebase initialization failed:", error);
+        console.error("❌ Firebase initialization failed:", error);
+
         // If app already exists, get the existing instance
         this._app = initializeApp(firebaseConfig, 'default');
       }

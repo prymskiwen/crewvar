@@ -63,6 +63,11 @@ jobs:
         
         echo "✅ Build verification successful"
         
+    - name: Configure Node.js for deployment
+      run: |
+        echo "🔧 Configuring Node.js to prevent memory leaks..."
+        echo "NODE_OPTIONS=--max-old-space-size=4096 --max-listeners=20" >> $GITHUB_ENV
+        
     - name: Deploy to Firebase Hosting
       uses: FirebaseExtended/action-hosting-deploy@v0
       with:

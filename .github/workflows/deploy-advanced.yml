@@ -1,4 +1,4 @@
-name: Deploy to Firebase Hosting
+name: Deploy to Firebase Hosting (Advanced)
 
 on:
   push:
@@ -21,6 +21,16 @@ jobs:
         cache: 'npm'
         cache-dependency-path: 'package-lock.json'
         
+    - name: Cache Vite build
+      uses: actions/cache@v3
+      with:
+        path: |
+          node_modules/.vite
+          dist
+        key: ${{ runner.os }}-vite-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-vite-
+        
     - name: Verify project structure
       run: |
         echo "📁 Project structure:"
@@ -39,6 +49,11 @@ jobs:
       run: |
         echo "🔍 Running TypeScript check..."
         npx tsc --noEmit
+        
+    - name: Lint check
+      run: |
+        echo "🔍 Running ESLint..."
+        npm run lint
         
     - name: Build project
       run: |
@@ -61,7 +76,21 @@ jobs:
           exit 1
         fi
         
+        echo "📊 Build size analysis:"
+        du -sh dist/
+        echo "📄 Key files:"
+        ls -la dist/index.html dist/assets/ 2>/dev/null || echo "No assets directory"
+        
         echo "✅ Build verification successful"
+        
+    - name: Test build locally (optional)
+      run: |
+        echo "🧪 Testing build locally..."
+        npx serve dist -p 3000 &
+        SERVE_PID=$!
+        sleep 5
+        curl -f http://localhost:3000 || echo "⚠️ Local test failed, but continuing..."
+        kill $SERVE_PID 2>/dev/null || true
         
     - name: Deploy to Firebase Hosting
       uses: FirebaseExtended/action-hosting-deploy@v0
@@ -70,3 +99,12 @@ jobs:
         firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
         channelId: live
         projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
+        
+    - name: Deployment summary
+      run: |
+        echo "🎉 Deployment completed successfully!"
+        echo "📊 Build info:"
+        echo "  - Node.js: $(node --version)"
+        echo "  - npm: $(npm --version)"
+        echo "  - Build size: $(du -sh dist/ | cut -f1)"
+        echo "  - Files: $(find dist -type f | wc -l)"

@@ -9,6 +9,15 @@ import {
 } from 'firebase/database';
 import { database } from './config';
 
+// Helper function to check if database is available
+const checkDatabaseAvailability = (): boolean => {
+    if (!database) {
+        console.warn('⚠️ Firebase Realtime Database is not available');
+        return false;
+    }
+    return true;
+};
+
 // Types
 export interface OnlineUser {
     userId: string;
@@ -27,8 +36,10 @@ export interface TypingUser {
 // Online status management
 export const setUserOnline = async (userId: string, userName: string) => {
     try {
-        const userStatusRef = ref(database, `users/${userId}/status`);
-        const userInfoRef = ref(database, `users/${userId}/info`);
+        if (!checkDatabaseAvailability()) return;
+
+        const userStatusRef = ref(database!, `users/${userId}/status`);
+        const userInfoRef = ref(database!, `users/${userId}/info`);
 
         await Promise.all([
             set(userStatusRef, {
@@ -42,7 +53,7 @@ export const setUserOnline = async (userId: string, userName: string) => {
         ]);
 
         // Set up disconnect handler
-        const disconnectRef = ref(database, `users/${userId}/status`);
+        const disconnectRef = ref(database!, `users/${userId}/status`);
         await onDisconnect(disconnectRef).set({
             status: 'offline',
             lastSeen: serverTimestamp()
@@ -54,7 +65,9 @@ export const setUserOnline = async (userId: string, userName: string) => {
 
 export const setUserOffline = async (userId: string) => {
     try {
-        const userStatusRef = ref(database, `users/${userId}/status`);
+        if (!checkDatabaseAvailability()) return;
+
+        const userStatusRef = ref(database!, `users/${userId}/status`);
         await set(userStatusRef, {
             status: 'offline',
             lastSeen: serverTimestamp()
@@ -66,7 +79,9 @@ export const setUserOffline = async (userId: string) => {
 
 export const updateUserStatus = async (userId: string, status: 'online' | 'away' | 'offline') => {
     try {
-        const userStatusRef = ref(database, `users/${userId}/status`);
+        if (!checkDatabaseAvailability()) return;
+
+        const userStatusRef = ref(database!, `users/${userId}/status`);
         await update(userStatusRef, {
             status,
             lastSeen: serverTimestamp()
@@ -79,7 +94,9 @@ export const updateUserStatus = async (userId: string, status: 'online' | 'away'
 // Get online users
 export const getOnlineUsers = async (): Promise<OnlineUser[]> => {
     try {
-        const usersRef = ref(database, 'users');
+        if (!checkDatabaseAvailability()) return [];
+
+        const usersRef = ref(database!, 'users');
         const snapshot = await get(usersRef);
 
         if (snapshot.exists()) {
@@ -100,7 +117,12 @@ export const getOnlineUsers = async (): Promise<OnlineUser[]> => {
 
 // Subscribe to online users
 export const subscribeToOnlineUsers = (callback: (users: OnlineUser[]) => void) => {
-    const usersRef = ref(database, 'users');
+    if (!checkDatabaseAvailability()) {
+        console.warn('⚠️ Cannot subscribe to online users - database not available');
+        return () => { }; // Return empty unsubscribe function
+    }
+
+    const usersRef = ref(database!, 'users');
 
     const unsubscribe = onValue(usersRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -123,7 +145,9 @@ export const subscribeToOnlineUsers = (callback: (users: OnlineUser[]) => void) 
 // Chat room presence
 export const joinChatRoom = async (roomId: string, userId: string, userName: string) => {
     try {
-        const roomPresenceRef = ref(database, `rooms/${roomId}/participants/${userId}`);
+        if (!checkDatabaseAvailability()) return;
+
+        const roomPresenceRef = ref(database!, `rooms/${roomId}/participants/${userId}`);
         await set(roomPresenceRef, {
             userName,
             joinedAt: serverTimestamp()
@@ -138,7 +162,9 @@ export const joinChatRoom = async (roomId: string, userId: string, userName: str
 
 export const leaveChatRoom = async (roomId: string, userId: string) => {
     try {
-        const roomPresenceRef = ref(database, `rooms/${roomId}/participants/${userId}`);
+        if (!checkDatabaseAvailability()) return;
+
+        const roomPresenceRef = ref(database!, `rooms/${roomId}/participants/${userId}`);
         await set(roomPresenceRef, null);
     } catch (error) {
         throw error;
@@ -148,7 +174,9 @@ export const leaveChatRoom = async (roomId: string, userId: string) => {
 // Typing indicators
 export const startTyping = async (roomId: string, userId: string, userName: string) => {
     try {
-        const typingRef = ref(database, `rooms/${roomId}/typing/${userId}`);
+        if (!checkDatabaseAvailability()) return;
+
+        const typingRef = ref(database!, `rooms/${roomId}/typing/${userId}`);
         await set(typingRef, {
             userName,
             timestamp: serverTimestamp()
@@ -165,7 +193,9 @@ export const startTyping = async (roomId: string, userId: string, userName: stri
 
 export const stopTyping = async (roomId: string, userId: string) => {
     try {
-        const typingRef = ref(database, `rooms/${roomId}/typing/${userId}`);
+        if (!checkDatabaseAvailability()) return;
+
+        const typingRef = ref(database!, `rooms/${roomId}/typing/${userId}`);
         await set(typingRef, null);
     } catch (error) {
         throw error;
@@ -177,7 +207,12 @@ export const subscribeToTyping = (
     roomId: string,
     callback: (typingUsers: TypingUser[]) => void
 ) => {
-    const typingRef = ref(database, `rooms/${roomId}/typing`);
+    if (!checkDatabaseAvailability()) {
+        console.warn('⚠️ Cannot subscribe to typing indicators - database not available');
+        return () => { }; // Return empty unsubscribe function
+    }
+
+    const typingRef = ref(database!, `rooms/${roomId}/typing`);
 
     const unsubscribe = onValue(typingRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -202,7 +237,12 @@ export const subscribeToRoomParticipants = (
     roomId: string,
     callback: (participants: { [userId: string]: { userName: string; joinedAt: any } }) => void
 ) => {
-    const participantsRef = ref(database, `rooms/${roomId}/participants`);
+    if (!checkDatabaseAvailability()) {
+        console.warn('⚠️ Cannot subscribe to room participants - database not available');
+        return () => { }; // Return empty unsubscribe function
+    }
+
+    const participantsRef = ref(database!, `rooms/${roomId}/participants`);
 
     const unsubscribe = onValue(participantsRef, (snapshot) => {
         if (snapshot.exists()) {
@@ -218,7 +258,9 @@ export const subscribeToRoomParticipants = (
 // Message delivery status
 export const markMessageAsDelivered = async (roomId: string, messageId: string, userId: string) => {
     try {
-        const deliveryRef = ref(database, `rooms/${roomId}/messages/${messageId}/delivered/${userId}`);
+        if (!checkDatabaseAvailability()) return;
+
+        const deliveryRef = ref(database!, `rooms/${roomId}/messages/${messageId}/delivered/${userId}`);
         await set(deliveryRef, {
             deliveredAt: serverTimestamp()
         });
@@ -229,7 +271,9 @@ export const markMessageAsDelivered = async (roomId: string, messageId: string, 
 
 export const markMessageAsRead = async (roomId: string, messageId: string, userId: string) => {
     try {
-        const readRef = ref(database, `rooms/${roomId}/messages/${messageId}/read/${userId}`);
+        if (!checkDatabaseAvailability()) return;
+
+        const readRef = ref(database!, `rooms/${roomId}/messages/${messageId}/read/${userId}`);
         await set(readRef, {
             readAt: serverTimestamp()
         });
@@ -244,7 +288,12 @@ export const subscribeToMessageStatus = (
     messageId: string,
     callback: (status: { delivered: string[]; read: string[] }) => void
 ) => {
-    const messageRef = ref(database, `rooms/${roomId}/messages/${messageId}`);
+    if (!checkDatabaseAvailability()) {
+        console.warn('⚠️ Cannot subscribe to message status - database not available');
+        return () => { }; // Return empty unsubscribe function
+    }
+
+    const messageRef = ref(database!, `rooms/${roomId}/messages/${messageId}`);
 
     const unsubscribe = onValue(messageRef, (snapshot) => {
         if (snapshot.exists()) {

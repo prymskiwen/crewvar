@@ -34,6 +34,27 @@ if (!firebaseConfig.projectId) {
   console.error('❌ VITE_FIREBASE_PROJECT_ID is missing or undefined');
 }
 
+// Debug Firebase configuration
+console.log('🔧 Firebase Configuration Debug:', {
+  apiKey: firebaseConfig.apiKey ? '✅ Set' : '❌ Missing',
+  authDomain: firebaseConfig.authDomain ? '✅ Set' : '❌ Missing',
+  projectId: firebaseConfig.projectId ? '✅ Set' : '❌ Missing',
+  storageBucket: firebaseConfig.storageBucket ? '✅ Set' : '❌ Missing',
+  messagingSenderId: firebaseConfig.messagingSenderId ? '✅ Set' : '❌ Missing',
+  appId: firebaseConfig.appId ? '✅ Set' : '❌ Missing',
+  databaseURL: firebaseConfig.databaseURL ? '✅ Set' : '❌ Missing'
+});
+
+// Check if we're in development mode
+if (import.meta.env.DEV) {
+  console.log('🔧 Development mode detected - Firebase services may be limited');
+  console.log('📝 Environment variables:', {
+    VITE_FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY ? 'Set' : 'Missing',
+    VITE_FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID ? 'Set' : 'Missing',
+    VITE_FIREBASE_STORAGE_BUCKET: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ? 'Set' : 'Missing'
+  });
+}
+
 /**
  * Firebase singleton instance to prevent multiple initializations
  */
@@ -86,25 +107,53 @@ class FirebaseSingleton {
   public get storage(): FirebaseStorage | null {
     if (!this._storage) {
       try {
+        // Check if storage bucket is configured
+        if (!firebaseConfig.storageBucket) {
+          console.warn('⚠️ Firebase Storage bucket not configured - storage will be disabled');
+          return null;
+        }
         this._storage = getStorage(this.app);
+        console.log('✅ Firebase Storage initialized successfully');
       } catch (error) {
-        console.warn('Firebase Storage is not available:', error);
+        console.warn('⚠️ Firebase Storage is not available:', error);
         return null;
       }
     }
     return this._storage;
   }
 
-  public get functions(): Functions {
+  public get functions(): Functions | null {
     if (!this._functions) {
-      this._functions = getFunctions(this.app);
+      try {
+        // Check if we're in a browser environment
+        if (typeof window === 'undefined') {
+          console.warn('⚠️ Firebase Functions not available in server environment');
+          return null;
+        }
+        this._functions = getFunctions(this.app);
+        console.log('✅ Firebase Functions initialized successfully');
+      } catch (error) {
+        console.warn('⚠️ Firebase Functions is not available:', error);
+        return null;
+      }
     }
     return this._functions;
   }
 
-  public get database(): Database {
+  public get database(): Database | null {
     if (!this._database) {
-      this._database = getDatabase(this.app);
+      try {
+        // Check if database URL is configured
+        if (!firebaseConfig.databaseURL) {
+          console.warn('⚠️ Firebase Realtime Database URL not configured - database will be disabled');
+          return null;
+        }
+        this._database = getDatabase(this.app);
+        console.log('✅ Firebase Realtime Database initialized successfully');
+      } catch (error) {
+        console.warn('⚠️ Firebase Realtime Database is not available:', error);
+        return null;
+      }
     }
     return this._database;
   }
@@ -136,8 +185,8 @@ const firebaseInstance = FirebaseSingleton.getInstance();
 export const auth: Auth = firebaseInstance.auth;
 export const db: Firestore = firebaseInstance.db;
 export const storage: FirebaseStorage | null = firebaseInstance.storage;
-export const functions: Functions = firebaseInstance.functions;
-export const database: Database = firebaseInstance.database;
+export const functions: Functions | null = firebaseInstance.functions;
+export const database: Database | null = firebaseInstance.database;
 export const app: FirebaseApp = firebaseInstance.app;
 
 /**

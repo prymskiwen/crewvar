@@ -133,7 +133,14 @@ export const signUpWithEmail = async (
             userData.currentShipId = additionalData.currentShipId;
         }
 
-        await setDoc(doc(db, 'users', user.uid), userData);
+        // Filter out undefined, null, and empty string values
+        const cleanUserData = Object.fromEntries(
+            Object.entries(userData).filter(([_, value]) =>
+                value !== undefined && value !== '' && value !== null
+            )
+        );
+
+        await setDoc(doc(db, 'users', user.uid), cleanUserData);
 
         return user;
     } catch (error) {
@@ -162,7 +169,6 @@ export const signInWithGoogle = async (): Promise<User> => {
                 id: user.uid,
                 email: user.email!,
                 displayName: user.displayName || '',
-                profilePhoto: user.photoURL || undefined,
                 isEmailVerified: true,
                 isActive: true,
                 isAdmin: false,
@@ -170,7 +176,19 @@ export const signInWithGoogle = async (): Promise<User> => {
                 updatedAt: new Date()
             };
 
-            await setDoc(doc(db, 'users', user.uid), userData);
+            // Only add profilePhoto if it exists
+            if (user.photoURL) {
+                userData.profilePhoto = user.photoURL;
+            }
+
+            // Filter out undefined, null, and empty string values
+            const cleanUserData = Object.fromEntries(
+                Object.entries(userData).filter(([_, value]) =>
+                    value !== undefined && value !== '' && value !== null
+                )
+            );
+
+            await setDoc(doc(db, 'users', user.uid), cleanUserData);
         }
 
         return user;

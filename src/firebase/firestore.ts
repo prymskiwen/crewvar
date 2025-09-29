@@ -432,9 +432,11 @@ export const getUserProfile = async (userId: string) => {
 export const createUserProfile = async (userId: string, profileData: any) => {
     const userRef = doc(db, 'users', userId);
 
-    // Filter out undefined values to prevent Firestore errors
+    // Filter out undefined values and empty strings to prevent Firestore errors
     const cleanProfileData = Object.fromEntries(
-        Object.entries(profileData).filter(([_, value]) => value !== undefined)
+        Object.entries(profileData).filter(([_, value]) =>
+            value !== undefined && value !== '' && value !== null
+        )
     );
 
     // Ensure required fields have proper values
@@ -453,8 +455,16 @@ export const createUserProfile = async (userId: string, profileData: any) => {
 
 export const updateUserProfile = async (userId: string, data: any) => {
     const userRef = doc(db, 'users', userId);
+
+    // Filter out undefined, null, and empty string values
+    const cleanData = Object.fromEntries(
+        Object.entries(data).filter(([_, value]) =>
+            value !== undefined && value !== '' && value !== null
+        )
+    );
+
     await updateDoc(userRef, {
-        ...data,
+        ...cleanData,
         updatedAt: serverTimestamp()
     });
 };

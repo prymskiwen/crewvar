@@ -5,13 +5,14 @@ import { RealtimeProvider } from "./context/RealtimeContextFirebase";
 import { AppRoutes } from "./routes";
 import { OnboardingGuard, AdminGuard, BanGuard } from "./guards";
 import { ErrorBoundary } from "./components/ui";
-import { Footer, ScrollToTop } from "./components/layout";
+import { Footer, ScrollToTop, AppBar } from "./components/layout";
 
 const AppContent = React.memo(() => {
     return (
         <RealtimeProvider>
             <ErrorBoundary>
                 <ScrollToTop />
+                <AppBar />
                 <BanGuard>
                     <OnboardingGuard>
                         <AdminGuard>

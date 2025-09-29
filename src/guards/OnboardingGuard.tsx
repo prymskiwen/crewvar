@@ -19,7 +19,18 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     }, [authLoading]);
 
     // Check if user is admin (from user profile, not Firebase user)
-    const isAdmin = userProfile?.isAdmin === true;
+    // Also check email as fallback for admin@crewvar.com
+    const isAdmin = userProfile?.isAdmin === true || currentUser?.email === 'admin@crewvar.com';
+
+    // Debug logging for admin detection
+    console.log('OnboardingGuard - Debug Info:', {
+        currentUser: !!currentUser,
+        userProfile: !!userProfile,
+        isAdmin: isAdmin,
+        userProfileIsAdmin: userProfile?.isAdmin,
+        userEmail: currentUser?.email,
+        pathname: location.pathname
+    });
 
     // Check if user profile is complete based on actual data
     const isProfileComplete = userProfile &&
@@ -77,8 +88,24 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
             return;
         }
 
-        // If authenticated, check email verification first
+        // If authenticated, check for admin FIRST before any other checks
         if (currentUser && !isPublicRoute) {
+            // ADMIN CHECK FIRST: Skip all other logic for admin users
+            // Check admin status immediately (email fallback works even without userProfile)
+            if (isAdmin) {
+                console.log('Admin user detected, redirecting to admin dashboard');
+                if (!location.pathname.startsWith('/admin')) {
+                    console.log('Redirecting admin user from', location.pathname, 'to /admin');
+                    navigate('/admin', {
+                        replace: true,
+                        state: {
+                            from: location.pathname,
+                            reason: 'Admin user redirected to admin dashboard'
+                        }
+                    });
+                }
+                return;
+            }
 
             // If email is not verified, redirect to verification pending page
             if (!isEmailVerified) {
@@ -90,20 +117,6 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
                         email: currentUser.email
                     }
                 });
-                return;
-            }
-
-            if (isAdmin) {
-
-                if (!location.pathname.startsWith('/admin')) {
-                    navigate('/admin', {
-                        replace: true,
-                        state: {
-                            from: location.pathname,
-                            reason: 'Admin user redirected to admin dashboard'
-                        }
-                    });
-                }
                 return;
             }
 

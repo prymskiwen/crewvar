@@ -5,3 +5,4 @@ export { default as ErrorBoundary } from './ErrorBoundary';
 export { StorageWarning } from './StorageWarning';
 export { SuccessNotification } from './SuccessNotification';
 export { BanNotification } from './BanNotification';
+export { Autocomplete } from './Autocomplete';

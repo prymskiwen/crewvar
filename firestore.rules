@@ -68,27 +68,31 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
-    // Departments - only admins can read/write
+    // Departments - all authenticated users can read, only admins can write
     match /departments/{departmentId} {
-      allow read, write: if request.auth != null && 
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
-    // Roles - only admins can read/write
+    // Roles - all authenticated users can read, only admins can write
     match /roles/{roleId} {
-      allow read, write: if request.auth != null && 
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
-    // Cruise Lines - only admins can read/write
+    // Cruise Lines - all authenticated users can read, only admins can write
     match /cruiseLines/{cruiseLineId} {
-      allow read, write: if request.auth != null && 
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
-    // Ships - only admins can read/write
+    // Ships - all authenticated users can read, only admins can write
     match /ships/{shipId} {
-      allow read, write: if request.auth != null && 
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     

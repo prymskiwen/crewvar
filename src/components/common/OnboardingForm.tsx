@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContextFirebase";
 import {
     getDepartments,
@@ -14,12 +15,11 @@ import {
     Role,
     CruiseLine
 } from "../../firebase/firestore";
-import { toast } from "react-toastify";
 import { Spinner } from "../Elements/Spinner";
 import { ShipSelection } from "./ShipSelection";
 import { AssignmentForm } from "./AssignmentForm";
 import { MissingShipFeedback } from "./MissingShipFeedback";
-import { Autocomplete } from "../ui";
+import { Autocomplete, Input, Button, FileUpload, FormGroup } from "../ui";
 import { ICruiseAssignment } from "../../types/calendar";
 
 // Dynamic validation schema based on whether user has existing profile
@@ -43,7 +43,6 @@ const OnboardingForm = () => {
 
     // State management
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [preview, setPreview] = useState<string | ArrayBuffer | null>(null);
     const [selectedCruiseLineId, setSelectedCruiseLineId] = useState<string>("");
     const [showAssignmentForm, setShowAssignmentForm] = useState(false);
     const [editingAssignment, setEditingAssignment] = useState<ICruiseAssignment | null>(null);
@@ -155,9 +154,6 @@ const OnboardingForm = () => {
 
             reset(formData);
 
-            if (userProfile.profilePhoto) {
-                setPreview(userProfile.profilePhoto);
-            }
 
             if (userProfile.currentShipId) {
                 // Find the ship and set cruise line
@@ -203,18 +199,6 @@ const OnboardingForm = () => {
         setValue("currentShipId", ""); // Reset ship selection
     }, [setValue]);
 
-    // Handle profile photo change
-    const handlePhotoChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                setPreview(e.target?.result || null);
-            };
-            reader.readAsDataURL(file);
-            setValue("profilePhoto", file);
-        }
-    }, [setValue]);
 
 
     // Form submission
@@ -264,7 +248,7 @@ const OnboardingForm = () => {
     return (
         <div className="min-h-screen py-8">
             <div className="max-w-4xl mx-auto px-4">
-                <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-xl">
                     {/* Header */}
                     <div className="bg-gradient-to-r from-[#069B93] to-[#00A59E] p-8 text-white">
                         <h1 className="text-3xl font-bold mb-2">
@@ -281,106 +265,64 @@ const OnboardingForm = () => {
                     {/* Form */}
                     <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-8">
                         {/* Display Name */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-800 mb-3">
-                                Display Name *
-                            </label>
-                            <input
+                        <FormGroup
+                            label="Display Name"
+                            error={errors.displayName?.message}
+                            required
+                        >
+                            <Input
                                 {...register("displayName")}
                                 type="text"
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-[#069B93] focus:ring-2 focus:ring-[#069B93]/20 focus:outline-none transition-all duration-200"
                                 placeholder="Enter your display name"
+                                variant="outlined"
+                                size="lg"
                             />
-                            {errors.displayName && (
-                                <p className="mt-2 text-sm text-red-600 flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                    </svg>
-                                    {errors.displayName.message}
-                                </p>
-                            )}
-                        </div>
+                        </FormGroup>
 
                         {/* Profile Photo */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-800 mb-3">
-                                Profile Photo {!hasExistingProfile && '*'}
-                            </label>
-                            <div className="flex justify-center">
-                                <div className="relative">
-                                    <input
-                                        {...register("profilePhoto")}
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handlePhotoChange}
-                                        className="hidden"
-                                        id="profilePhoto"
-                                    />
-                                    <label
-                                        htmlFor="profilePhoto"
-                                        className="cursor-pointer block w-32 h-32 rounded-full overflow-hidden border-4 border-[#069B93] hover:border-[#058a7a] transition-all duration-200 hover:shadow-lg"
-                                    >
-                                        {preview ? (
-                                            <img
-                                                src={preview as string}
-                                                alt="Profile preview"
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-gray-200 flex flex-col items-center justify-center hover:bg-gray-300 transition-colors">
-                                                <svg className="w-12 h-12 text-gray-400 mb-2" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                                                </svg>
-                                                <span className="text-xs text-gray-500 font-medium">Click to upload</span>
-                                            </div>
-                                        )}
-                                    </label>
-                                    {preview && (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setPreview(null);
-                                                setValue("profilePhoto", undefined);
-                                            }}
-                                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                                        >
-                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                            </svg>
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                            {errors.profilePhoto && (
-                                <p className="mt-2 text-sm text-red-600 flex items-center justify-center">
-                                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                    </svg>
-                                    {errors.profilePhoto.message}
-                                </p>
-                            )}
-                        </div>
+                        <FormGroup
+                            label="Profile Photo"
+                            error={errors.profilePhoto?.message}
+                            required={!hasExistingProfile}
+                            className="flex justify-center"
+                        >
+                            <FileUpload
+                                {...register("profilePhoto")}
+                                variant="avatar"
+                                size="xl"
+                                accept="image/*"
+                                onFileSelect={(files) => {
+                                    if (files && files[0]) {
+                                        setValue("profilePhoto", files[0]);
+                                    }
+                                }}
+                                onFileRemove={() => {
+                                    setValue("profilePhoto", undefined);
+                                }}
+                            />
+                        </FormGroup>
 
                         {/* Department */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-800 mb-3">
-                                Department *
-                            </label>
+                        <FormGroup
+                            label="Department"
+                            error={errors.departmentId?.message}
+                            required
+                        >
                             <Autocomplete
                                 value={watchedDepartmentId}
                                 onChange={(value) => setValue("departmentId", value)}
                                 options={departments.map(dept => ({ id: dept.id, name: dept.name }))}
                                 placeholder="Select your department"
                                 loading={loadingDepartments}
-                                error={errors.departmentId?.message}
                             />
-                        </div>
+                        </FormGroup>
 
                         {/* Role */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-800 mb-3">
-                                Role *
-                            </label>
+                        <FormGroup
+                            label="Role"
+                            error={errors.roleId?.message}
+                            required
+                        >
                             <Autocomplete
                                 value={watch("roleId")}
                                 onChange={(value) => setValue("roleId", value)}
@@ -388,15 +330,14 @@ const OnboardingForm = () => {
                                 placeholder={watchedDepartmentId ? "Select your role" : "Select department first"}
                                 loading={loadingRoles}
                                 disabled={!watchedDepartmentId}
-                                error={errors.roleId?.message}
                             />
-                        </div>
+                        </FormGroup>
 
                         {/* Cruise Line */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-800 mb-3">
-                                Cruise Line *
-                            </label>
+                        <FormGroup
+                            label="Cruise Line"
+                            required
+                        >
                             <Autocomplete
                                 value={selectedCruiseLineId}
                                 onChange={handleCruiseLineChange}
@@ -404,14 +345,14 @@ const OnboardingForm = () => {
                                 placeholder="Select your cruise line"
                                 loading={loadingCruiseLines}
                             />
-                        </div>
+                        </FormGroup>
 
                         {/* Ship Selection */}
                         {selectedCruiseLineId && (
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-800 mb-3">
-                                    Current Ship *
-                                </label>
+                            <FormGroup
+                                label="Current Ship"
+                                required
+                            >
                                 <ShipSelection
                                     selectedCruiseLineId={selectedCruiseLineId}
                                     selectedShipId={watch("currentShipId")}
@@ -419,26 +360,24 @@ const OnboardingForm = () => {
                                     onShipChange={handleShipChange}
                                     placeholder="Select your ship"
                                 />
-                            </div>
+                            </FormGroup>
                         )}
 
                         {/* Submit Button */}
                         <div className="flex justify-end pt-6">
-                            <button
+                            <Button
                                 type="submit"
+                                variant="primary"
+                                size="lg"
+                                loading={isSubmitting}
+                                loadingText={isSubmitting
+                                    ? (hasExistingProfile ? "Updating..." : "Setting up...")
+                                    : undefined
+                                }
                                 disabled={isSubmitting}
-                                className="px-8 py-3 bg-gradient-to-r from-[#069B93] to-[#00A59E] text-white font-semibold rounded-xl hover:from-[#058a7a] hover:to-[#069B93] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                             >
-                                {isSubmitting && (
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                )}
-                                <span>
-                                    {isSubmitting
-                                        ? (hasExistingProfile ? "Updating..." : "Setting up...")
-                                        : (hasExistingProfile ? "Update Profile" : "Complete Setup")
-                                    }
-                                </span>
-                            </button>
+                                {hasExistingProfile ? "Update Profile" : "Complete Setup"}
+                            </Button>
                         </div>
                     </form>
 

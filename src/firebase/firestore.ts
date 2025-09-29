@@ -935,15 +935,17 @@ export const getRolesByDepartment = async (departmentId: string): Promise<Role[]
         const rolesRef = collection(db, 'roles');
         const q = query(
             rolesRef,
-            where('departmentId', '==', departmentId),
-            orderBy('name', 'asc')
+            where('departmentId', '==', departmentId)
         );
         const querySnapshot = await getDocs(q);
 
-        return querySnapshot.docs.map(doc => ({
+        // Sort in memory to avoid index requirement
+        const roles = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         } as Role));
+
+        return roles.sort((a, b) => a.name.localeCompare(b.name));
     } catch (error) {
         console.error('Error fetching roles by department:', error);
         throw error;

@@ -55,11 +55,14 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({
             }
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, []);
+    }, [isOpen]);
 
     // Focus input when dropdown opens
     useEffect(() => {
@@ -95,7 +98,7 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({
     };
 
     return (
-        <div className={`relative ${className}`} ref={dropdownRef}>
+        <div className={`relative ${className}`}>
             <button
                 type="button"
                 onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -103,8 +106,8 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({
                 onFocus={handleFocus}
                 onBlur={handleBlur}
                 className={`w-full px-4 py-3 border-2 rounded-xl text-left transition-all duration-200 ${error
-                        ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                        : 'border-gray-200 focus:border-[#069B93] focus:ring-[#069B93]'
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                    : 'border-gray-200 focus:border-[#069B93] focus:ring-[#069B93]'
                     } ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:border-[#069B93]'}`}
             >
                 <div className="flex items-center justify-between">
@@ -142,7 +145,10 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({
             </button>
 
             {isOpen && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                <div
+                    ref={dropdownRef}
+                    className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
+                >
                     <div className="p-2">
                         <input
                             ref={inputRef}

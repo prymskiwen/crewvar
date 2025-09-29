@@ -3,23 +3,22 @@ import { ToastContainer } from "react-toastify";
 import { AuthProvider } from "./context/AuthContextFirebase";
 import { RealtimeProvider } from "./context/RealtimeContextFirebase";
 import { AppRoutes } from "./routes";
-import { OnboardingGuard, AdminGuard, BanGuard } from "./guards";
+import { AuthGuard, BanGuard, ConditionalGuards } from "./guards";
 import { ErrorBoundary } from "./components/ui";
-import { Footer, ScrollToTop, AppBar } from "./components/layout";
+import { Footer, ScrollToTop } from "./components/layout";
 
 const AppContent = React.memo(() => {
     return (
         <RealtimeProvider>
             <ErrorBoundary>
                 <ScrollToTop />
-                <AppBar />
-                <BanGuard>
-                    <OnboardingGuard>
-                        <AdminGuard>
+                <AuthGuard>
+                    <BanGuard>
+                        <ConditionalGuards>
                             <AppRoutes />
-                        </AdminGuard>
-                    </OnboardingGuard>
-                </BanGuard>
+                        </ConditionalGuards>
+                    </BanGuard>
+                </AuthGuard>
 
                 {/* Footer - appears on all pages */}
                 <Footer />

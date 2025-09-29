@@ -41,42 +41,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setCurrentUser(user);
+            console.log("User", user);
 
             if (user) {
                 try {
                     let profile;
-                    try {
-                        profile = await getUserProfile(user.uid) as any;
-                    } catch (error: any) {
-                        // If profile doesn't exist or permissions error, create a default one
-                        if (error.code === 'permission-denied' || error.message.includes('not found')) {
-                            console.log('User profile not found or permission denied, creating default profile');
-                            const defaultProfile = {
-                                id: user.uid,
-                                email: user.email || '',
-                                displayName: user.displayName || '',
-                                profilePhoto: user.photoURL || '',
-                                bio: '',
-                                phone: '',
-                                instagram: '',
-                                twitter: '',
-                                facebook: '',
-                                snapchat: '',
-                                website: '',
-                                isEmailVerified: user.emailVerified || false,
-                                isActive: true,
-                                isAdmin: false,
-                                createdAt: new Date(),
-                                updatedAt: new Date()
-                            };
-
-                            // Create the user profile in Firestore
-                            await createUserProfile(user.uid, defaultProfile);
-                            profile = defaultProfile;
-                        } else {
-                            throw error;
-                        }
-                    }
+                    profile = await getUserProfile(user.uid) as any;
 
                     // Ensure profile has all required properties with defaults
                     const fullProfile: UserProfile = {

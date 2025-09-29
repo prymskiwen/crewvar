@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContextFirebase';
 import {
     setUserOnline,
@@ -44,8 +44,8 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     const [typingUsers, setTypingUsers] = useState<{ [roomId: string]: TypingUser[] }>({});
     const [roomParticipants, setRoomParticipants] = useState<{ [roomId: string]: { [userId: string]: { userName: string; joinedAt: any } } }>({});
 
-    // Unsubscribe functions
-    const [unsubscribeFunctions, setUnsubscribeFunctions] = useState<(() => void)[]>([]);
+    // Unsubscribe functions - use ref to avoid dependency issues
+    const unsubscribeFunctionsRef = useRef<(() => void)[]>([]);
 
     useEffect(() => {
         // Only connect to realtime services after auth is fully loaded
@@ -64,13 +64,30 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
                 setOnlineUsers(users);
             });
 
-            setUnsubscribeFunctions(prev => [...prev, unsubscribeOnlineUsers]);
+            unsubscribeFunctionsRef.current.push(unsubscribeOnlineUsers);
 
             // Cleanup on unmount
             return () => {
                 setUserOffline(currentUser.uid).catch(console.error);
                 unsubscribeOnlineUsers();
             };
+        } else if (!currentUser && !loading) {
+            // User signed out - cleanup all connections
+            console.log('User signed out, cleaning up realtime connections...');
+            setIsConnected(false);
+            setOnlineUsers([]);
+            setTypingUsers({});
+            setRoomParticipants({});
+
+            // Clean up all subscriptions
+            unsubscribeFunctionsRef.current.forEach(unsubscribe => {
+                try {
+                    unsubscribe();
+                } catch (error) {
+                    console.error('Error unsubscribing:', error);
+                }
+            });
+            unsubscribeFunctionsRef.current = [];
         }
     }, [currentUser, userProfile, loading]);
 
@@ -107,7 +124,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
                     }));
                 });
 
-                setUnsubscribeFunctions(prev => [...prev, unsubscribeTyping, unsubscribeParticipants]);
+                unsubscribeFunctionsRef.current.push(unsubscribeTyping, unsubscribeParticipants);
             } catch (error) {
                 console.error('Error joining room:', error);
                 throw error;
@@ -167,9 +184,15 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     // Cleanup all subscriptions on unmount
     useEffect(() => {
         return () => {
-            unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+            unsubscribeFunctionsRef.current.forEach(unsubscribe => {
+                try {
+                    unsubscribe();
+                } catch (error) {
+                    console.error('Error unsubscribing on unmount:', error);
+                }
+            });
         };
-    }, [unsubscribeFunctions]);
+    }, []);
 
     const value: RealtimeContextType = {
         isConnected,

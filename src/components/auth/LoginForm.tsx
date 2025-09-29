@@ -15,25 +15,9 @@ const LoginForm = () => {
         setIsLoading(true);
 
         try {
-            console.log('Attempting login with:', { email, password });
-
-            // Use backend authentication
             await signIn(email, password);
 
             console.log('Login successful!');
-            toast.success('🎉 Welcome back! You have successfully signed in.', {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-            });
-
-            // Let OnboardingGuard handle the navigation based on user status
-            // OnboardingGuard will redirect admins to /admin and regular users to /dashboard
-            navigate("/dashboard");
-
         } catch (error: any) {
             console.error('Login error:', error);
 

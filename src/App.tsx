@@ -9,33 +9,33 @@ import { Footer, ScrollToTop } from "./components/layout";
 
 const AppContent = React.memo(() => {
     return (
-        <ErrorBoundary>
-            <ScrollToTop />
-            <BanGuard>
-                <OnboardingGuard>
-                    <AdminGuard>
-                        <AppRoutes />
-                    </AdminGuard>
-                </OnboardingGuard>
-            </BanGuard>
+        <RealtimeProvider>
+            <ErrorBoundary>
+                <ScrollToTop />
+                <BanGuard>
+                    <OnboardingGuard>
+                        <AdminGuard>
+                            <AppRoutes />
+                        </AdminGuard>
+                    </OnboardingGuard>
+                </BanGuard>
 
-            {/* Footer - appears on all pages */}
-            <Footer />
-        </ErrorBoundary>
+                {/* Footer - appears on all pages */}
+                <Footer />
+            </ErrorBoundary>
+        </RealtimeProvider>
     );
 });
 
 const App = React.memo(() => {
     return (
         <AuthProvider>
-            <RealtimeProvider>
-                <ToastContainer
-                    autoClose={3500}
-                    draggable={false}
-                    pauseOnHover={false}
-                />
-                <AppContent />
-            </RealtimeProvider>
+            <ToastContainer
+                autoClose={3500}
+                draggable={false}
+                pauseOnHover={false}
+            />
+            <AppContent />
         </AuthProvider>
     );
 });

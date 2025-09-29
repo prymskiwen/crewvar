@@ -1,6 +1,5 @@
 import { ChangeEvent } from "react";
 import { FiSearch } from "react-icons/fi";
-import { SearchBoxProps } from '../../types';
 
 type Props = {
     searchQuery: string;

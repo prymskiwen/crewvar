@@ -67,10 +67,10 @@ export const PortConnectionsDashboard = () => {
         }
     };
 
-    const handleConnect = (userId: string, userName: string) => {
-        console.log(`Connection request sent to ${userName} (${userId})`);
-        // In a real app, this would send a connection request
-    };
+    // const handleConnect = (userId: string, userName: string) => {
+    //     console.log(`Connection request sent to ${userName} (${userId})`);
+    //     // In a real app, this would send a connection request
+    // };
 
     return (
         <div className="space-y-6">

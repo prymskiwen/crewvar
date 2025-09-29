@@ -2,12 +2,9 @@ import {
     ref,
     set,
     get,
-    push,
     onValue,
-    off,
     onDisconnect,
     serverTimestamp,
-    child,
     update
 } from 'firebase/database';
 import { database } from './config';

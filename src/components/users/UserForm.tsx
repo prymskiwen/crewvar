@@ -2,12 +2,9 @@ import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import PreviewImage from "../Elements/PreviewImage";
-// TODO: Implement Firebase user update functionality
-// import { convertToFormData } from "../../utils/convertToFormData";
 import { useAuth } from "../../context/AuthContextFirebase";
 import { useState } from "react";
 import { Spinner } from "../Elements/Spinner";
-import { UserFormProps } from "../../types";
 
 const fieldRequiredError = "This field is required.";
 const userValidationSchema = yup.object({

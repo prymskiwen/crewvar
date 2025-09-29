@@ -1,6 +1,5 @@
 import { BiSortAlt2 } from "react-icons/bi";
 import { ChangeEvent, Dispatch, SetStateAction } from "react";
-import { SortSelectBoxProps } from '../../types';
 
 type Props = {
     sortOption: string;

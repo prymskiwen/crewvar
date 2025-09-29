@@ -131,10 +131,10 @@ export const getSentRequestsForUser = (userId: string) => {
   return sampleConnectionRequests.filter(req => req.fromUserId === userId);
 };
 
-export const getNotificationsForUser = (userId: string) => {
-  return []; // TODO: Implement notifications
-};
+// export const getNotificationsForUser = (userId: string) => {
+//   return []; // TODO: Implement notifications
+// };
 
-export const getUnreadNotificationsCount = (userId: string) => {
-  return 0; // TODO: Implement unread count
-};
+// export const getUnreadNotificationsCount = (userId: string) => {
+//   return 0; // TODO: Implement unread count
+// };

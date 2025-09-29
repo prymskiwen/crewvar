@@ -25,7 +25,6 @@ export const PortConnectionForm = ({ onClose, onSuccess }: PortConnectionFormPro
         console.log('Adding port connection:', connectionData);
     };
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [selectedCruiseLineId, setSelectedCruiseLineId] = useState<string>("");
 
     const cruiseLines: any[] = [];
     const cruiseLinesLoading = false;
@@ -44,10 +43,9 @@ export const PortConnectionForm = ({ onClose, onSuccess }: PortConnectionFormPro
     const watchedCruiseLineId = watch("cruiseLineId");
     const watchedDate = watch("date");
 
-    // Update selected cruise line and reset ship selection when cruise line changes
+    // Reset ship selection when cruise line changes
     useEffect(() => {
         if (watchedCruiseLineId) {
-            setSelectedCruiseLineId(watchedCruiseLineId);
             setValue("dockedWithShipId", ""); // Reset ship selection
         }
     }, [watchedCruiseLineId, setValue]);

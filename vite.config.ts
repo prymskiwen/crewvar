@@ -5,21 +5,9 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig({
     envDir: ".",
     base: "/",
-    define: {
-        // Make environment variables available at build time
-        'process.env': process.env
-    },
     server: {
-        // Increase max listeners to prevent memory leak warnings
         hmr: {
             overlay: false
-        },
-        proxy: {
-            '/uploads': {
-                target: process.env.VITE_API_URL || 'http://localhost:3000',
-                changeOrigin: true,
-                secure: false,
-            }
         }
     },
     build: {
@@ -27,8 +15,33 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 assetFileNames: "assets/[name]-[hash][extname]",
+                manualChunks: {
+                    vendor: ['react', 'react-dom'],
+                    firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+                    ui: ['react-router-dom', '@reduxjs/toolkit', 'react-redux']
+                }
             },
         },
+    },
+    optimizeDeps: {
+        include: [
+            'react',
+            'react-dom',
+            'react-router-dom',
+            '@reduxjs/toolkit',
+            'react-redux',
+            'redux-persist',
+            '@tanstack/react-query',
+            'react-toastify',
+            'firebase/app',
+            'firebase/auth',
+            'firebase/firestore'
+        ],
+        exclude: [
+            'firebase/storage',
+            'firebase/functions',
+            'firebase/database'
+        ]
     },
     plugins: [
         react(),

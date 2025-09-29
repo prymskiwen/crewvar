@@ -53,13 +53,8 @@ export const UserProfileDropdown = ({ onSignOut }: UserProfileDropdownProps) => 
     // Construct full URL for the profile photo
     const getFullPhotoUrl = (photoUrl: string | null | undefined) => {
         if (!photoUrl) return defaultAvatar;
-        if (photoUrl.startsWith('http')) return photoUrl; // Already a full URL
-        if (photoUrl.startsWith('/uploads/')) {
-            // Construct full URL using the API base URL
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-            return `${baseUrl}${photoUrl}`;
-        }
-        return photoUrl; // Fallback
+        if (photoUrl.startsWith('http')) return photoUrl; // Already a full URL (Firebase Storage URL)
+        return photoUrl; // Fallback for relative paths
     };
 
     const profileImage = getFullPhotoUrl(userProfile?.profilePhoto);

@@ -118,16 +118,8 @@ export const ProfilePhotoUpload = ({
     // Construct full URL for the photo
     const getFullPhotoUrl = (photoUrl: string | null) => {
         if (!photoUrl) return null;
-        if (photoUrl.startsWith('http')) return photoUrl; // Already a full URL
-        if (photoUrl.startsWith('/uploads/')) {
-            // Construct full URL using the API base URL
-            const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-            const fullUrl = `${baseUrl}${photoUrl}`;
-            console.log('Constructed photo URL:', { photoUrl, baseUrl, fullUrl });
-            return fullUrl;
-        }
-        console.log('Photo URL fallback:', photoUrl);
-        return photoUrl; // Fallback
+        if (photoUrl.startsWith('http')) return photoUrl; // Already a full URL (Firebase Storage URL)
+        return photoUrl; // Fallback for relative paths
     };
 
     const displayPhoto = preview || getFullPhotoUrl(currentPhoto || null);

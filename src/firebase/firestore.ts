@@ -12,7 +12,9 @@ import {
     orderBy,
     limit,
     onSnapshot,
-    serverTimestamp
+    serverTimestamp,
+    writeBatch,
+    startAfter
 } from 'firebase/firestore';
 import { db } from './config';
 import { IChatRoom } from '../types/chat.d';
@@ -274,6 +276,86 @@ export const markNotificationAsRead = async (notificationId: string): Promise<vo
             updatedAt: serverTimestamp()
         });
     } catch (error) {
+        throw error;
+    }
+};
+
+export const getNotificationsForUser = async (
+    userId: string,
+    limitCount: number = 50,
+    startAfterDoc?: any
+): Promise<Notification[]> => {
+    try {
+        let notificationsQuery = query(
+            collection(db, 'notifications'),
+            where('userId', '==', userId),
+            orderBy('createdAt', 'desc'),
+            limit(limitCount)
+        );
+
+        // Add pagination if startAfterDoc is provided
+        if (startAfterDoc) {
+            notificationsQuery = query(
+                collection(db, 'notifications'),
+                where('userId', '==', userId),
+                orderBy('createdAt', 'desc'),
+                startAfter(startAfterDoc),
+                limit(limitCount)
+            );
+        }
+
+        const snapshot = await getDocs(notificationsQuery);
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as Notification));
+    } catch (error) {
+        console.error('Error fetching notifications for user:', error);
+        throw error;
+    }
+};
+
+export const getUnreadNotificationsCount = async (userId: string): Promise<number> => {
+    try {
+        const notificationsQuery = query(
+            collection(db, 'notifications'),
+            where('userId', '==', userId),
+            where('isRead', '==', false)
+        );
+
+        const snapshot = await getDocs(notificationsQuery);
+        return snapshot.size;
+    } catch (error) {
+        console.error('Error fetching unread notifications count:', error);
+        throw error;
+    }
+};
+
+export const markAllNotificationsAsRead = async (userId: string): Promise<void> => {
+    try {
+        const notificationsQuery = query(
+            collection(db, 'notifications'),
+            where('userId', '==', userId),
+            where('isRead', '==', false)
+        );
+
+        const snapshot = await getDocs(notificationsQuery);
+
+        if (snapshot.empty) {
+            return; // No unread notifications
+        }
+
+        const batch = writeBatch(db);
+        snapshot.docs.forEach((doc) => {
+            batch.update(doc.ref, {
+                isRead: true,
+                updatedAt: serverTimestamp()
+            });
+        });
+
+        await batch.commit();
+    } catch (error) {
+        console.error('Error marking all notifications as read:', error);
         throw error;
     }
 };

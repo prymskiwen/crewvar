@@ -5,12 +5,14 @@ import { defaultAvatar } from "../../utils/images";
 import {
     getPendingRequestsForUser,
     getSentRequestsForUser,
-    getNotificationsForUser,
-    getUnreadNotificationsCount,
     sampleProfiles,
     sampleConnections,
     sampleConnectionRequests
 } from "../../data/samples/connections-data";
+import {
+    getNotificationsForUser,
+    getUnreadNotificationsCount
+} from "../../firebase/firestore";
 
 interface ConnectionRequestsProps {
     currentUserId: string;
@@ -31,13 +33,31 @@ export const ConnectionRequests = ({
     const [notifications, setNotifications] = useState<INotification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [activeTab, setActiveTab] = useState<'pending' | 'sent' | 'notifications'>('pending');
+    const [loadingNotifications, setLoadingNotifications] = useState(false);
 
     useEffect(() => {
         // Load data
         setPendingRequests(getPendingRequestsForUser(currentUserId));
         setSentRequests(getSentRequestsForUser(currentUserId));
-        setNotifications(getNotificationsForUser(currentUserId));
-        setUnreadCount(getUnreadNotificationsCount(currentUserId));
+
+        // Load notifications asynchronously
+        const loadNotifications = async () => {
+            try {
+                setLoadingNotifications(true);
+                const [notificationsData, unreadCountData] = await Promise.all([
+                    getNotificationsForUser(currentUserId),
+                    getUnreadNotificationsCount(currentUserId)
+                ]);
+                setNotifications(notificationsData as INotification[]);
+                setUnreadCount(unreadCountData);
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            } finally {
+                setLoadingNotifications(false);
+            }
+        };
+
+        loadNotifications();
     }, [currentUserId]);
 
     const handleAcceptRequest = (requestId: string) => {
@@ -242,7 +262,12 @@ export const ConnectionRequests = ({
 
                 {activeTab === 'notifications' && (
                     <div>
-                        {notifications.length === 0 ? (
+                        {loadingNotifications ? (
+                            <div className="text-center py-8">
+                                <div className="w-8 h-8 border-4 border-[#069B93] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                                <p className="text-gray-500">Loading notifications...</p>
+                            </div>
+                        ) : notifications.length === 0 ? (
                             <div className="text-center py-8">
                                 <p className="text-gray-500">No notifications</p>
                             </div>

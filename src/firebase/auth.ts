@@ -115,15 +115,23 @@ export const signUpWithEmail = async (
             id: user.uid,
             email: user.email!,
             displayName,
-            departmentId: additionalData?.departmentId,
-            roleId: additionalData?.roleId,
-            currentShipId: additionalData?.currentShipId,
             isEmailVerified: false,
             isActive: true,
             isAdmin: false,
             createdAt: new Date(),
             updatedAt: new Date()
         };
+
+        // Only add optional fields if they have values
+        if (additionalData?.departmentId) {
+            userData.departmentId = additionalData.departmentId;
+        }
+        if (additionalData?.roleId) {
+            userData.roleId = additionalData.roleId;
+        }
+        if (additionalData?.currentShipId) {
+            userData.currentShipId = additionalData.currentShipId;
+        }
 
         await setDoc(doc(db, 'users', user.uid), userData);
 

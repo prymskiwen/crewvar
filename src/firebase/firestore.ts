@@ -431,12 +431,24 @@ export const getUserProfile = async (userId: string) => {
 
 export const createUserProfile = async (userId: string, profileData: any) => {
     const userRef = doc(db, 'users', userId);
-    await setDoc(userRef, {
-        ...profileData,
+
+    // Filter out undefined values to prevent Firestore errors
+    const cleanProfileData = Object.fromEntries(
+        Object.entries(profileData).filter(([_, value]) => value !== undefined)
+    );
+
+    // Ensure required fields have proper values
+    const safeProfileData = {
+        ...cleanProfileData,
+        isActive: cleanProfileData.isActive ?? true,
+        isAdmin: cleanProfileData.isAdmin ?? false,
+        isEmailVerified: cleanProfileData.isEmailVerified ?? false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
-    });
-    return { id: userId, ...profileData };
+    };
+
+    await setDoc(userRef, safeProfileData);
+    return { id: userId, ...safeProfileData };
 };
 
 export const updateUserProfile = async (userId: string, data: any) => {

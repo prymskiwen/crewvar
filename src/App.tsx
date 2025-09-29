@@ -5,7 +5,7 @@ import { RealtimeProvider } from "./context/RealtimeContextFirebase";
 import { AppRoutes } from "./routes";
 import { AuthGuard, BanGuard, ConditionalGuards } from "./guards";
 import { ErrorBoundary } from "./components/ui";
-import { Footer, ScrollToTop } from "./components/layout";
+import { ScrollToTop } from "./layout";
 
 const AppContent = React.memo(() => {
     return (
@@ -19,9 +19,6 @@ const AppContent = React.memo(() => {
                         </ConditionalGuards>
                     </BanGuard>
                 </AuthGuard>
-
-                {/* Footer - appears on all pages */}
-                <Footer />
             </ErrorBoundary>
         </RealtimeProvider>
     );
@@ -34,6 +31,16 @@ const App = React.memo(() => {
                 autoClose={3500}
                 draggable={false}
                 pauseOnHover={false}
+                enableMultiContainer={false}
+                closeOnClick={true}
+                newestOnTop={true}
+                position="top-right"
+                hideProgressBar={false}
+                rtl={false}
+                limit={5}
+                style={{
+                    touchAction: 'manipulation'
+                }}
             />
             <AppContent />
         </AuthProvider>

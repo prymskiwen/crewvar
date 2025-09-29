@@ -17,4 +17,13 @@
         @apply text-dark;
         background-color: #FFFFEC;
     }
+
+    /* Fix for react-toastify passive event listener issue */
+    .Toastify__toast-container {
+        touch-action: manipulation;
+    }
+
+    .Toastify__toast {
+        touch-action: manipulation;
+    }
 }

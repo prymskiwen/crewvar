@@ -1,16 +1,18 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContextFirebase';
+import { useState, useRef, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContextFirebase';
 import {
     HiBell,
+    HiHome,
     HiUser,
     HiLogout,
-    HiHome
+    HiMenu
 } from 'react-icons/hi';
-import { defaultAvatar } from '../../utils/images';
-import { toast } from 'react-toastify';
+import { defaultAvatar } from '../utils/images';
 
-export const AppBar: React.FC = () => {
+// Internal AppBar Component
+const AppBar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
     const { currentUser, userProfile, signOut } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -56,8 +58,18 @@ export const AppBar: React.FC = () => {
         <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
             <div className="px-4 lg:px-6 py-3">
                 <div className="flex items-center justify-between">
-                    {/* Left side - Logo/Home */}
+                    {/* Left side - Hamburger Menu & Logo/Home */}
                     <div className="flex items-center space-x-3">
+                        {/* Hamburger Menu Button */}
+                        {onToggleSidebar && (
+                            <button
+                                onClick={onToggleSidebar}
+                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-900"
+                            >
+                                <HiMenu className="w-6 h-6" />
+                            </button>
+                        )}
+
                         <Link
                             to="/dashboard"
                             className="flex items-center space-x-2 text-[#069B93] hover:text-[#058a7a] transition-colors"
@@ -139,3 +151,5 @@ export const AppBar: React.FC = () => {
         </div>
     );
 };
+
+export default AppBar;

@@ -2,6 +2,7 @@ export { default as OnboardingForm } from './OnboardingForm';
 export { OnboardingProgress } from './OnboardingProgress';
 export { MissingShipFeedback } from './MissingShipFeedback';
 export { QuickCheckIn } from './QuickCheckIn';
+export { QuickCheckInDialog } from './QuickCheckInDialog';
 export { ShipSelection } from './ShipSelection';
 export { AssignmentForm } from './AssignmentForm';
 export { CalendarView } from './CalendarView';

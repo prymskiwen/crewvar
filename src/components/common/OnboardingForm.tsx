@@ -8,12 +8,9 @@ import { useAuth } from "../../context/AuthContextFirebase";
 import {
     getDepartments,
     getRolesByDepartment,
-    getCruiseLines,
-    getShips,
     updateUserProfile,
     Department,
-    Role,
-    CruiseLine
+    Role
 } from "../../firebase/firestore";
 import { Spinner } from "../Elements/Spinner";
 import { ShipSelection } from "./ShipSelection";
@@ -51,10 +48,8 @@ const OnboardingForm = () => {
     // Data loading states
     const [departments, setDepartments] = useState<Department[]>([]);
     const [roles, setRoles] = useState<Role[]>([]);
-    const [cruiseLines, setCruiseLines] = useState<CruiseLine[]>([]);
     const [loadingDepartments, setLoadingDepartments] = useState(false);
     const [loadingRoles, setLoadingRoles] = useState(false);
-    const [loadingCruiseLines, setLoadingCruiseLines] = useState(false);
 
     // Refs for preventing infinite loops
     const profileLoadedRef = useRef(false);
@@ -94,21 +89,14 @@ const OnboardingForm = () => {
 
                 try {
                     setLoadingDepartments(true);
-                    setLoadingCruiseLines(true);
 
-                    const [departmentsData, cruiseLinesData] = await Promise.all([
-                        getDepartments(),
-                        getCruiseLines()
-                    ]);
-
+                    const departmentsData = await getDepartments();
                     setDepartments(departmentsData);
-                    setCruiseLines(cruiseLinesData);
                 } catch (error) {
                     console.error('Error loading initial data:', error);
                     toast.error('Failed to load form data');
                 } finally {
                     setLoadingDepartments(false);
-                    setLoadingCruiseLines(false);
                 }
             }
         };
@@ -155,21 +143,7 @@ const OnboardingForm = () => {
             reset(formData);
 
 
-            if (userProfile.currentShipId) {
-                // Find the ship and set cruise line
-                const findShipAndSetCruiseLine = async () => {
-                    try {
-                        const allShips = await getShips();
-                        const ship = allShips.find(s => s.id === userProfile.currentShipId);
-                        if (ship) {
-                            setSelectedCruiseLineId(ship.cruiseLineId);
-                        }
-                    } catch (error) {
-                        console.error('Error finding ship:', error);
-                    }
-                };
-                findShipAndSetCruiseLine();
-            }
+            // Ship selection is now handled by ShipSelection component
 
             clearErrors();
         }
@@ -333,35 +307,19 @@ const OnboardingForm = () => {
                             />
                         </FormGroup>
 
-                        {/* Cruise Line */}
+                        {/* Ship Selection */}
                         <FormGroup
-                            label="Cruise Line"
+                            label="Current Ship"
                             required
                         >
-                            <Autocomplete
-                                value={selectedCruiseLineId}
-                                onChange={handleCruiseLineChange}
-                                options={cruiseLines.map(line => ({ id: line.id, name: line.name }))}
-                                placeholder="Select your cruise line"
-                                loading={loadingCruiseLines}
+                            <ShipSelection
+                                selectedCruiseLineId={selectedCruiseLineId}
+                                selectedShipId={watch("currentShipId")}
+                                onCruiseLineChange={handleCruiseLineChange}
+                                onShipChange={handleShipChange}
+                                placeholder="Select your ship"
                             />
                         </FormGroup>
-
-                        {/* Ship Selection */}
-                        {selectedCruiseLineId && (
-                            <FormGroup
-                                label="Current Ship"
-                                required
-                            >
-                                <ShipSelection
-                                    selectedCruiseLineId={selectedCruiseLineId}
-                                    selectedShipId={watch("currentShipId")}
-                                    onCruiseLineChange={handleCruiseLineChange}
-                                    onShipChange={handleShipChange}
-                                    placeholder="Select your ship"
-                                />
-                            </FormGroup>
-                        )}
 
                         {/* Submit Button */}
                         <div className="flex justify-end pt-6">

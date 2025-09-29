@@ -43,8 +43,8 @@ const SignupForm = () => {
                 autoClose: 5000,
                 hideProgressBar: false,
                 closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
+                pauseOnHover: false,
+                draggable: false,
             });
             console.log('Navigating to verification pending page...');
             navigate("/auth/verification-pending", {
@@ -70,8 +70,8 @@ const SignupForm = () => {
                 autoClose: 5000,
                 hideProgressBar: false,
                 closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
+                pauseOnHover: false,
+                draggable: false,
             });
         } finally {
             setIsLoading(false);
@@ -88,8 +88,8 @@ const SignupForm = () => {
                 autoClose: 3000,
                 hideProgressBar: false,
                 closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
+                pauseOnHover: false,
+                draggable: false,
             });
             navigate('/dashboard');
         } catch (error: any) {
@@ -99,8 +99,8 @@ const SignupForm = () => {
                 autoClose: 5000,
                 hideProgressBar: false,
                 closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
+                pauseOnHover: false,
+                draggable: false,
             });
         } finally {
             setIsLoading(false);

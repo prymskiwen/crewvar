@@ -1,15 +1,14 @@
 import Showcase from "../../components/common/Showcase";
-import Navbar from "../../components/Elements/Navbar";
 import newArrivals from "../../assets/images/Home/yourhomeatsea.png";
 import createProfile from "../../assets/images/Home/createprofile.png";
 import findAround from "../../assets/images/Home/findaround.png";
 import connectShare from "../../assets/images/Home/connectshare.png";
 import homefooter from "../../assets/images/Home/homefooter.png";
+import { DashboardLayout } from '../../layout/DashboardLayout';
 
 export const Home = () => {
     return (
-        <>
-            <Navbar />
+        <DashboardLayout>
             <Showcase />
             <div className="container px-[20px] lg:px-[96px] md:px-[48px] sm:px-[24px]">
                 <div className="flex flex-col md:flex-row rounded-lg overflow-hidden">
@@ -104,6 +103,6 @@ export const Home = () => {
                     </div>
                 </div>
             </div>
-        </>
+        </DashboardLayout>
     );
 };

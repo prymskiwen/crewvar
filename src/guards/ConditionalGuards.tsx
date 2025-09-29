@@ -2,7 +2,6 @@ import { useAuth } from '../context/AuthContextFirebase';
 import { AdminGuard } from './AdminGuard';
 import { OnboardingGuard } from './OnboardingGuard';
 import { LoadingPage } from '../components/ui';
-import { AppBar } from "../components/layout";
 
 export const ConditionalGuards = ({ children }: { children: React.ReactNode }) => {
     const { currentUser, userProfile, loading } = useAuth();
@@ -22,14 +21,6 @@ export const ConditionalGuards = ({ children }: { children: React.ReactNode }) =
     // Check admin status from user profile
     const isAdmin = userProfile.isAdmin === true;
 
-    console.log("ConditionalGuards - Debug Info:", {
-        currentUser: !!currentUser,
-        userProfile: !!userProfile,
-        isAdmin,
-        userEmail: currentUser?.email,
-        userProfileIsAdmin: userProfile?.isAdmin
-    });
-
     if (isAdmin) {
         return (
             <AdminGuard>
@@ -40,7 +31,6 @@ export const ConditionalGuards = ({ children }: { children: React.ReactNode }) =
 
     return (
         <OnboardingGuard>
-            <AppBar />
             {children}
         </OnboardingGuard>
     );

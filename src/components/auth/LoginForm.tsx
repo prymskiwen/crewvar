@@ -18,6 +18,15 @@ const LoginForm = () => {
             await signIn(email, password);
 
             console.log('Login successful!');
+            toast.success('Login successful!', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: false,
+            });
+            navigate('/dashboard');
         } catch (error: any) {
             console.error('Login error:', error);
 
@@ -68,8 +77,8 @@ const LoginForm = () => {
                 autoClose: 5000,
                 hideProgressBar: false,
                 closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
+                pauseOnHover: false,
+                draggable: false,
             });
         } finally {
             setIsLoading(false);
@@ -84,8 +93,8 @@ const LoginForm = () => {
             autoClose: 3000,
             hideProgressBar: false,
             closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
+            pauseOnHover: false,
+            draggable: false,
         });
     };
 

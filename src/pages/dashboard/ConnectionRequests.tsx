@@ -79,7 +79,7 @@ export const ConnectionRequests = () => {
     );
 
     // Handle accept request
-    const handleAccept = async (requestId: string, requesterName: string) => {
+    const handleAccept = async (requestId: string) => {
         try {
             setLoadingStates(prev => ({ ...prev, [requestId]: true }));
             await acceptRequestMutation.mutateAsync(requestId);
@@ -91,7 +91,7 @@ export const ConnectionRequests = () => {
     };
 
     // Handle decline request
-    const handleDecline = async (requestId: string, requesterName: string) => {
+    const handleDecline = async (requestId: string) => {
         try {
             setLoadingStates(prev => ({ ...prev, [requestId]: true }));
             await declineRequestMutation.mutateAsync(requestId);
@@ -202,14 +202,14 @@ export const ConnectionRequests = () => {
                                                     {/* Action Buttons */}
                                                     <div className="flex space-x-2 sm:flex-shrink-0">
                                                         <button
-                                                            onClick={() => handleAccept(request?.id, profile.displayName)}
+                                                            onClick={() => handleAccept(request?.id)}
                                                             disabled={loadingStates[request?.id] || acceptRequestMutation.isLoading}
                                                             className="flex-1 sm:flex-none px-3 py-2 bg-green-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                                         >
                                                             {loadingStates[request?.id] ? 'Accepting...' : 'Accept'}
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDecline(request?.id, profile.displayName)}
+                                                            onClick={() => handleDecline(request?.id)}
                                                             disabled={loadingStates[request?.id] || declineRequestMutation.isLoading}
                                                             className="flex-1 sm:flex-none px-3 py-2 bg-red-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                                         >

@@ -3,7 +3,6 @@ import { ProfileEdit } from '../users/ProfileEdit';
 
 interface JobInformationCardProps {
     profile: any;
-    setProfile: React.Dispatch<React.SetStateAction<any>>;
     isEditing: boolean;
     setIsEditing: (editing: boolean) => void;
     departments: Array<{ id: string; name: string }>;
@@ -15,7 +14,6 @@ interface JobInformationCardProps {
 
 export const JobInformationCard = ({
     profile,
-    setProfile,
     isEditing,
     setIsEditing,
     departments,

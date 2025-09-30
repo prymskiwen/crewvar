@@ -1,10 +1,13 @@
-import { useState } from 'react';
 import { Button, Autocomplete } from '../ui';
 
 interface AssignmentCardProps {
     profile: {
         currentShipId: string;
         currentCruiseLineId: string;
+        displayName?: string;
+        avatar?: string;
+        departmentId?: string;
+        roleId?: string;
     };
     setProfile: React.Dispatch<React.SetStateAction<any>>;
     isEditing: boolean;
@@ -31,10 +34,6 @@ export const AssignmentCard = ({
     shipsLoading,
     cruiseLinesLoading
 }: AssignmentCardProps) => {
-    const [showCruiseLineDropdown, setShowCruiseLineDropdown] = useState(false);
-    const [showShipDropdown, setShowShipDropdown] = useState(false);
-    const [cruiseLineSearchTerm, setCruiseLineSearchTerm] = useState('');
-    const [shipSearchTerm, setShipSearchTerm] = useState('');
 
     const handleUpdate = async () => {
         try {
@@ -79,7 +78,7 @@ export const AssignmentCard = ({
                         </label>
                         <Autocomplete
                             value={profile.currentCruiseLineId}
-                            onChange={(value) => setProfile(prev => ({
+                            onChange={(value) => setProfile((prev: any) => ({
                                 ...prev,
                                 currentCruiseLineId: value,
                                 currentShipId: '' // Reset ship when cruise line changes
@@ -95,7 +94,7 @@ export const AssignmentCard = ({
                         </label>
                         <Autocomplete
                             value={profile.currentShipId}
-                            onChange={(value) => setProfile(prev => ({
+                            onChange={(value) => setProfile((prev: any) => ({
                                 ...prev,
                                 currentShipId: value
                             }))}

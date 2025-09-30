@@ -370,7 +370,6 @@ export const MyProfile = () => {
                                 {/* Job Information Card */}
                                 <JobInformationCard
                                     profile={profile}
-                                    setProfile={setProfile}
                                     isEditing={isEditingProfile}
                                     setIsEditing={setIsEditingProfile}
                                     departments={departments}

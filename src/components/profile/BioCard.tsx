@@ -60,7 +60,7 @@ export const BioCard = ({
             {isEditing ? (
                 <Textarea
                     value={profile.bio}
-                    onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
+                    onChange={(e) => setProfile((prev: any) => ({ ...prev, bio: e.target.value }))}
                     placeholder="Tell other crew members about yourself, your interests, and what makes you unique..."
                     rows={4}
                 />

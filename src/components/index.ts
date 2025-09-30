@@ -1,6 +1,3 @@
-// Layout Components
-export * from './layout';
-
 // UI Components
 export * from './ui';
 
@@ -16,6 +13,7 @@ export * from './connections';
 export * from './moderation';
 export * from './notifications';
 export * from './port';
+export * from './profile';
 export * from './reports';
 export * from './support';
 export * from './users';

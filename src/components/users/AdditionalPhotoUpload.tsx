@@ -27,7 +27,10 @@ export const AdditionalPhotoUpload = ({
     const { currentUser } = useAuth();
 
     const uploadPhoto = async (file: File) => {
+        console.log('uploadPhoto called with:', { file: file.name, userId: currentUser?.uid, index });
+
         if (!currentUser?.uid) {
+            console.error('User not authenticated');
             throw new Error('User not authenticated');
         }
 
@@ -35,10 +38,13 @@ export const AdditionalPhotoUpload = ({
         setError(null);
 
         try {
+            console.log('Calling uploadAdditionalPhoto...');
             const photoUrl = await uploadAdditionalPhoto(file, currentUser.uid, index);
+            console.log('uploadAdditionalPhoto returned:', photoUrl);
             onPhotoChange(photoUrl);
             return photoUrl;
         } catch (error: any) {
+            console.error('Upload error:', error);
             setError(error.message || 'Failed to upload photo');
             throw error;
         } finally {
@@ -65,6 +71,8 @@ export const AdditionalPhotoUpload = ({
     };
 
     const handleFileSelect = useCallback(async (file: File) => {
+        console.log('File selected:', file.name, file.type, file.size);
+
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
@@ -84,7 +92,9 @@ export const AdditionalPhotoUpload = ({
 
         // Upload file with specific slot
         try {
-            await uploadPhoto(file);
+            console.log('Starting upload for slot:', index);
+            const photoUrl = await uploadPhoto(file);
+            console.log('Upload successful, photo URL:', photoUrl);
             // Clean up preview URL
             URL.revokeObjectURL(previewUrl);
             setPreview(null);
@@ -94,7 +104,7 @@ export const AdditionalPhotoUpload = ({
             URL.revokeObjectURL(previewUrl);
             setPreview(null);
         }
-    }, [uploadPhoto, onPhotoChange]);
+    }, [uploadPhoto, onPhotoChange, index]);
 
     const handleDelete = useCallback(async () => {
         try {
@@ -196,7 +206,7 @@ export const AdditionalPhotoUpload = ({
                         e.stopPropagation();
                         handleDelete();
                     }}
-                    variant="destructive"
+                    variant="danger"
                     size="sm"
                     className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs"
                     title="Delete photo"

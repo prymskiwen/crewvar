@@ -1,87 +1,105 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
-
-// TODO: Import from utils when module resolution is fixed
-const getProfilePhotoUrl = (profilePhoto?: string, _userId?: string): string => {
-    if (profilePhoto && profilePhoto.trim() !== '') {
-        return profilePhoto;
-    }
-    return '/default-avatar.webp';
-};
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../../context/AuthContextFirebase";
+import {
+    getReceivedConnectionRequests,
+    respondToConnectionRequest,
+    getUserProfile
+} from "../../firebase/firestore";
+import { getProfilePhotoUrl } from "../../utils/images";
 
 export const PendingRequests = () => {
-    // TODO: Implement Firebase connections functionality
-    const pendingData = { requests: [] as any[] };
-    const isLoading = false;
-    const error = null;
-    const [isResponding, setIsResponding] = useState(false);
-    const respondToRequest = {
-        mutateAsync: async (requestData: { requestId: string; action: 'accept' | 'decline' }) => {
-            // TODO: Implement Firebase connection request response functionality
-            console.log('Responding to connection request:', requestData);
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            toast.success(`Connection request ${requestData.action}ed successfully!`);
+    const { currentUser } = useAuth();
+    const queryClient = useQueryClient();
+    const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+
+    // Fetch received connection requests
+    const { data: connectionRequests = [], isLoading, error } = useQuery({
+        queryKey: ['receivedConnectionRequests', currentUser?.uid],
+        queryFn: () => getReceivedConnectionRequests(currentUser!.uid),
+        enabled: !!currentUser?.uid
+    });
+
+    // Fetch requester profiles
+    const { data: requesterProfiles = [] } = useQuery({
+        queryKey: ['requesterProfiles', connectionRequests.map(req => req.requesterId)],
+        queryFn: async () => {
+            const profiles = [];
+            for (const request of connectionRequests) {
+                try {
+                    const profile = await getUserProfile(request.requesterId);
+                    profiles.push({ ...profile, requestId: request.id });
+                } catch (error) {
+                    console.error(`Error fetching profile for ${request.requesterId}:`, error);
+                }
+            }
+            return profiles;
         },
-        isLoading: isResponding
+        enabled: connectionRequests.length > 0
+    });
+
+    // Accept connection request mutation
+    const acceptRequestMutation = useMutation(
+        async (requestId: string) => {
+            return await respondToConnectionRequest(requestId, 'accepted');
+        },
+        {
+            onSuccess: () => {
+                toast.success('Connection request accepted!');
+                // Refresh data
+                queryClient.invalidateQueries({ queryKey: ['receivedConnectionRequests'] });
+                queryClient.invalidateQueries({ queryKey: ['userConnections'] });
+                queryClient.invalidateQueries({ queryKey: ['pendingRequests'] });
+            },
+            onError: (error: any) => {
+                console.error('Failed to accept connection request:', error);
+                toast.error(error.message || 'Failed to accept connection request');
+            }
+        }
+    );
+
+    // Decline connection request mutation
+    const declineRequestMutation = useMutation(
+        async (requestId: string) => {
+            return await respondToConnectionRequest(requestId, 'declined');
+        },
+        {
+            onSuccess: () => {
+                toast.success('Connection request declined');
+                // Refresh data
+                queryClient.invalidateQueries({ queryKey: ['receivedConnectionRequests'] });
+            },
+            onError: (error: any) => {
+                console.error('Failed to decline connection request:', error);
+                toast.error(error.message || 'Failed to decline connection request');
+            }
+        }
+    );
+
+    const requests = connectionRequests;
+
+    // Handle accept request
+    const handleAccept = async (requestId: string) => {
+        try {
+            setLoadingStates(prev => ({ ...prev, [requestId]: true }));
+            await acceptRequestMutation.mutateAsync(requestId);
+        } catch (error: any) {
+            console.error('Failed to accept connection request:', error);
+        } finally {
+            setLoadingStates(prev => ({ ...prev, [requestId]: false }));
+        }
     };
 
-    const requests = pendingData.requests;
-
-    const handleRespondToRequest = async (requestId: string, action: 'accept' | 'decline') => {
+    // Handle decline request
+    const handleDecline = async (requestId: string) => {
         try {
-            setIsResponding(true);
-            await respondToRequest.mutateAsync({ requestId, action });
-
-            // Find the request to get the user's name for the notification
-            const request = requests.find((req: any) => req.id === requestId);
-            const userName = request?.display_name || 'User';
-
-            if (action === 'accept') {
-                toast.success(`🎉 Connection accepted! You're now connected with ${userName}`, {
-                    position: "top-right",
-                    autoClose: 4000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    style: {
-                        background: '#f0fdf4',
-                        color: '#166534',
-                        border: '1px solid #bbf7d0'
-                    }
-                });
-            } else {
-                toast.info(`Connection request from ${userName} has been declined`, {
-                    position: "top-right",
-                    autoClose: 3000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    style: {
-                        background: '#f0f9ff',
-                        color: '#0369a1',
-                        border: '1px solid #bae6fd'
-                    }
-                });
-            }
+            setLoadingStates(prev => ({ ...prev, [requestId]: true }));
+            await declineRequestMutation.mutateAsync(requestId);
         } catch (error: any) {
-            console.error(`Failed to ${action} connection request:`, error);
-            toast.error(error.response?.data?.error || `Failed to ${action} connection request. Please try again.`, {
-                position: "top-right",
-                autoClose: 4000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                style: {
-                    background: '#fef2f2',
-                    color: '#dc2626',
-                    border: '1px solid #fecaca'
-                }
-            });
+            console.error('Failed to decline connection request:', error);
         } finally {
-            setIsResponding(false);
+            setLoadingStates(prev => ({ ...prev, [requestId]: false }));
         }
     };
 
@@ -124,54 +142,69 @@ export const PendingRequests = () => {
 
     return (
         <div className="space-y-4">
-            {requests.map((request: any) => (
-                <div key={request.id} className="bg-white rounded-lg shadow-sm border p-6">
-                    <div className="flex items-start space-x-4">
-                        <img
-                            src={getProfilePhotoUrl(request.profile_photo)}
-                            alt={request.display_name}
-                            className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                        />
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-lg font-semibold text-gray-900">{request.display_name}</h3>
-                                    <p className="text-sm text-gray-600">{request.role_name} • {request.department_name}</p>
-                                    <p className="text-xs text-gray-500">{request.ship_name} • {request.cruise_line_name}</p>
+            {requesterProfiles.map((profile: any) => {
+                const request = connectionRequests.find(req => req.requesterId === profile.id);
+                return (
+                    <div key={request?.id} className="bg-white rounded-lg shadow-sm border p-6">
+                        <div className="flex items-start space-x-4">
+                            <img
+                                src={getProfilePhotoUrl(profile.profilePhoto)}
+                                alt={profile.displayName}
+                                className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                                onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                        parent.innerHTML = `
+                                        <div class="w-12 h-12 bg-teal-500 flex items-center justify-center rounded-full border-2 border-gray-200">
+                                            <span class="text-white font-bold text-lg">${profile.displayName.charAt(0)}</span>
+                                        </div>
+                                    `;
+                                    }
+                                }}
+                            />
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900">{profile.displayName}</h3>
+                                        <p className="text-sm text-gray-600">{profile.roleId || 'Crew Member'}</p>
+                                        <p className="text-xs text-gray-500">{profile.departmentId} • {profile.currentShipId}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-gray-500">
+                                            {request?.createdAt ? new Date(request.createdAt.seconds * 1000).toLocaleDateString() : 'Recently'}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-xs text-gray-500">
-                                        {new Date(request.created_at).toLocaleDateString()}
-                                    </p>
-                                </div>
-                            </div>
 
-                            {request.message && (
-                                <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-700 italic">"{request.message}"</p>
-                                </div>
-                            )}
+                                {request?.message && (
+                                    <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                                        <p className="text-sm text-gray-700 italic">"{request.message}"</p>
+                                    </div>
+                                )}
 
-                            <div className="flex space-x-3 mt-4">
-                                <button
-                                    onClick={() => handleRespondToRequest(request.id, 'accept')}
-                                    disabled={respondToRequest.isLoading}
-                                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {respondToRequest.isLoading ? 'Processing...' : 'Accept'}
-                                </button>
-                                <button
-                                    onClick={() => handleRespondToRequest(request.id, 'decline')}
-                                    disabled={respondToRequest.isLoading}
-                                    className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {respondToRequest.isLoading ? 'Processing...' : 'Decline'}
-                                </button>
+                                <div className="flex space-x-3 mt-4">
+                                    <button
+                                        onClick={() => handleAccept(request?.id)}
+                                        disabled={loadingStates[request?.id] || acceptRequestMutation.isLoading}
+                                        className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {loadingStates[request?.id] ? 'Accepting...' : 'Accept'}
+                                    </button>
+                                    <button
+                                        onClick={() => handleDecline(request?.id)}
+                                        disabled={loadingStates[request?.id] || declineRequestMutation.isLoading}
+                                        className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {loadingStates[request?.id] ? 'Declining...' : 'Decline'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 };

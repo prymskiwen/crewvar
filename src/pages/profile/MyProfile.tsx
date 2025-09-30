@@ -21,6 +21,7 @@ import {
     getRolesByDepartment
 } from "../../firebase/firestore";
 import { toast } from "react-toastify";
+import { DashboardLayout } from "../../layout/DashboardLayout";
 
 export const MyProfile = () => {
     const { currentUser, userProfile } = useAuth();
@@ -243,85 +244,10 @@ export const MyProfile = () => {
         }
     }, [profile.currentShipId, allShips, profile.currentCruiseLineId]);
 
-    const [isEditing, setIsEditing] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
     const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [isEditingContact, setIsEditingContact] = useState(false);
     const [isEditingAboutMe, setIsEditingAboutMe] = useState(false);
     const [isEditingAssignment, setIsEditingAssignment] = useState(false);
-
-    const toNull = (value: any) => {
-        return value === undefined ? null : value;
-    };
-
-    const handleSave = async () => {
-        setIsLoading(true);
-
-        try {
-            // Always save job information (department, role, etc.) regardless of photo changes
-            await updateUserProfileFunc({
-                displayName: profile.displayName,
-                departmentId: profile.departmentId,
-                roleId: profile.roleId,
-                currentShipId: profile.currentShipId
-            });
-
-            // Save profile details (bio, contacts, social media, additional photos)
-            const profileDetailsData = {
-                bio: toNull(profile.bio),
-                phone: toNull(profile.contacts?.phone),
-                instagram: toNull(profile.socialMedia?.instagram),
-                twitter: toNull(profile.socialMedia?.twitter),
-                facebook: toNull(profile.socialMedia?.facebook),
-                snapchat: toNull(profile.socialMedia?.snapchat),
-                website: toNull(profile.socialMedia?.website),
-                additionalPhotos: profile.photos || [],
-                additionalPhotosCount: (profile.photos || []).length
-            };
-
-            await updateProfileDetails(profileDetailsData);
-
-            setIsEditing(false);
-            console.log('Profile updated successfully');
-        } catch (error: any) {
-            console.error('Failed to update profile:', error);
-            const errorMessage = error.response?.data?.error || error.message || 'Failed to update profile. Please try again.';
-            alert(`Error: ${errorMessage}`);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleCancel = () => {
-        setIsEditing(false);
-        // Reset to original values from userProfile
-        if (userProfile) {
-            setProfile(prev => ({
-                ...prev,
-                displayName: userProfile.displayName || currentUser?.displayName || '',
-                avatar: userProfile.profilePhoto ? getProfilePhotoUrl(userProfile.profilePhoto) : (currentUser?.photoURL || ''),
-                bio: userProfile.bio || '',
-                contacts: {
-                    ...prev.contacts,
-                    email: userProfile.email || currentUser?.email || '',
-                    phone: userProfile.phone || ''
-                },
-                socialMedia: {
-                    instagram: userProfile.instagram || '',
-                    twitter: userProfile.twitter || '',
-                    facebook: userProfile.facebook || '',
-                    snapchat: userProfile.snapchat || '',
-                    website: userProfile.website || ''
-                },
-                photos: ['', '', ''],
-                departmentId: userProfile.departmentId || '',
-                roleId: userProfile.roleId || '',
-                currentShipId: userProfile.currentShipId || ''
-            }));
-        }
-    };
-
-
 
     const handleProfileEditSave = async (profileData: any) => {
         try {
@@ -364,124 +290,138 @@ export const MyProfile = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#B9F3DF] via-[#E8F8F5] to-[#B9F3DF]">
-            <div className="container mx-auto px-4 py-6 lg:py-8">
-                <div className="max-w-6xl mx-auto">
-                    {/* Profile Header Card */}
-                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-6">
-                        <div className="bg-gradient-to-r from-[#069B93] via-[#00A59E] to-[#069B93] p-6 lg:p-8">
-                            <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-4 lg:space-y-0 lg:space-x-6">
-                                <div className="relative flex-shrink-0">
-                                    <ProfilePhotoUpload
-                                        currentPhoto={profile.avatar}
-                                        onPhotoChange={(photoUrl) => {
-                                            setProfile(prev => ({ ...prev, avatar: photoUrl }));
-                                        }}
-                                        size="large"
-                                        className="w-24 h-24 lg:w-32 lg:h-32 rounded-full shadow-2xl"
-                                        showInstructions={false}
-                                    />
-                                </div>
-                                <div className="flex-1 text-center lg:text-left">
-                                    <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">{profile.displayName || 'Crew Member'}</h1>
-                                    <p className="text-[#B9F3DF] text-lg lg:text-xl mb-3">{getUserJobTitle()}</p>
-                                    <div className="flex items-center justify-center lg:justify-start space-x-3">
-                                        <div className="flex items-center space-x-2 bg-white/20 rounded-full px-3 py-1">
-                                            <div className={`w-2 h-2 ${getUserStatus().color} rounded-full`}></div>
-                                            <span className="text-sm text-white font-medium">{getUserStatus().status}</span>
+        <DashboardLayout>
+            {/* Mobile Header */}
+            <div className="bg-teal-600 text-white p-3 sm:p-4 sticky top-0 z-10">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                        <div>
+                            <h1 className="text-base sm:text-lg font-bold">My Profile</h1>
+                            <p className="text-xs text-teal-100">Manage your personal information</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="min-h-screen bg-gradient-to-br from-[#B9F3DF] via-[#E8F8F5] to-[#B9F3DF]">
+                <div className="container mx-auto px-4 py-6 lg:py-8">
+                    <div className="max-w-6xl mx-auto">
+                        {/* Profile Header Card */}
+                        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden mb-6 border-2 border-teal-500">
+                            <div className="bg-white p-6 lg:p-8">
+                                <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-4 lg:space-y-0 lg:space-x-6">
+                                    <div className="relative flex-shrink-0">
+                                        <ProfilePhotoUpload
+                                            currentPhoto={profile.avatar}
+                                            onPhotoChange={(photoUrl) => {
+                                                setProfile(prev => ({ ...prev, avatar: photoUrl }));
+                                            }}
+                                            size="large"
+                                            className="w-24 h-24 lg:w-32 lg:h-32 rounded-full shadow-2xl border-4 border-teal-500"
+                                            showInstructions={false}
+                                        />
+                                    </div>
+                                    <div className="flex-1 text-center lg:text-left">
+                                        <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">{profile.displayName || 'Crew Member'}</h1>
+                                        <p className="text-teal-600 text-lg lg:text-xl mb-3 font-medium">{getUserJobTitle()}</p>
+                                        <div className="flex items-center justify-center lg:justify-start space-x-3">
+                                            <div className="flex items-center space-x-2 bg-teal-50 border border-teal-200 rounded-full px-4 py-2">
+                                                <div className={`w-3 h-3 ${getUserStatus().color} rounded-full`}></div>
+                                                <span className="text-sm text-teal-700 font-semibold">{getUserStatus().status}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex flex-col sm:flex-row items-center justify-end space-y-3 sm:space-y-0 sm:space-x-4 mb-6">
-                        <div className="flex items-center space-x-3">
-                            <Link
-                                to="/calendar"
-                                className="flex items-center justify-center space-x-2 px-4 py-2 bg-white text-[#069B93] rounded-xl font-semibold transition-all duration-200 hover:bg-[#069B93] hover:text-white shadow-md hover:shadow-lg"
-                            >
-                                <HiCalendar className="w-4 h-4" />
-                                <span>My Calendar</span>
-                            </Link>
-                        </div>
-                    </div>
-
-                    {/* Main Content Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Left Column - Main Info */}
-                        <div className="lg:col-span-2 space-y-6">
-                            {/* Current Assignment Card */}
-                            <AssignmentCard
-                                profile={profile}
-                                setProfile={setProfile}
-                                isEditing={isEditingAssignment}
-                                setIsEditing={setIsEditingAssignment}
-                                cruiseLines={cruiseLines}
-                                allShips={allShips}
-                                getCruiseLineFromShip={getCruiseLineFromShip}
-                                getShipName={getShipName}
-                                updateUserProfileFunc={updateUserProfileFunc}
-                                shipsLoading={shipsLoading}
-                                cruiseLinesLoading={cruiseLinesLoading}
-                            />
-
-                            {/* Job Information Card */}
-                            <JobInformationCard
-                                profile={profile}
-                                setProfile={setProfile}
-                                isEditing={isEditingProfile}
-                                setIsEditing={setIsEditingProfile}
-                                departments={departments}
-                                allRoles={allRoles}
-                                getDepartmentName={getDepartmentName}
-                                getRoleName={getRoleName}
-                                handleProfileEditSave={handleProfileEditSave}
-                            />
-
-                            {/* Bio Card */}
-                            <BioCard
-                                profile={profile}
-                                setProfile={setProfile}
-                                isEditing={isEditingAboutMe}
-                                setIsEditing={setIsEditingAboutMe}
-                                updateProfileDetails={updateProfileDetails}
-                            />
-
-                            {/* Photos Card */}
-                            <PhotosCard
-                                profile={profile}
-                                setProfile={setProfile}
-                                isEditing={isEditing}
-                            />
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row items-center justify-end space-y-3 sm:space-y-0 sm:space-x-4 mb-6">
+                            <div className="flex items-center space-x-3">
+                                <Link
+                                    to="/calendar"
+                                    className="flex items-center justify-center space-x-2 px-4 py-2 bg-white text-[#069B93] rounded-xl font-semibold transition-all duration-200 hover:bg-[#069B93] hover:text-white shadow-md hover:shadow-lg"
+                                >
+                                    <HiCalendar className="w-4 h-4" />
+                                    <span>My Calendar</span>
+                                </Link>
+                            </div>
                         </div>
 
-                        {/* Right Column - Contact & Social */}
-                        <div className="space-y-6">
-                            {/* Contact Information Card */}
-                            <ContactCard
-                                profile={profile}
-                                setProfile={setProfile}
-                                isEditing={isEditingContact}
-                                setIsEditing={setIsEditingContact}
-                                updateProfileDetails={updateProfileDetails}
-                            />
+                        {/* Main Content Grid */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Left Column - Main Info */}
+                            <div className="lg:col-span-2 space-y-6">
+                                {/* Current Assignment Card */}
+                                <AssignmentCard
+                                    profile={profile}
+                                    setProfile={setProfile}
+                                    isEditing={isEditingAssignment}
+                                    setIsEditing={setIsEditingAssignment}
+                                    cruiseLines={cruiseLines}
+                                    allShips={allShips}
+                                    getCruiseLineFromShip={getCruiseLineFromShip}
+                                    getShipName={getShipName}
+                                    updateUserProfileFunc={updateUserProfileFunc}
+                                    shipsLoading={shipsLoading}
+                                    cruiseLinesLoading={cruiseLinesLoading}
+                                />
 
-                            {/* Social Media Card */}
-                            <SocialMediaCard
-                                profile={profile}
-                                setProfile={setProfile}
-                                updateProfileDetails={updateProfileDetails}
-                            />
+                                {/* Job Information Card */}
+                                <JobInformationCard
+                                    profile={profile}
+                                    setProfile={setProfile}
+                                    isEditing={isEditingProfile}
+                                    setIsEditing={setIsEditingProfile}
+                                    departments={departments}
+                                    allRoles={allRoles}
+                                    getDepartmentName={getDepartmentName}
+                                    getRoleName={getRoleName}
+                                    handleProfileEditSave={handleProfileEditSave}
+                                />
 
+                                {/* Bio Card */}
+                                <BioCard
+                                    profile={profile}
+                                    setProfile={setProfile}
+                                    isEditing={isEditingAboutMe}
+                                    setIsEditing={setIsEditingAboutMe}
+                                    updateProfileDetails={updateProfileDetails}
+                                />
+
+                                {/* Photos Card */}
+                                <PhotosCard
+                                    profile={profile}
+                                    setProfile={setProfile}
+                                    isEditing={true}
+                                />
+                            </div>
+
+                            {/* Right Column - Contact & Social */}
+                            <div className="space-y-6">
+                                {/* Contact Information Card */}
+                                <ContactCard
+                                    profile={profile}
+                                    setProfile={setProfile}
+                                    isEditing={isEditingContact}
+                                    setIsEditing={setIsEditingContact}
+                                    updateProfileDetails={updateProfileDetails}
+                                />
+
+                                {/* Social Media Card */}
+                                <SocialMediaCard
+                                    profile={profile}
+                                    setProfile={setProfile}
+                                    updateProfileDetails={updateProfileDetails}
+                                />
+
+                            </div>
                         </div>
+
+
                     </div>
-
-
                 </div>
             </div>
-        </div>
+        </DashboardLayout>
     );
 };

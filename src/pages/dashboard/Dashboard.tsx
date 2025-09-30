@@ -313,28 +313,35 @@ const WhosInPortCard = () => {
 const Dashboard = () => {
     return (
         <DashboardLayout>
-            {/* Welcome Section - Compact Desktop Design */}
-            <div className="mb-4 lg:mb-6">
-                <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-4xl">
-                    Manage your profile and connections.
-                </p>
+            {/* Mobile Header */}
+            <div className="bg-teal-600 text-white p-3 sm:p-4 sticky top-0 z-10">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                        <div>
+                            <h1 className="text-base sm:text-lg font-bold">Dashboard</h1>
+                            <p className="text-xs text-teal-100">Manage your profile and connections</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {/* Main Dashboard Cards - Equal Size */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-3">
-                {/* Today on Board */}
-                <div>
-                    <TodayOnBoardCard onConnectClick={() => console.log('Connect clicked')} />
-                </div>
+            {/* Main Dashboard Cards */}
+            <div className="p-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+                    {/* Today on Board */}
+                    <div>
+                        <TodayOnBoardCard onConnectClick={() => console.log('Connect clicked')} />
+                    </div>
 
-                {/* Who's in Your Port */}
-                <div>
-                    <WhosInPortCard />
-                </div>
+                    {/* Who's in Your Port */}
+                    <div>
+                        <WhosInPortCard />
+                    </div>
 
-                {/* New Connections Pending */}
-                <div>
-                    <ConnectionPendingCard />
+                    {/* New Connections Pending */}
+                    <div>
+                        <ConnectionPendingCard />
+                    </div>
                 </div>
             </div>
         </DashboardLayout>

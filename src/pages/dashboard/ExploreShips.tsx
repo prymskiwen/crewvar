@@ -1,9 +1,21 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useQuery, useMutation, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../../context/AuthContextFirebase";
 import logo from "../../assets/images/Home/logo.png";
 import { getProfilePhotoUrl } from "../../utils/images";
 import { DashboardLayout } from '../../layout/DashboardLayout';
+import {
+    getCruiseLines,
+    getShips,
+    getCrewMembers,
+    sendConnectionRequest,
+    getDepartments,
+    getRolesByDepartment,
+    getUserConnections,
+    getPendingConnectionRequests
+} from "../../firebase/firestore";
 
 // Custom Dropdown Component for Mobile-Friendly Selection
 interface CustomDropdownProps {
@@ -169,54 +181,155 @@ const CustomDropdown = ({
 
 export const ExploreShips = () => {
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
+    const queryClient = useQueryClient();
     const [selectedCruiseLine, setSelectedCruiseLine] = useState<string>("");
     const [selectedShip, setSelectedShip] = useState<string>("");
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
     const observerRef = useRef<HTMLDivElement>(null);
 
-    // TODO: Implement Firebase connection functionality
-    const sendConnectionRequestMutation = {
-        mutateAsync: async (data: any) => {
-            // Placeholder function
-            console.log('Send connection request:', data);
-        },
-        isLoading: false
-    };
+    // Fetch cruise lines
+    const { data: cruiseLines = [], isLoading: cruiseLinesLoading } = useQuery({
+        queryKey: ['cruiseLines'],
+        queryFn: getCruiseLines
+    });
 
-    // TODO: Implement Firebase cruise data functionality
-    const cruiseLines: any[] = [];
-    const cruiseLinesLoading = false;
-    const allShips: any[] = [];
-    const shipsLoading = false;
+    // Fetch all ships
+    const { data: allShips = [], isLoading: shipsLoading } = useQuery({
+        queryKey: ['ships'],
+        queryFn: getShips
+    });
+
+    // Fetch departments
+    const { data: departments = [] } = useQuery({
+        queryKey: ['departments'],
+        queryFn: getDepartments
+    });
+
+    // Fetch all roles for role name mapping
+    const { data: allRoles = [] } = useQuery({
+        queryKey: ['roles'],
+        queryFn: async () => {
+            const allRolesData = [];
+            for (const dept of departments) {
+                try {
+                    const roles = await getRolesByDepartment(dept.id);
+                    allRolesData.push(...roles);
+                } catch (error) {
+                    console.error(`Error fetching roles for department ${dept.id}:`, error);
+                }
+            }
+            return allRolesData;
+        },
+        enabled: departments.length > 0
+    });
+
+    // Fetch user's connections to check if already connected
+    const { data: userConnections = [] } = useQuery({
+        queryKey: ['userConnections', currentUser?.uid],
+        queryFn: () => getUserConnections(currentUser!.uid),
+        enabled: !!currentUser?.uid
+    });
+
+    // Fetch pending connection requests
+    const { data: pendingRequests = [] } = useQuery({
+        queryKey: ['pendingRequests', currentUser?.uid],
+        queryFn: () => getPendingConnectionRequests(currentUser!.uid),
+        enabled: !!currentUser?.uid
+    });
 
     // Get the cruise line ID from the selected name
     const selectedCruiseLineId = cruiseLines?.find(cl => cl.name === selectedCruiseLine)?.id || '';
-    const shipsByCruiseLine: any[] = [];
-    const shipsByCruiseLineLoading = false;
 
-    const crewData: any[] = [];
-    const crewLoading = false;
-    const isFetchingNextPage = false;
-    const hasNextPage = false;
-    const fetchNextPage = () => {
-        // Placeholder function
+    // Helper functions to get names from IDs
+    const getRoleName = (roleId: string) => {
+        if (!roleId) return 'Crew Member';
+        const role = allRoles.find(r => r.id === roleId);
+        return role ? role.name : 'Crew Member';
     };
+
+    const getDepartmentName = (departmentId: string) => {
+        if (!departmentId) return 'No Department';
+        const department = departments.find(d => d.id === departmentId);
+        return department ? department.name : departmentId;
+    };
+
+    const getShipName = (shipId: string) => {
+        if (!shipId) return 'No Ship';
+        const ship = allShips.find(s => s.id === shipId);
+        return ship ? ship.name : shipId;
+    };
+
+    // Check connection status for a member
+    const getConnectionStatus = (memberId: string) => {
+        // Check if already connected
+        const isConnected = userConnections.some(connection =>
+            connection.connectedUserId === memberId || connection.userId === memberId
+        );
+
+        if (isConnected) {
+            return 'connected';
+        }
+
+        // Check if there's a pending request
+        const hasPendingRequest = pendingRequests.some(request =>
+            request.receiverId === memberId
+        );
+
+        if (hasPendingRequest) {
+            return 'pending';
+        }
+
+        return 'none';
+    };
+
+    // Fetch ships by cruise line
+    const { data: shipsByCruiseLine = [], isLoading: shipsByCruiseLineLoading } = useQuery({
+        queryKey: ['shipsByCruiseLine', selectedCruiseLineId],
+        queryFn: () => getShips(),
+        enabled: !!selectedCruiseLineId
+    });
+
+    // Fetch crew members with infinite scroll (moved after selectedShipId is defined)
+
+    // Connection request mutation
+    const sendConnectionRequestMutation = useMutation(
+        async (params: { requesterId: string; receiverId: string; message?: string }) => {
+            return await sendConnectionRequest(params.requesterId, params.receiverId, params.message);
+        },
+        {
+            onSuccess: () => {
+                toast.success(`Connection request sent successfully!`);
+                // Refresh connections and pending requests data
+                queryClient.invalidateQueries({ queryKey: ['userConnections'] });
+                queryClient.invalidateQueries({ queryKey: ['pendingRequests'] });
+                queryClient.invalidateQueries({ queryKey: ['receivedConnectionRequests'] });
+            },
+            onError: (error: any) => {
+                console.error('Failed to send connection request:', error);
+                toast.error(error.message || 'Failed to send connection request');
+            }
+        }
+    );
 
     // Connection request handler
     const handleConnect = async (memberId: string, memberName: string) => {
+        if (!currentUser?.uid) {
+            toast.error('You must be logged in to send connection requests');
+            return;
+        }
+
         try {
             setLoadingStates(prev => ({ ...prev, [memberId]: true }));
 
             await sendConnectionRequestMutation.mutateAsync({
+                requesterId: currentUser.uid,
                 receiverId: memberId,
                 message: `Hi ${memberName}! I'd like to connect with you.`
             });
-
-            toast.success(`Connection request sent to ${memberName}!`);
         } catch (error: any) {
             console.error('Failed to send connection request:', error);
-            toast.error(error.response?.data?.error || 'Failed to send connection request');
         } finally {
             setLoadingStates(prev => ({ ...prev, [memberId]: false }));
         }
@@ -241,21 +354,32 @@ export const ExploreShips = () => {
         return [];
     }, [selectedCruiseLine, shipsByCruiseLine, allShips]);
 
+    // Get the ship ID from the selected ship name
+    const selectedShipId = availableShips?.find(ship => ship.name === selectedShip)?.id || '';
+
+    // Fetch crew members with infinite scroll
+    const {
+        data: crewData,
+        isLoading: crewLoading,
+        isFetchingNextPage,
+        hasNextPage,
+        fetchNextPage
+    } = useInfiniteQuery({
+        queryKey: ['crewMembers', selectedShipId], // Use ship ID instead of ship name
+        queryFn: ({ pageParam = 0 }) => getCrewMembers({
+            shipId: selectedShipId,
+            page: pageParam,
+            limit: 20,
+            currentUserId: currentUser?.uid
+        }),
+        getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.nextPage : undefined,
+        enabled: !!currentUser
+    });
+
     // Flatten all crew data from all pages
     const allCrew = useMemo(() => {
-        if (!crewData) return [];
-        // If crewData is already an array, return it directly
-        if (Array.isArray(crewData)) {
-            return crewData;
-        }
-        // If crewData has pages property, flatten them
-        if (crewData && typeof crewData === 'object' && 'pages' in crewData) {
-            const dataWithPages = crewData as any;
-            if (Array.isArray(dataWithPages.pages)) {
-                return dataWithPages.pages.flatMap((page: any) => page.crew || []);
-            }
-        }
-        return [];
+        if (!crewData?.pages) return [];
+        return crewData.pages.flatMap((page: any) => page.crew || []);
     }, [crewData]);
 
     // Filter crew members based on selections (client-side filtering)
@@ -263,17 +387,24 @@ export const ExploreShips = () => {
         if (!allCrew) return [];
 
         return allCrew.filter((member: any) => {
-            const matchesCruiseLine = !selectedCruiseLine || member.cruise_line_name === selectedCruiseLine;
-            const matchesShip = !selectedShip || member.ship_name === selectedShip;
+            // For cruise line filtering, we need to check if the member's ship belongs to the selected cruise line
+            let matchesCruiseLine = true;
+            if (selectedCruiseLine) {
+                // Find the member's ship and check if it belongs to the selected cruise line
+                const memberShip = allShips.find(ship => ship.id === member.currentShipId);
+                const memberCruiseLine = memberShip ? cruiseLines.find(cl => cl.id === memberShip.cruiseLineId) : null;
+                matchesCruiseLine = memberCruiseLine?.name === selectedCruiseLine;
+            }
+
+            const matchesShip = !selectedShipId || member.currentShipId === selectedShipId;
             const matchesSearch = !searchQuery ||
-                member.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                member.department_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                member.role_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                member.ship_name?.toLowerCase().includes(searchQuery.toLowerCase());
+                member.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                member.departmentId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                member.roleId?.toLowerCase().includes(searchQuery.toLowerCase());
 
             return matchesCruiseLine && matchesShip && matchesSearch;
         });
-    }, [allCrew, selectedCruiseLine, selectedShip, searchQuery]);
+    }, [allCrew, selectedCruiseLine, selectedShipId, searchQuery, allShips, cruiseLines]);
 
     // Infinite scroll observer
     useEffect(() => {
@@ -298,19 +429,6 @@ export const ExploreShips = () => {
         setSelectedCruiseLine(cruiseLineName);
         setSelectedShip(""); // Reset ship selection
     };
-
-    // Debug logging
-    console.log('ExploreShips Debug:', {
-        cruiseLines: cruiseLines?.length || 0,
-        allShips: allShips?.length || 0,
-        crewData: allCrew.length || 0,
-        crewDataFull: crewData,
-        crewLoading,
-        selectedCruiseLine,
-        selectedCruiseLineId,
-        availableShips: availableShips?.length || 0,
-        shipsByCruiseLine: shipsByCruiseLine?.length || 0
-    });
 
     return (
         <DashboardLayout>
@@ -434,8 +552,8 @@ export const ExploreShips = () => {
                                                     {/* Avatar */}
                                                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden flex-shrink-0">
                                                         <img
-                                                            src={getProfilePhotoUrl(member.profile_photo)}
-                                                            alt={member.display_name}
+                                                            src={getProfilePhotoUrl(member.profilePhoto)}
+                                                            alt={member.displayName}
                                                             className="w-full h-full object-cover"
                                                             onError={(e) => {
                                                                 // Fallback to letter avatar if image fails to load
@@ -445,7 +563,7 @@ export const ExploreShips = () => {
                                                                 if (parent) {
                                                                     parent.innerHTML = `
                                                                     <div class="w-full h-full bg-teal-500 flex items-center justify-center">
-                                                                        <span class="text-white font-bold text-sm sm:text-lg">${member.display_name.charAt(0)}</span>
+                                                                        <span class="text-white font-bold text-sm sm:text-lg">${member.displayName.charAt(0)}</span>
                                                                     </div>
                                                                 `;
                                                                 }
@@ -456,26 +574,52 @@ export const ExploreShips = () => {
                                                     {/* Member Info */}
                                                     <div className="flex-1 min-w-0">
                                                         <h3 className="text-sm sm:text-base font-semibold text-gray-900 truncate">
-                                                            {member.display_name}
+                                                            {member.displayName}
                                                         </h3>
                                                         <p className="text-xs sm:text-sm text-gray-600 truncate">
-                                                            {member.role_name || 'Friend'}
+                                                            {getRoleName(member.roleId) || 'Crew Member'}
                                                         </p>
                                                         <p className="text-xs text-gray-500 truncate">
-                                                            {member.department_name} • {member.ship_name}
+                                                            {getDepartmentName(member.departmentId)} • {getShipName(member.currentShipId)}
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 {/* Action Buttons */}
                                                 <div className="flex space-x-2 sm:flex-shrink-0">
-                                                    <button
-                                                        onClick={() => handleConnect(member.id, member.display_name)}
-                                                        disabled={loadingStates[member.id] || sendConnectionRequestMutation.isLoading}
-                                                        className="flex-1 sm:flex-none px-3 py-2 bg-[#069B93] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#058a7a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                                    >
-                                                        {loadingStates[member.id] ? 'Sending...' : 'Connect'}
-                                                    </button>
+                                                    {(() => {
+                                                        const status = getConnectionStatus(member.id);
+
+                                                        if (status === 'connected') {
+                                                            return (
+                                                                <button
+                                                                    disabled
+                                                                    className="flex-1 sm:flex-none px-3 py-2 bg-gray-400 text-white text-xs sm:text-sm font-medium rounded-lg cursor-not-allowed transition-colors"
+                                                                >
+                                                                    Connected
+                                                                </button>
+                                                            );
+                                                        } else if (status === 'pending') {
+                                                            return (
+                                                                <button
+                                                                    disabled
+                                                                    className="flex-1 sm:flex-none px-3 py-2 bg-yellow-500 text-white text-xs sm:text-sm font-medium rounded-lg cursor-not-allowed transition-colors"
+                                                                >
+                                                                    Pending
+                                                                </button>
+                                                            );
+                                                        } else {
+                                                            return (
+                                                                <button
+                                                                    onClick={() => handleConnect(member.id, member.displayName)}
+                                                                    disabled={loadingStates[member.id]}
+                                                                    className="flex-1 sm:flex-none px-3 py-2 bg-[#069B93] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#058a7a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                                >
+                                                                    {loadingStates[member.id] ? 'Sending...' : 'Connect'}
+                                                                </button>
+                                                            );
+                                                        }
+                                                    })()}
                                                     <button
                                                         onClick={() => handleViewProfile(member.id)}
                                                         className="flex-1 sm:flex-none px-3 py-2 border border-gray-300 text-gray-700 text-xs sm:text-sm rounded-lg hover:border-[#069B93] hover:text-[#069B93] hover:bg-[#069B93]/5 transition-colors font-medium"

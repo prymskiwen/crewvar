@@ -1,13 +1,26 @@
 import { useState } from "react";
 import { PrivacySettings } from "../../components/common/PrivacySettings";
 import { BlockedUsersManager } from "../../components/moderation/BlockedUsersManager";
+import { DashboardLayout } from "../../layout";
 
 export const Privacy = () => {
     const [activeTab, setActiveTab] = useState<'settings' | 'blocked'>('settings');
 
     return (
-        <div className="container">
-            <div className="min-h-screen" style={{ backgroundColor: '#B9F3DF' }}>
+        <DashboardLayout>
+            <div className="min-h-screen bg-gray-50">
+                {/* Mobile Header */}
+                <div className="bg-teal-600 text-white p-3 sm:p-4 sticky top-0 z-10">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2 sm:space-x-3">
+                            <div>
+                                <h1 className="text-base sm:text-lg font-bold">Privacy & Security</h1>
+                                <p className="text-xs text-teal-100">Manage your privacy settings and blocked users</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="container mx-auto px-4 py-8">
                     {/* Header */}
                     <div className="mb-8">
@@ -22,8 +35,8 @@ export const Privacy = () => {
                                 <button
                                     onClick={() => setActiveTab('settings')}
                                     className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'settings'
-                                            ? 'border-[#069B93] text-[#069B93]'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                        ? 'border-[#069B93] text-[#069B93]'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                         }`}
                                 >
                                     Privacy Settings
@@ -31,8 +44,8 @@ export const Privacy = () => {
                                 <button
                                     onClick={() => setActiveTab('blocked')}
                                     className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'blocked'
-                                            ? 'border-[#069B93] text-[#069B93]'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                        ? 'border-[#069B93] text-[#069B93]'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                         }`}
                                 >
                                     Blocked Users
@@ -85,6 +98,6 @@ export const Privacy = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </DashboardLayout>
     );
 };

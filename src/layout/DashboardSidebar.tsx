@@ -1,5 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContextFirebase';
+import { useQuery } from '@tanstack/react-query';
+import { getReceivedConnectionRequests } from '../firebase/firestore';
 import {
     HiLocationMarker,
     HiChat,
@@ -9,6 +11,7 @@ import {
     HiHome,
     HiHeart,
     HiSearch,
+    HiUserAdd,
 } from 'react-icons/hi';
 
 const DashboardSidebar = ({ isOpen, onToggle, setShowCheckInDialog }: {
@@ -22,6 +25,13 @@ const DashboardSidebar = ({ isOpen, onToggle, setShowCheckInDialog }: {
         currentUser.email === 'admin@crewvar.com' || (currentUser as any).isAdmin === true
     );
 
+    // Fetch pending connection requests count
+    const { data: pendingRequests = [] } = useQuery({
+        queryKey: ['receivedConnectionRequests', currentUser?.uid],
+        queryFn: () => getReceivedConnectionRequests(currentUser!.uid),
+        enabled: !!currentUser?.uid
+    });
+
     const sidebarClasses = `
         fixed top-0 left-0 h-full bg-gradient-to-b from-[#069B93] to-[#058a7a] text-white z-[9999] transform transition-transform duration-300 ease-in-out
         lg:translate-x-0 lg:static lg:z-auto
@@ -34,6 +44,7 @@ const DashboardSidebar = ({ isOpen, onToggle, setShowCheckInDialog }: {
         { name: 'Dashboard', icon: HiHome, path: '/dashboard' },
         { name: 'Update Location', icon: HiLocationMarker, path: '/ship-location' },
         { name: 'Discover Crew', icon: HiSearch, path: '/explore-ships' },
+        { name: 'Connection Requests', icon: HiUserAdd, path: '/connections/pending' },
         { name: 'Messages', icon: HiChat, path: '/chat' },
         { name: 'Notifications', icon: HiBell, path: '/all-notifications' },
         { name: 'Favorites', icon: HiHeart, path: '/favorites' },
@@ -119,7 +130,15 @@ const DashboardSidebar = ({ isOpen, onToggle, setShowCheckInDialog }: {
                                         }
                                     }}
                                 >
-                                    <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`} />
+                                    <div className="relative">
+                                        <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`} />
+                                        {/* Show badge for Connection Requests if there are pending requests */}
+                                        {item.name === 'Connection Requests' && pendingRequests.length > 0 && (
+                                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                                                {pendingRequests.length}
+                                            </span>
+                                        )}
+                                    </div>
                                     <span className="font-medium">{item.name}</span>
                                 </Link>
                             );

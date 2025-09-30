@@ -215,8 +215,92 @@ export const sendConnectionRequest = async (
         };
 
         const requestRef = await addDoc(collection(db, 'connectionRequests'), requestData);
+
+        // Create notification for the receiver
+        await createNotification({
+            userId: receiverId,
+            type: 'connection_request',
+            title: 'New Connection Request',
+            message: message || 'Someone wants to connect with you!',
+            data: {
+                requesterId,
+                requestId: requestRef.id
+            },
+            isRead: false
+        });
+
         return requestRef.id;
     } catch (error) {
+        console.error('Error creating connection request:', error);
+        throw error;
+    }
+};
+
+// Get user's connections
+export const getUserConnections = async (userId: string): Promise<any[]> => {
+    try {
+        const connectionsRef = collection(db, 'connections');
+        const q = query(
+            connectionsRef,
+            where('userId', '==', userId)
+        );
+        const snapshot = await getDocs(q);
+
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+    } catch (error) {
+        console.error('Error fetching user connections:', error);
+        throw error;
+    }
+};
+
+// Get pending connection requests for a user
+export const getPendingConnectionRequests = async (userId: string): Promise<any[]> => {
+    try {
+        const requestsRef = collection(db, 'connectionRequests');
+        const q = query(
+            requestsRef,
+            where('requesterId', '==', userId),
+            where('status', '==', 'pending')
+        );
+        const snapshot = await getDocs(q);
+
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+    } catch (error) {
+        console.error('Error fetching pending connection requests:', error);
+        throw error;
+    }
+};
+
+// Create a notification for a user
+export const createNotification = async (notificationData: {
+    userId: string;
+    type: string;
+    title: string;
+    message: string;
+    data?: any;
+    isRead?: boolean;
+}): Promise<string> => {
+    try {
+        const notificationRef = await addDoc(collection(db, 'notifications'), {
+            userId: notificationData.userId,
+            type: notificationData.type,
+            title: notificationData.title,
+            message: notificationData.message,
+            data: notificationData.data || {},
+            isRead: notificationData.isRead || false,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+
+        return notificationRef.id;
+    } catch (error) {
+        console.error('Error creating notification:', error);
         throw error;
     }
 };
@@ -237,14 +321,89 @@ export const respondToConnectionRequest = async (
             const requestDoc = await getDoc(requestRef);
             if (requestDoc.exists()) {
                 const requestData = requestDoc.data();
-                await addDoc(collection(db, 'connections'), {
-                    user1Id: requestData.requesterId,
-                    user2Id: requestData.receiverId,
-                    createdAt: serverTimestamp()
+                const { requesterId, receiverId } = requestData;
+
+                // Create connections for both users
+                const connectionsRef = collection(db, 'connections');
+
+                // Create connection for requester
+                await addDoc(connectionsRef, {
+                    userId: requesterId,
+                    connectedUserId: receiverId,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+
+                // Create connection for receiver
+                await addDoc(connectionsRef, {
+                    userId: receiverId,
+                    connectedUserId: requesterId,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+
+                // Create notification for the requester
+                await createNotification({
+                    userId: requesterId,
+                    type: 'connection_accepted',
+                    title: 'Connection Request Accepted',
+                    message: 'Your connection request has been accepted!',
+                    data: {
+                        receiverId,
+                        requestId
+                    },
+                    isRead: false
+                });
+            }
+        } else {
+            // Create notification for declined request
+            const requestDoc = await getDoc(requestRef);
+            if (requestDoc.exists()) {
+                const { requesterId } = requestDoc.data();
+
+                await createNotification({
+                    userId: requesterId,
+                    type: 'connection_declined',
+                    title: 'Connection Request Declined',
+                    message: 'Your connection request was declined.',
+                    data: {
+                        requestId
+                    },
+                    isRead: false
                 });
             }
         }
     } catch (error) {
+        throw error;
+    }
+};
+
+// Get connection requests received by a user
+export const getReceivedConnectionRequests = async (userId: string): Promise<any[]> => {
+    try {
+        const requestsRef = collection(db, 'connectionRequests');
+        const q = query(
+            requestsRef,
+            where('receiverId', '==', userId),
+            where('status', '==', 'pending')
+            // Temporarily removed orderBy to avoid index requirement while building
+        );
+        const snapshot = await getDocs(q);
+
+        // Sort in memory as temporary workaround
+        const results = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        // Sort by createdAt descending in memory
+        return results.sort((a, b) => {
+            const aTime = (a as any).createdAt?.seconds || 0;
+            const bTime = (b as any).createdAt?.seconds || 0;
+            return bTime - aTime;
+        });
+    } catch (error) {
+        console.error('Error fetching received connection requests:', error);
         throw error;
     }
 };
@@ -279,6 +438,18 @@ export const markNotificationAsRead = async (notificationId: string): Promise<vo
         throw error;
     }
 };
+
+// Delete notification
+export const deleteNotification = async (notificationId: string): Promise<void> => {
+    try {
+        const notificationRef = doc(db, 'notifications', notificationId);
+        await deleteDoc(notificationRef);
+    } catch (error) {
+        console.error('Error deleting notification:', error);
+        throw error;
+    }
+};
+
 
 export const getNotificationsForUser = async (
     userId: string,
@@ -1189,6 +1360,88 @@ export const getSupportStats = async (): Promise<SupportStats> => {
         };
     } catch (error) {
         console.error('Error fetching support stats:', error);
+        throw error;
+    }
+};
+
+// Get crew members with pagination and filtering
+export const getCrewMembers = async (params: {
+    cruiseLineId?: string;
+    shipId?: string;
+    page?: number;
+    limit?: number;
+    currentUserId?: string;
+} = {}): Promise<{
+    crew: any[];
+    hasNextPage: boolean;
+    nextPage?: number;
+    total: number;
+}> => {
+    try {
+        const { cruiseLineId, shipId, page = 0, limit: pageLimit = 20 } = params;
+
+        console.log('getCrewMembers called with params:', params);
+
+        let constraints: any[] = [];
+
+        // For now, let's fetch all users and filter client-side to avoid index requirements
+        // This is simpler and works without needing composite indexes
+        constraints.push(orderBy('displayName'));
+
+        // Note: Admin filtering is done client-side to avoid index requirements
+        // TODO: Re-enable database-level filtering once index is built
+        // constraints.push(where('isAdmin', '==', false));
+
+        constraints.push(limit(pageLimit + 1)); // Get one extra to check if there are more pages
+
+        console.log('Query constraints:', constraints);
+
+        const q = query(collection(db, 'users'), ...constraints);
+        const snapshot = await getDocs(q);
+        const docs = snapshot.docs;
+
+        console.log('Query returned', docs.length, 'documents');
+
+        const hasNextPage = docs.length > pageLimit;
+        let crew = docs.slice(0, pageLimit).map(doc => {
+            const data = doc.data();
+            console.log('Crew member data:', { id: doc.id, displayName: data.displayName, currentShipId: data.currentShipId });
+            return {
+                id: doc.id,
+                ...data
+            };
+        });
+
+        // Apply client-side filtering for ship
+        if (shipId) {
+            crew = crew.filter(member => (member as any).currentShipId === shipId);
+        }
+
+        crew = crew.filter(member => !(member as any).isAdmin);
+
+        // Exclude current user from crew members list
+        if (params.currentUserId) {
+            const beforeSelfFilter = crew.length;
+            crew = crew.filter(member => member.id !== params.currentUserId);
+            const afterSelfFilter = crew.length;
+            console.log(`Self filtering: ${beforeSelfFilter} -> ${afterSelfFilter} (excluded ${beforeSelfFilter - afterSelfFilter} self)`);
+        }
+        // If cruiseLineId filter is provided, filter the results client-side
+        let filteredCrew = crew;
+        if (cruiseLineId) {
+            // We'll need to get the ship data to filter by cruise line
+            // For now, return all crew and let the client handle the filtering
+            console.log('Cruise line filtering will be handled client-side');
+        }
+
+        return {
+            crew: filteredCrew,
+            hasNextPage,
+            nextPage: hasNextPage ? page + 1 : undefined,
+            total: docs.length
+        };
+    } catch (error) {
+        console.error('Error fetching crew members:', error);
         throw error;
     }
 };

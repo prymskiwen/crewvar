@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContextFirebase';
+import { getNotifications, getReceivedConnectionRequests } from '../firebase/firestore';
 import {
     HiBell,
     HiHome,
@@ -18,6 +20,23 @@ const AppBar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
     const location = useLocation();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
+
+    // Fetch notifications count
+    const { data: notifications = [] } = useQuery({
+        queryKey: ['notifications', currentUser?.uid],
+        queryFn: () => getNotifications(currentUser!.uid),
+        enabled: !!currentUser?.uid
+    });
+
+    // Fetch connection requests count
+    const { data: connectionRequests = [] } = useQuery({
+        queryKey: ['receivedConnectionRequests', currentUser?.uid],
+        queryFn: () => getReceivedConnectionRequests(currentUser!.uid),
+        enabled: !!currentUser?.uid
+    });
+
+    const unreadNotifications = notifications.filter((n: any) => !n.isRead).length;
+    const totalNotificationCount = unreadNotifications + connectionRequests.length;
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -82,10 +101,17 @@ const AppBar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                     {/* Right side - User actions */}
                     <div className="flex items-center space-x-3">
                         {/* Notifications */}
-                        <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
+                        <button
+                            onClick={() => navigate('/all-notifications')}
+                            className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+                        >
                             <HiBell className="w-5 h-5 text-gray-600" />
                             {/* Notification badge */}
-                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                            {totalNotificationCount > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                                    {totalNotificationCount > 99 ? '99+' : totalNotificationCount}
+                                </span>
+                            )}
                         </button>
 
                         {/* User Profile Dropdown */}
@@ -132,6 +158,17 @@ const AppBar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                                         <HiHome className="w-4 h-4 mr-3" />
                                         Dashboard
                                     </Link>
+
+                                    {connectionRequests.length > 0 && (
+                                        <Link
+                                            to="/connections/pending"
+                                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                            onClick={() => setIsProfileOpen(false)}
+                                        >
+                                            <HiBell className="w-4 h-4 mr-3" />
+                                            Connection Requests ({connectionRequests.length})
+                                        </Link>
+                                    )}
 
                                     <div className="border-t border-gray-100 my-1"></div>
 

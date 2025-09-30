@@ -27,9 +27,9 @@ export const ProfilePhotoUpload = ({
     const { currentUser } = useAuth();
 
     const sizeClasses = {
-        small: 'w-16 h-16',
-        medium: 'w-24 h-24',
-        large: 'w-24 h-24' // Default large size
+        small: 'w-20 h-20',
+        medium: 'w-28 h-28',
+        large: 'w-32 h-32' // Increased large size
     };
 
     const handleFileSelect = useCallback(async (file: File) => {
@@ -126,7 +126,7 @@ export const ProfilePhotoUpload = ({
     console.log('Display photo:', { preview, currentPhoto, displayPhoto });
 
     const containerClasses = className || sizeClasses[size];
-    const borderClasses = className ? 'border-0' : 'border-2 border-dashed';
+    const borderClasses = className ? 'border-0' : 'border-2 border-solid';
 
     return (
         <div>
@@ -137,8 +137,8 @@ export const ProfilePhotoUpload = ({
                     cursor-pointer transition-all duration-200
                     flex items-center justify-center overflow-hidden
                     ${isDragOver
-                        ? 'border-[#069B93] bg-[#069B93]/10'
-                        : className ? '' : 'border-gray-300 hover:border-[#069B93] hover:bg-gray-50'
+                        ? 'border-teal-500 bg-teal-50'
+                        : className ? '' : 'border-teal-300 hover:border-teal-500 hover:bg-teal-50'
                     }
                     ${isUploading ? 'opacity-50 pointer-events-none' : ''}
                 `}
@@ -160,24 +160,24 @@ export const ProfilePhotoUpload = ({
                         }}
                     />
                 ) : (
-                    <div className="text-center">
-                        <svg className="w-8 h-8 text-gray-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="text-center px-2">
+                        <svg className="w-6 h-6 text-teal-400 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         {showInstructions && (
                             <>
-                                <p className="text-xs text-gray-500 font-medium">
+                                <p className="text-xs text-teal-600 font-medium leading-tight">
                                     {size === 'large' ? 'Click to upload' : 'Upload'}
                                 </p>
                                 {size === 'large' && (
-                                    <p className="text-xs text-gray-400 mt-1">
+                                    <p className="text-xs text-teal-500 mt-1 leading-tight">
                                         Profile Photo
                                     </p>
                                 )}
                             </>
                         )}
                         {!showInstructions && (
-                            <p className="text-xs text-white font-medium mt-1">
+                            <p className="text-xs text-teal-600 font-medium mt-1 leading-tight">
                                 Click to upload
                             </p>
                         )}
@@ -217,10 +217,10 @@ export const ProfilePhotoUpload = ({
             {/* Upload instructions - only show if enabled */}
             {showInstructions && (
                 <div className="mt-2 text-center">
-                    <p className="text-xs text-gray-500 font-medium">
+                    <p className="text-xs text-teal-600 font-medium">
                         Drag & drop or click to upload
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-teal-500">
                         Max 10MB • JPG, PNG, WebP supported
                     </p>
                     {shouldShowStorageWarning() && (

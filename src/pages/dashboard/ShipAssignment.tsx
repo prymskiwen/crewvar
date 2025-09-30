@@ -1,40 +1,49 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ShipSelection } from "../../components/common";
 import { DashboardLayout } from '../../layout/DashboardLayout';
+import { useAuth } from "../../context/AuthContextFirebase";
+import { updateUserShipAssignment, getShips, getCruiseLines } from "../../firebase/firestore";
 
 export const ShipAssignment = () => {
     const navigate = useNavigate();
+    const { currentUser, userProfile } = useAuth();
+    const queryClient = useQueryClient();
     const [selectedCruiseLineId, setSelectedCruiseLineId] = useState<string>("");
     const [selectedShipId, setSelectedShipId] = useState<string>("");
     const [isLoading, setIsLoading] = useState(false);
 
-    // TODO: Implement Firebase ship assignment functionality
-    const updateShipAssignmentMutation = {
-        mutateAsync: async (data: any) => {
-            // Placeholder function
-            console.log('Update ship assignment:', data);
+    // Fetch ships
+    const { data: allShips = [] } = useQuery({
+        queryKey: ['ships'],
+        queryFn: getShips
+    });
+
+    // Fetch cruise lines
+    const { data: cruiseLines = [] } = useQuery({
+        queryKey: ['cruiseLines'],
+        queryFn: getCruiseLines
+    });
+
+    // Update ship assignment mutation
+    const updateShipAssignmentMutation = useMutation({
+        mutationFn: async (data: { currentShipId: string }) => {
+            if (!currentUser?.uid) throw new Error('User not authenticated');
+            await updateUserShipAssignment(currentUser.uid, data.currentShipId);
         },
-        isLoading: false
-    };
-    const { data: userProfile } = useQuery({
-        queryKey: ['user', 'profile'],
-        queryFn: async () => {
-            // TODO: Implement Firebase user profile fetch
-            return null;
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['user', 'profile'] });
         }
-    }) as { data: any };
-    const allShips: any[] = [];
-    const cruiseLines: any[] = [];
+    });
 
     // Initialize with user's current ship
     useEffect(() => {
-        if (userProfile?.user?.current_ship_id) {
-            const currentShip = allShips?.find(ship => ship.id === userProfile.user.current_ship_id);
+        if (userProfile?.currentShipId) {
+            const currentShip = allShips?.find(ship => ship.id === userProfile.currentShipId);
             if (currentShip) {
-                setSelectedCruiseLineId(currentShip.cruise_line_id || '');
+                setSelectedCruiseLineId(currentShip.cruiseLineId || '');
                 setSelectedShipId(currentShip.id);
             }
         }
@@ -69,11 +78,25 @@ export const ShipAssignment = () => {
                 localStorage.setItem('lastShipConfirmation', today);
             }
 
-            toast.success('Ship assignment updated successfully!');
+            toast.success('Ship assignment updated successfully!', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: false,
+            });
             navigate('/dashboard');
         } catch (error) {
             console.error('Failed to update ship assignment:', error);
-            toast.error('Failed to update ship assignment. Please try again.');
+            toast.error('Failed to update ship assignment. Please try again.', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: false,
+            });
         } finally {
             setIsLoading(false);
         }
@@ -109,7 +132,7 @@ export const ShipAssignment = () => {
                 {/* Content */}
                 <div className="p-4 sm:p-6">
                     {/* Current Assignment Info */}
-                    {userProfile?.user?.current_ship_id && (
+                    {userProfile?.currentShipId && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                             <div className="flex items-start space-x-3">
                                 <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -119,8 +142,8 @@ export const ShipAssignment = () => {
                                     <h4 className="font-medium text-blue-900">Current Assignment</h4>
                                     <p className="text-sm text-blue-700 mt-1">
                                         {(() => {
-                                            const currentShip = allShips?.find(ship => ship.id === userProfile.user.current_ship_id);
-                                            const currentCruiseLine = cruiseLines?.find(cl => cl.id === currentShip?.cruise_line_id);
+                                            const currentShip = allShips?.find(ship => ship.id === userProfile.currentShipId);
+                                            const currentCruiseLine = cruiseLines?.find(cl => cl.id === currentShip?.cruiseLineId);
                                             return currentShip && currentCruiseLine
                                                 ? `${currentShip.name || 'Unknown Ship'} • ${currentCruiseLine.name || 'Unknown Cruise Line'}`
                                                 : 'Loading...';

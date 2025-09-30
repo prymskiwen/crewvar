@@ -4,6 +4,8 @@ import DashboardSidebar from './DashboardSidebar';
 import Footer from './Footer';
 import { useAuth } from '../context/AuthContextFirebase';
 import { QuickCheckInDialog } from '../components/common/QuickCheckInDialog';
+import { useQuery } from '@tanstack/react-query';
+import { getShips } from '../firebase/firestore';
 
 interface ShipAssignment {
     shipId: string;
@@ -22,6 +24,12 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showCheckInDialog, setShowCheckInDialog] = useState(false);
     const [currentShip, setCurrentShip] = useState<ShipAssignment | null>(null);
+
+    // Fetch ships data
+    const { data: ships = [] } = useQuery({
+        queryKey: ['ships'],
+        queryFn: getShips
+    });
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
@@ -55,12 +63,27 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             setShowCheckInDialog(false);
         }
 
-        // Load saved ship assignment if available
-        const savedShip = localStorage.getItem('currentShipAssignment');
-        if (savedShip) {
-            setCurrentShip(JSON.parse(savedShip));
+        // Load current ship assignment from Firebase or localStorage
+        if (userProfile.currentShipId && ships.length > 0) {
+            const currentShipData = ships.find(ship => ship.id === userProfile.currentShipId);
+            if (currentShipData) {
+                const today = new Date().toISOString().split('T')[0];
+                setCurrentShip({
+                    shipId: currentShipData.id,
+                    shipName: currentShipData.name,
+                    port: "Current Port",
+                    date: today,
+                    isConfirmed: true
+                });
+            }
+        } else {
+            // Fallback to localStorage
+            const savedShip = localStorage.getItem('currentShipAssignment');
+            if (savedShip) {
+                setCurrentShip(JSON.parse(savedShip));
+            }
         }
-    }, [userProfile]);
+    }, [userProfile, ships]);
 
     // TODO: Implement Firebase ship assignment update function when needed
     // This will be used for confirming ship assignments in the future

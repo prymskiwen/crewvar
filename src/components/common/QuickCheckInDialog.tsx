@@ -1,4 +1,6 @@
 import React from 'react';
+import { useAuth } from '../../context/AuthContextFirebase';
+import { toast } from 'react-toastify';
 
 interface ShipAssignment {
     shipId: string;
@@ -19,6 +21,37 @@ export const QuickCheckInDialog: React.FC<QuickCheckInDialogProps> = ({
     onClose,
     currentShip
 }) => {
+    const { currentUser } = useAuth();
+
+    const handleUpdateShip = async () => {
+        if (!currentUser?.uid) {
+            toast.error('User not authenticated', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: false,
+            });
+            return;
+        }
+
+        try {
+            // Navigate to ship assignment page
+            window.location.href = '/ship-assignment';
+        } catch (error) {
+            console.error('Error navigating to ship assignment:', error);
+            toast.error('Failed to navigate to ship assignment page', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: false,
+            });
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -70,10 +103,7 @@ export const QuickCheckInDialog: React.FC<QuickCheckInDialogProps> = ({
                         Skip for Now
                     </button>
                     <button
-                        onClick={() => {
-                            // Navigate to ship assignment page
-                            window.location.href = '/ship-assignment';
-                        }}
+                        onClick={handleUpdateShip}
                         className="flex-1 px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors"
                     >
                         Update Ship

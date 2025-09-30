@@ -929,6 +929,76 @@ export const updateUserStatus = async (userId: string, updates: {
     }
 };
 
+// Update user's current ship assignment
+export const updateUserShipAssignment = async (userId: string, shipId: string) => {
+    try {
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, {
+            currentShipId: shipId,
+            updatedAt: serverTimestamp()
+        });
+    } catch (error) {
+        console.error('Error updating ship assignment:', error);
+        throw error;
+    }
+};
+
+// Privacy settings functions
+export const getPrivacySettings = async (userId: string) => {
+    try {
+        const userRef = doc(db, 'users', userId);
+        const userDoc = await getDoc(userRef);
+
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            return {
+                userId: userData.id,
+                isVerified: userData.isEmailVerified || false,
+                isActive: userData.isActive !== false,
+                showOnlyTodayShip: userData.showOnlyTodayShip || false,
+                allowFutureShipVisibility: userData.allowFutureShipVisibility !== false,
+                declineRequestsSilently: userData.declineRequestsSilently || false,
+                blockEnforcesInvisibility: userData.blockEnforcesInvisibility !== false,
+                lastActiveDate: userData.lastActiveDate || new Date().toISOString().split('T')[0],
+                verificationStatus: userData.isEmailVerified ? 'verified' as const : 'pending' as const
+            };
+        }
+
+        // Return default settings if user doesn't exist
+        return {
+            userId,
+            isVerified: false,
+            isActive: true,
+            showOnlyTodayShip: false,
+            allowFutureShipVisibility: true,
+            declineRequestsSilently: false,
+            blockEnforcesInvisibility: false,
+            lastActiveDate: new Date().toISOString().split('T')[0],
+            verificationStatus: 'pending' as const
+        };
+    } catch (error) {
+        console.error('Error fetching privacy settings:', error);
+        throw error;
+    }
+};
+
+export const updatePrivacySettings = async (userId: string, settings: any) => {
+    try {
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, {
+            showOnlyTodayShip: settings.showOnlyTodayShip,
+            allowFutureShipVisibility: settings.allowFutureShipVisibility,
+            declineRequestsSilently: settings.declineRequestsSilently,
+            blockEnforcesInvisibility: settings.blockEnforcesInvisibility,
+            lastActiveDate: settings.lastActiveDate,
+            updatedAt: serverTimestamp()
+        });
+    } catch (error) {
+        console.error('Error updating privacy settings:', error);
+        throw error;
+    }
+};
+
 // Get roles by department
 export const getRolesByDepartment = async (departmentId: string): Promise<Role[]> => {
     try {

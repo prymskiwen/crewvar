@@ -1,11 +1,57 @@
-import { useState } from "react";
-// TODO: Implement Firebase privacy functionality
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../../context/AuthContextFirebase";
+import { getPrivacySettings, updatePrivacySettings } from "../../firebase/firestore";
+import { toast } from "react-toastify";
 import { IPrivacySettings } from "../../types/privacy";
 
 export const PrivacySettings = () => {
-    // TODO: Implement Firebase privacy functionality
-    const privacySettings: IPrivacySettings = {
-        userId: 'current-user-id', // TODO: Get from auth context
+    const { currentUser } = useAuth();
+    const queryClient = useQueryClient();
+    const [isEditing, setIsEditing] = useState(false);
+
+    // Fetch privacy settings
+    const { data: privacySettings, isLoading: settingsLoading } = useQuery({
+        queryKey: ['privacy-settings', currentUser?.uid],
+        queryFn: async () => {
+            if (!currentUser?.uid) return null;
+            return await getPrivacySettings(currentUser.uid);
+        },
+        enabled: !!currentUser?.uid
+    });
+
+    // Update privacy settings mutation
+    const updatePrivacySettingsMutation = useMutation({
+        mutationFn: async (settings: IPrivacySettings) => {
+            if (!currentUser?.uid) throw new Error('User not authenticated');
+            await updatePrivacySettings(currentUser.uid, settings);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['privacy-settings'] });
+            toast.success('Privacy settings updated successfully!', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: false,
+            });
+        },
+        onError: (error: any) => {
+            console.error('Failed to update privacy settings:', error);
+            toast.error('Failed to update privacy settings. Please try again.', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: false,
+            });
+        }
+    });
+
+    const [settings, setSettings] = useState<IPrivacySettings>({
+        userId: currentUser?.uid || '',
         isVerified: false,
         isActive: true,
         showOnlyTodayShip: false,
@@ -13,34 +59,43 @@ export const PrivacySettings = () => {
         declineRequestsSilently: false,
         blockEnforcesInvisibility: false,
         lastActiveDate: new Date().toISOString().split('T')[0],
-        verificationStatus: 'pending'
-    };
-    const updatePrivacySettings = (settings: IPrivacySettings) => {
-        // Placeholder function
-        console.log('Updating privacy settings:', settings);
-    };
-    const [isEditing, setIsEditing] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [settings, setSettings] = useState<IPrivacySettings>(privacySettings);
+        verificationStatus: 'pending' as const
+    });
+
+    // Update settings when data is loaded
+    useEffect(() => {
+        if (privacySettings) {
+            setSettings(privacySettings);
+        }
+    }, [privacySettings]);
 
     const handleSave = async () => {
-        setIsLoading(true);
-
         try {
-            await updatePrivacySettings(settings);
+            await updatePrivacySettingsMutation.mutateAsync(settings);
             setIsEditing(false);
-            console.log('Privacy settings saved');
         } catch (error) {
             console.error('Failed to save privacy settings:', error);
-        } finally {
-            setIsLoading(false);
         }
     };
 
     const handleCancel = () => {
-        setSettings(privacySettings);
+        if (privacySettings) {
+            setSettings(privacySettings);
+        }
         setIsEditing(false);
     };
+
+    // Show loading state while settings are being fetched
+    if (settingsLoading) {
+        return (
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center justify-center py-8">
+                    <div className="w-8 h-8 border-4 border-[#069B93] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading privacy settings...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -225,10 +280,10 @@ export const PrivacySettings = () => {
                     <div className="flex space-x-4 pt-6 border-t border-gray-200">
                         <button
                             onClick={handleSave}
-                            disabled={isLoading}
+                            disabled={updatePrivacySettingsMutation.isLoading}
                             className="flex-1 px-6 py-3 text-white bg-[#069B93] hover:bg-[#058a7a] rounded-lg font-medium transition-colors disabled:opacity-50"
                         >
-                            {isLoading ? 'Saving...' : 'Save Settings'}
+                            {updatePrivacySettingsMutation.isLoading ? 'Saving...' : 'Save Settings'}
                         </button>
                         <button
                             onClick={handleCancel}

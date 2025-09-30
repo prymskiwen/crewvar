@@ -16,6 +16,7 @@ interface SocialMediaLinksProps {
     onSave?: (data: SocialMediaData) => void;
     onCancel?: () => void;
     className?: string;
+    showButtons?: boolean;
 }
 
 const socialMediaValidationSchema = yup.object({
@@ -26,11 +27,12 @@ const socialMediaValidationSchema = yup.object({
     website: yup.string().url("Please enter a valid website URL").optional()
 }) as yup.ObjectSchema<SocialMediaData>;
 
-export const SocialMediaLinks = ({ 
-    initialData = {}, 
-    onSave, 
+export const SocialMediaLinks = ({
+    initialData = {},
+    onSave,
     onCancel,
-    className = ""
+    className = "",
+    showButtons = true
 }: SocialMediaLinksProps) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,13 +43,13 @@ export const SocialMediaLinks = ({
 
     const onSubmit = async (data: SocialMediaData) => {
         setIsSubmitting(true);
-        
+
         try {
             // Clean up empty strings
             const cleanedData = Object.fromEntries(
                 Object.entries(data).filter(([_, value]) => value && value.trim() !== '')
             );
-            
+
             onSave?.(cleanedData);
         } catch (error) {
             console.error('Failed to save social media links:', error);
@@ -117,7 +119,7 @@ export const SocialMediaLinks = ({
                                 )}
                             </div>
                         </label>
-                        
+
                         <div className="relative">
                             <input
                                 {...register(field.name)}
@@ -130,7 +132,7 @@ export const SocialMediaLinks = ({
                                 <span className="text-white text-xs">{field.icon}</span>
                             </div>
                         </div>
-                        
+
                         {errors[field.name] && (
                             <p className="text-red-500 text-sm mt-1">{errors[field.name]?.message}</p>
                         )}
@@ -146,7 +148,7 @@ export const SocialMediaLinks = ({
                         <div>
                             <h4 className="font-medium text-blue-900">Privacy & Safety</h4>
                             <p className="text-sm text-blue-700 mt-1">
-                                Social media links will only be visible if connection is approved. Only share links you're comfortable with others seeing. 
+                                Social media links will only be visible if connection is approved. Only share links you're comfortable with others seeing.
                                 You can update or remove them anytime.
                             </p>
                         </div>
@@ -154,24 +156,26 @@ export const SocialMediaLinks = ({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex space-x-4 pt-4">
-                    {onCancel && (
+                {showButtons && (
+                    <div className="flex space-x-4 pt-4">
+                        {onCancel && (
+                            <button
+                                type="button"
+                                onClick={onCancel}
+                                className="flex-1 px-4 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        )}
                         <button
-                            type="button"
-                            onClick={onCancel}
-                            className="flex-1 px-4 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium transition-colors"
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="flex-1 px-4 py-2 text-white bg-[#069B93] hover:bg-[#058a7a] rounded-lg font-medium transition-colors disabled:opacity-50"
                         >
-                            Cancel
+                            {isSubmitting ? 'Updating...' : 'Update'}
                         </button>
-                    )}
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="flex-1 px-4 py-2 text-white bg-[#069B93] hover:bg-[#058a7a] rounded-lg font-medium transition-colors disabled:opacity-50"
-                    >
-                        {isSubmitting ? 'Updating...' : 'Update'}
-                    </button>
-                </div>
+                    </div>
+                )}
             </form>
         </div>
     );

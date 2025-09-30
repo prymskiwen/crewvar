@@ -181,6 +181,8 @@ export interface ProfileEditProps {
     onCancel: () => void;
     isLoading?: boolean;
     initialData?: any;
+    departments?: any[];
+    roles?: any[];
     className?: string;
 }
 

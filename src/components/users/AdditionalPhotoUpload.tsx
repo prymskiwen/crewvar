@@ -1,4 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
+import { uploadAdditionalPhoto, deleteFile } from '../../firebase/storage';
+import { useAuth } from '../../context/AuthContextFirebase';
+import { Button } from '../ui';
 
 interface AdditionalPhotoUploadProps {
     currentPhoto?: string;
@@ -17,24 +20,49 @@ export const AdditionalPhotoUpload = ({
 }: AdditionalPhotoUploadProps) => {
     const [isDragOver, setIsDragOver] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { currentUser } = useAuth();
 
-    // TODO: Implement Firebase photo upload functionality
-    const uploadPhoto = async (data: any, callbacks: any) => {
-        // Placeholder function
-        console.log('Upload photo:', data);
-        // Simulate success
-        setTimeout(() => {
-            callbacks.onSuccess({ fileUrl: 'placeholder-url' });
-        }, 1000);
+    const uploadPhoto = async (file: File) => {
+        if (!currentUser?.uid) {
+            throw new Error('User not authenticated');
+        }
+
+        setIsUploading(true);
+        setError(null);
+
+        try {
+            const photoUrl = await uploadAdditionalPhoto(file, currentUser.uid, index);
+            onPhotoChange(photoUrl);
+            return photoUrl;
+        } catch (error: any) {
+            setError(error.message || 'Failed to upload photo');
+            throw error;
+        } finally {
+            setIsUploading(false);
+        }
     };
-    const isUploading = false;
-    const error = null;
-    const deletePhoto = async (data: any) => {
-        // Placeholder function
-        console.log('Delete photo:', data);
+
+    const deletePhoto = async () => {
+        if (!currentPhoto) return;
+
+        setIsDeleting(true);
+        setError(null);
+
+        try {
+            // Delete from Firebase Storage
+            await deleteFile(currentPhoto);
+            onPhotoDelete();
+        } catch (error: any) {
+            setError(error.message || 'Failed to delete photo');
+            throw error;
+        } finally {
+            setIsDeleting(false);
+        }
     };
-    const isDeleting = false;
 
     const handleFileSelect = useCallback(async (file: File) => {
         // Validate file type
@@ -55,29 +83,26 @@ export const AdditionalPhotoUpload = ({
         setPreview(previewUrl);
 
         // Upload file with specific slot
-        uploadPhoto({ file, photoSlot: index + 1 }, {
-            onSuccess: (response: any) => {
-                onPhotoChange(response.fileUrl);
-                // Clean up preview URL
-                URL.revokeObjectURL(previewUrl);
-                setPreview(null);
-            },
-            onError: (error: any) => {
-                console.error('Upload error:', error);
-                // Clean up preview on error
-                URL.revokeObjectURL(previewUrl);
-                setPreview(null);
-            }
-        });
+        try {
+            await uploadPhoto(file);
+            // Clean up preview URL
+            URL.revokeObjectURL(previewUrl);
+            setPreview(null);
+        } catch (error) {
+            console.error('Upload error:', error);
+            // Clean up preview on error
+            URL.revokeObjectURL(previewUrl);
+            setPreview(null);
+        }
     }, [uploadPhoto, onPhotoChange]);
 
-    const handleDelete = useCallback(() => {
-        deletePhoto({
-            photoType: 'additional',
-            photoSlot: (index + 1).toString()
-        });
-        onPhotoDelete();
-    }, [deletePhoto, index, onPhotoDelete]);
+    const handleDelete = useCallback(async () => {
+        try {
+            await deletePhoto();
+        } catch (error) {
+            console.error('Delete error:', error);
+        }
+    }, [deletePhoto]);
 
     const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -166,16 +191,18 @@ export const AdditionalPhotoUpload = ({
 
             {/* Delete button */}
             {displayPhoto && !isLoading && (
-                <button
+                <Button
                     onClick={(e) => {
                         e.stopPropagation();
                         handleDelete();
                     }}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs"
                     title="Delete photo"
                 >
                     ×
-                </button>
+                </Button>
             )}
 
             {/* Error message */}

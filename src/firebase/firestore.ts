@@ -390,14 +390,89 @@ export const getReceivedConnectionRequests = async (userId: string): Promise<any
         );
         const snapshot = await getDocs(q);
 
-        // Sort in memory as temporary workaround
-        const results = snapshot.docs.map(doc => ({
+        // Get basic request data
+        const requests = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
-        }));
+        })) as any[];
+
+        // Helper functions to get names
+        const getDepartmentName = async (departmentId: string) => {
+            try {
+                const departmentDoc = await getDoc(doc(db, 'departments', departmentId));
+                return departmentDoc.exists() ? departmentDoc.data().name : 'Unknown Department';
+            } catch (error) {
+                console.error('Error fetching department name:', error);
+                return 'Unknown Department';
+            }
+        };
+
+        const getRoleName = async (roleId: string) => {
+            try {
+                const roleDoc = await getDoc(doc(db, 'roles', roleId));
+                return roleDoc.exists() ? roleDoc.data().name : 'Unknown Role';
+            } catch (error) {
+                console.error('Error fetching role name:', error);
+                return 'Unknown Role';
+            }
+        };
+
+        // Fetch requester profiles for each request
+        const requestsWithProfiles = await Promise.all(
+            requests.map(async (request) => {
+                try {
+                    const requesterProfile = await getUserProfile(request.requesterId) as any;
+
+                    // Get ship and cruise line information
+                    let shipName = 'Not specified';
+                    let cruiseLineName = 'Not specified';
+
+                    if (requesterProfile.currentShipId) {
+                        try {
+                            const shipDoc = await getDoc(doc(db, 'ships', requesterProfile.currentShipId));
+                            if (shipDoc.exists()) {
+                                const shipData = shipDoc.data();
+                                shipName = shipData.name;
+
+                                // Get cruise line from ship
+                                if (shipData.cruiseLineId) {
+                                    const cruiseLineDoc = await getDoc(doc(db, 'cruiseLines', shipData.cruiseLineId));
+                                    if (cruiseLineDoc.exists()) {
+                                        cruiseLineName = cruiseLineDoc.data().name;
+                                    }
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error fetching ship/cruise line data:', error);
+                        }
+                    }
+
+                    return {
+                        ...request,
+                        requesterName: requesterProfile.displayName,
+                        requesterPhoto: requesterProfile.profilePhoto,
+                        shipName,
+                        cruiseLineName,
+                        departmentName: requesterProfile.departmentId ? await getDepartmentName(requesterProfile.departmentId) : 'Not specified',
+                        roleName: requesterProfile.roleId ? await getRoleName(requesterProfile.roleId) : 'Not specified'
+                    };
+                } catch (error) {
+                    console.error(`Error fetching profile for ${request.requesterId}:`, error);
+                    return {
+                        ...request,
+                        requesterName: 'Unknown User',
+                        requesterPhoto: null,
+                        shipName: 'Not specified',
+                        cruiseLineName: 'Not specified',
+                        departmentName: 'Not specified',
+                        roleName: 'Not specified'
+                    };
+                }
+            })
+        );
 
         // Sort by createdAt descending in memory
-        return results.sort((a, b) => {
+        return requestsWithProfiles.sort((a, b) => {
             const aTime = (a as any).createdAt?.seconds || 0;
             const bTime = (b as any).createdAt?.seconds || 0;
             return bTime - aTime;

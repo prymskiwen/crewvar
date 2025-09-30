@@ -14,7 +14,13 @@ import {
 import { defaultAvatar } from '../utils/images';
 
 // Internal AppBar Component
-const AppBar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
+const AppBar = ({
+    onToggleSidebar,
+    setShowCheckInDialog
+}: {
+    onToggleSidebar?: () => void;
+    setShowCheckInDialog?: (show: boolean) => void;
+}) => {
     const { currentUser, userProfile, signOut } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -36,7 +42,23 @@ const AppBar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
     });
 
     const unreadNotifications = notifications.filter((n: any) => !n.isRead).length;
-    const totalNotificationCount = unreadNotifications + connectionRequests.length;
+
+    // Check if user is admin
+    const isAdmin = !!currentUser && (
+        currentUser.email === 'admin@crewvar.com' || (currentUser as any).isAdmin === true
+    );
+
+    // Navigation items for desktop
+    const navItems = [
+        { name: 'Dashboard', path: '/dashboard' },
+        { name: 'Update Location', path: '/ship-location', isButton: true },
+        { name: 'Discover Crew', path: '/explore-ships' },
+        { name: 'Connection Requests', path: '/connections/pending' },
+        { name: 'Messages', path: '/chat' },
+        { name: 'Favorites', path: '/favorites' },
+        // Admin link (only visible to admins)
+        ...(isAdmin ? [{ name: 'Admin Panel', path: '/admin' }] : []),
+    ];
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -79,11 +101,11 @@ const AppBar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                 <div className="flex items-center justify-between">
                     {/* Left side - Hamburger Menu & Logo/Home */}
                     <div className="flex items-center space-x-3">
-                        {/* Hamburger Menu Button */}
+                        {/* Hamburger Menu Button - Only show on mobile */}
                         {onToggleSidebar && (
                             <button
                                 onClick={onToggleSidebar}
-                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-900"
+                                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-600 hover:text-gray-900"
                             >
                                 <HiMenu className="w-6 h-6" />
                             </button>
@@ -98,6 +120,53 @@ const AppBar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                         </Link>
                     </div>
 
+                    {/* Center - Desktop Navigation (hidden on mobile) */}
+                    <div className="hidden lg:flex items-center space-x-1">
+                        {navItems.map((item) => {
+                            const isActive = location.pathname === item.path;
+
+                            // Special handling for Update Location - show QuickCheckIn dialog
+                            if (item.isButton) {
+                                return (
+                                    <button
+                                        key={item.name}
+                                        onClick={() => {
+                                            if (setShowCheckInDialog) {
+                                                setShowCheckInDialog(true);
+                                            }
+                                        }}
+                                        className={`px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 ${isActive
+                                            ? 'text-[#069B93] font-bold'
+                                            : 'text-gray-600 hover:text-gray-900'
+                                            }`}
+                                    >
+                                        <span className={`${isActive ? 'text-base font-bold' : 'text-sm font-medium'}`}>{item.name}</span>
+                                    </button>
+                                );
+                            }
+
+                            // Regular navigation items
+                            return (
+                                <Link
+                                    key={item.name}
+                                    to={item.path}
+                                    className={`relative px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 ${isActive
+                                        ? 'text-[#069B93] font-bold'
+                                        : 'text-gray-600 hover:text-gray-900'
+                                        }`}
+                                >
+                                    <span className={`${isActive ? 'text-base font-bold' : 'text-sm font-medium'}`}>{item.name}</span>
+                                    {/* Show badge for Connection Requests if there are pending requests */}
+                                    {item.name === 'Connection Requests' && connectionRequests.length > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                                            {connectionRequests.length}
+                                        </span>
+                                    )}
+                                </Link>
+                            );
+                        })}
+                    </div>
+
                     {/* Right side - User actions */}
                     <div className="flex items-center space-x-3">
                         {/* Notifications */}
@@ -107,9 +176,9 @@ const AppBar = ({ onToggleSidebar }: { onToggleSidebar?: () => void }) => {
                         >
                             <HiBell className="w-5 h-5 text-gray-600" />
                             {/* Notification badge */}
-                            {totalNotificationCount > 0 && (
+                            {unreadNotifications > 0 && (
                                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                                    {totalNotificationCount > 99 ? '99+' : totalNotificationCount}
+                                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
                                 </span>
                             )}
                         </button>

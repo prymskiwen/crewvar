@@ -33,14 +33,6 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
-    // Notifications - users can read their own notifications
-    match /notifications/{notificationId} {
-      allow read, write: if request.auth != null && 
-        request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null && 
-        request.auth.uid == request.resource.data.userId;
-    }
-    
     // Connections - users can read/write their own connections
     match /connections/{connectionId} {
       allow read, write: if request.auth != null && 
@@ -52,25 +44,24 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
-        // Connection requests - users can read/write their own requests
-        match /connectionRequests/{requestId} {
-          allow read, write: if request.auth != null && 
-            (request.auth.uid == resource.data.requesterId || request.auth.uid == resource.data.receiverId);
-          allow create: if request.auth != null && 
-            (request.auth.uid == request.resource.data.requesterId || request.auth.uid == request.resource.data.receiverId);
-          // Admins can read all connection requests for statistics
-          allow read: if request.auth != null && 
-            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-        }
-        
-        // Notifications - users can read/write their own notifications
-        match /notifications/{notificationId} {
-          allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
-          allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-          // Admins can read all notifications for statistics
-          allow read: if request.auth != null && 
-            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-        }
+    // Connection requests - users can read/write their own requests
+    match /connectionRequests/{requestId} {
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == resource.data.requesterId || request.auth.uid == resource.data.receiverId);
+      allow create: if request.auth != null;
+      // Admins can read all connection requests for statistics
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // Notifications - users can read/write their own notifications
+    match /notifications/{notificationId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null;
+      // Admins can read all notifications for statistics
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
     
     // Reports - users can create reports, admins can read all
     match /reports/{reportId} {

@@ -1,44 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../../context/AuthContextFirebase';
+import { getReceivedConnectionRequests, respondToConnectionRequest } from '../../firebase/firestore';
 
 interface ConnectionPendingCardProps {
     className?: string;
 }
 
 export const ConnectionPendingCard: React.FC<ConnectionPendingCardProps> = () => {
-    // TODO: Implement Firebase connection functionality
-    const requestsData = {
-        requests: [
-            {
-                id: 'req-1',
-                display_name: 'John Doe',
-                profile_photo: null,
-                ship_name: 'Sample Ship',
-                cruise_line_name: 'Sample Cruise Line',
-                message: 'Hello, I would like to connect!'
-            }
-        ]
-    };
-    const pendingRequests = requestsData?.requests || [];
-    const isLoading = false;
-    const error = null;
-    const respondMutation = {
-        mutateAsync: async (requestData: { requestId: string; action: 'accept' | 'decline' }) => {
-            // TODO: Implement Firebase connection request response functionality
-            console.log('Responding to connection request:', requestData);
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            toast.success(`Connection request ${requestData.action}ed successfully!`);
+    const { currentUser } = useAuth();
+    const queryClient = useQueryClient();
+    const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+
+    // Fetch received connection requests
+    const { data: pendingRequests = [], isLoading, error } = useQuery({
+        queryKey: ['receivedConnectionRequests', currentUser?.uid],
+        queryFn: () => getReceivedConnectionRequests(currentUser!.uid),
+        enabled: !!currentUser?.uid
+    });
+    console.log(pendingRequests);
+
+    // Respond to connection request mutation
+    const respondMutation = useMutation(
+        async (requestData: { requestId: string; action: 'accept' | 'decline' }) => {
+            const status = requestData.action === 'accept' ? 'accepted' : 'declined';
+            return await respondToConnectionRequest(requestData.requestId, status);
         },
-        isLoading: false
-    };
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: ['receivedConnectionRequests'] });
+                queryClient.invalidateQueries({ queryKey: ['userConnections'] });
+                queryClient.invalidateQueries({ queryKey: ['pendingRequests'] });
+            },
+            onError: (error: any) => {
+                console.error('Failed to respond to connection request:', error);
+                toast.error(error.message || 'Failed to respond to connection request');
+            }
+        }
+    );
 
     const handleAccept = async (requestId: string) => {
+        setLoadingStates(prev => ({ ...prev, [requestId]: true }));
         try {
             await respondMutation.mutateAsync({ requestId, action: 'accept' });
 
             // Find the request to get the user's name for the notification
             const request = pendingRequests.find((req: any) => req.id === requestId);
-            const userName = request?.display_name || 'User';
+            const userName = request?.requesterName || 'User';
 
             toast.success(`🎉 Connection accepted! You're now connected with ${userName}`, {
                 position: "top-right",
@@ -68,16 +77,19 @@ export const ConnectionPendingCard: React.FC<ConnectionPendingCardProps> = () =>
                     border: '1px solid #fecaca'
                 }
             });
+        } finally {
+            setLoadingStates(prev => ({ ...prev, [requestId]: false }));
         }
     };
 
     const handleDecline = async (requestId: string) => {
+        setLoadingStates(prev => ({ ...prev, [requestId]: true }));
         try {
             await respondMutation.mutateAsync({ requestId, action: 'decline' });
 
             // Find the request to get the user's name for the notification
             const request = pendingRequests.find((req: any) => req.id === requestId);
-            const userName = request?.display_name || 'User';
+            const userName = request?.requesterName || 'User';
 
             toast.info(`Connection request from ${userName} has been declined`, {
                 position: "top-right",
@@ -107,6 +119,8 @@ export const ConnectionPendingCard: React.FC<ConnectionPendingCardProps> = () =>
                     border: '1px solid #fecaca'
                 }
             });
+        } finally {
+            setLoadingStates(prev => ({ ...prev, [requestId]: false }));
         }
     };
 
@@ -172,20 +186,20 @@ export const ConnectionPendingCard: React.FC<ConnectionPendingCardProps> = () =>
             ) : (
                 <div className="space-y-4">
                     {pendingRequests.slice(0, 3).map((request) => (
-                        <div key={request.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                            {/* Left side - User info */}
-                            <div className="flex items-center space-x-4 flex-1 min-w-0">
+                        <div key={request.id} className="p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                            {/* User info */}
+                            <div className="flex items-center space-x-4 mb-4">
                                 {/* Profile Photo */}
                                 <div className="flex-shrink-0 relative">
-                                    {request.profile_photo ? (
+                                    {request.requesterPhoto ? (
                                         <img
-                                            src={request.profile_photo}
-                                            alt={request.display_name}
+                                            src={request.requesterPhoto}
+                                            alt={request.requesterName}
                                             className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
                                         />
                                     ) : (
                                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold text-lg">
-                                            {request.display_name.charAt(0).toUpperCase()}
+                                            {request.requesterName?.charAt(0).toUpperCase() || 'U'}
                                         </div>
                                     )}
                                     <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
@@ -194,10 +208,13 @@ export const ConnectionPendingCard: React.FC<ConnectionPendingCardProps> = () =>
                                 {/* User Details */}
                                 <div className="flex-1 min-w-0">
                                     <h4 className="text-sm font-semibold text-gray-900 truncate">
-                                        {request.display_name}
+                                        {request.requesterName}
                                     </h4>
-                                    <p className="text-xs text-gray-600 truncate">
-                                        {request.ship_name} • {request.cruise_line_name}
+                                    {/* <p className="text-xs text-gray-600 truncate">
+                                        {request.roleName} • {request.departmentName}
+                                    </p> */}
+                                    <p className="text-xs text-gray-500 truncate">
+                                        {request.shipName} • {request.cruiseLineName}
                                     </p>
                                     {request.message && (
                                         <p className="text-xs text-gray-500 mt-1 line-clamp-2">
@@ -207,21 +224,21 @@ export const ConnectionPendingCard: React.FC<ConnectionPendingCardProps> = () =>
                                 </div>
                             </div>
 
-                            {/* Right side - Action buttons */}
-                            <div className="flex flex-col space-y-2">
+                            {/* Action buttons at bottom */}
+                            <div className="flex space-x-2 justify-end">
                                 <button
                                     onClick={() => handleAccept(request.id)}
-                                    disabled={respondMutation.isLoading}
-                                    className="px-3 py-1 bg-[#069B93] text-white text-xs rounded-lg hover:bg-[#058a7a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    disabled={loadingStates[request.id]}
+                                    className="px-4 py-2 bg-[#069B93] text-white text-sm rounded-lg hover:bg-[#058a7a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
-                                    Accept
+                                    {loadingStates[request.id] ? 'Accepting...' : 'Accept'}
                                 </button>
                                 <button
                                     onClick={() => handleDecline(request.id)}
-                                    disabled={respondMutation.isLoading}
-                                    className="px-3 py-1 text-xs border border-gray-300 text-gray-600 rounded hover:border-[#069B93] hover:text-[#069B93] transition-colors"
+                                    disabled={loadingStates[request.id]}
+                                    className="px-4 py-2 text-sm border border-gray-300 text-gray-600 rounded hover:border-[#069B93] hover:text-[#069B93] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Decline
+                                    {loadingStates[request.id] ? 'Declining...' : 'Decline'}
                                 </button>
                             </div>
                         </div>

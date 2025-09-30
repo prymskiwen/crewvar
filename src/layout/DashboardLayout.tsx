@@ -89,22 +89,27 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     // This will be used for confirming ship assignments in the future
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen bg-gray-50">
             {/* Internal App Bar */}
-            <AppBar onToggleSidebar={toggleSidebar} />
+            <AppBar
+                onToggleSidebar={toggleSidebar}
+                setShowCheckInDialog={setShowCheckInDialog}
+            />
 
-            <div className="flex flex-1">
-                {/* Internal Sidebar */}
-                <DashboardSidebar
-                    isOpen={sidebarOpen}
-                    onToggle={toggleSidebar}
-                    setShowCheckInDialog={setShowCheckInDialog}
-                />
+            <div className="flex">
+                {/* Internal Sidebar - Hidden on desktop, shown on mobile */}
+                <div className="lg:hidden">
+                    <DashboardSidebar
+                        isOpen={sidebarOpen}
+                        onToggle={toggleSidebar}
+                        setShowCheckInDialog={setShowCheckInDialog}
+                    />
+                </div>
 
-                {/* Main Content */}
-                <div className="flex-1 flex flex-col">
+                {/* Main Content Area */}
+                <div className="flex-1 flex flex-col min-h-screen">
                     {/* Page Content */}
-                    <div className="p-3 sm:p-4 lg:p-6 xl:p-8 flex-1 lg:ml-80">
+                    <div className="flex-1 p-3">
                         {children}
                     </div>
 

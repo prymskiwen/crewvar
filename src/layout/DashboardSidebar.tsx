@@ -33,8 +33,8 @@ const DashboardSidebar = ({ isOpen, onToggle, setShowCheckInDialog }: {
     });
 
     const sidebarClasses = `
-        fixed top-0 left-0 h-full bg-gradient-to-b from-[#069B93] to-[#058a7a] text-white z-[9999] transform transition-transform duration-300 ease-in-out
-        lg:translate-x-0 lg:static lg:z-auto
+        fixed top-0 left-0 h-screen bg-gradient-to-b from-[#069B93] to-[#058a7a] text-white z-[9999] transform transition-transform duration-300 ease-in-out
+        lg:translate-x-0 lg:sticky lg:top-0 lg:z-50
         w-72 lg:w-80
         shadow-2xl lg:shadow-xl
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}

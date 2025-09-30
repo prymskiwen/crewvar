@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContextFirebase';
 import { LoadingPage } from '../../components/ui';
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '../../firebase/firestore';
 import { DashboardLayout } from '../../layout';
+import { formatTimeAgo } from '../../utils/data';
 
 // TODO: Define INotification interface
 interface INotification {
@@ -14,7 +15,7 @@ interface INotification {
     title: string;
     message: string;
     isRead: boolean;
-    createdAt: string;
+    createdAt: any; // Can be Firestore timestamp object or string
 }
 
 export const AllNotificationsPage = () => {
@@ -102,16 +103,6 @@ export const AllNotificationsPage = () => {
     } | null>(null);
     const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
 
-    const formatTimeAgo = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-        if (diffInSeconds < 60) return 'Just now';
-        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-        return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    };
 
     const toggleMessageExpansion = (notificationId: string) => {
         setExpandedMessages(prev => {
@@ -358,20 +349,22 @@ export const AllNotificationsPage = () => {
     return (
         <DashboardLayout>
             <div className="min-h-screen bg-gray-50">
-                {/* Header */}
-                <div className="bg-white border-b border-gray-200 p-4">
+                {/* Mobile Header */}
+                <div className="bg-teal-600 text-white p-3 sm:p-4 sticky top-0 z-10">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">All Notifications</h1>
-                            <p className="text-gray-600 text-sm mt-1">
-                                {filteredNotifications.length} notification{filteredNotifications.length !== 1 ? 's' : ''}
-                            </p>
+                        <div className="flex items-center space-x-2 sm:space-x-3">
+                            <div>
+                                <h1 className="text-base sm:text-lg font-bold">All Notifications</h1>
+                                <p className="text-xs text-teal-100">
+                                    {filteredNotifications.length} notification{filteredNotifications.length !== 1 ? 's' : ''}
+                                </p>
+                            </div>
                         </div>
                         <div className="flex items-center space-x-2">
                             <button
                                 onClick={handleRefresh}
                                 disabled={isRefreshing}
-                                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                                className="p-2 text-white hover:text-teal-100 hover:bg-teal-700 rounded-lg transition-colors disabled:opacity-50"
                                 title="Refresh notifications"
                             >
                                 <svg
@@ -388,12 +381,12 @@ export const AllNotificationsPage = () => {
 
                     {/* Action Buttons */}
                     {filteredNotifications.length > 0 && (
-                        <div className="flex items-center space-x-2 mt-4 pt-4 border-t border-gray-200">
+                        <div className="flex items-center space-x-2 mt-4 pt-4 border-t border-teal-500">
                             {unreadCount > 0 && (
                                 <button
                                     onClick={handleMarkAllAsRead}
                                     disabled={isMarkingAsRead}
-                                    className="px-3 py-1.5 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-3 py-1.5 text-xs bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isMarkingAsRead ? 'Marking...' : 'Mark All Read'}
                                 </button>
@@ -402,7 +395,7 @@ export const AllNotificationsPage = () => {
                                 <button
                                     onClick={handleMarkSelectedAsRead}
                                     disabled={isMarkingAsRead}
-                                    className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-3 py-1.5 text-xs bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isMarkingAsRead ? 'Marking...' : `Mark ${selectedNotifications.size} Read`}
                                 </button>
@@ -411,7 +404,7 @@ export const AllNotificationsPage = () => {
                                 <button
                                     onClick={handleDeleteSelectedNotifications}
                                     disabled={isMarkingAsRead}
-                                    className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-3 py-1.5 text-xs bg-red-500/20 text-white rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isMarkingAsRead ? 'Deleting...' : `Delete ${selectedNotifications.size}`}
                                 </button>
@@ -419,7 +412,7 @@ export const AllNotificationsPage = () => {
                             <button
                                 onClick={handleDeleteAllNotifications}
                                 disabled={isMarkingAsRead}
-                                className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-3 py-1.5 text-xs bg-red-500/20 text-white rounded-lg hover:bg-red-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isMarkingAsRead ? 'Deleting...' : 'Delete All'}
                             </button>

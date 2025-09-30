@@ -11,13 +11,13 @@ import {
     where,
     orderBy,
     limit,
-    onSnapshot,
     serverTimestamp,
     writeBatch,
-    startAfter
+    startAfter,
+    increment,
+    onSnapshot
 } from 'firebase/firestore';
 import { db } from './config';
-import { IChatRoom } from '../types/chat.d';
 
 // Types
 export interface ChatRoom {
@@ -525,6 +525,332 @@ export const deleteNotification = async (notificationId: string): Promise<void> 
     }
 };
 
+// User Profile Functions
+
+// Get user profile by ID
+export const getUserProfile = async (userId: string) => {
+    try {
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            console.log('getUserProfile - Raw user data:', { userId, userData });
+            return { id: userDoc.id, ...userData };
+        }
+        throw new Error('User profile not found');
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        throw error;
+    }
+};
+
+// Create user profile (id is the auth uid)
+export const createUserProfile = async (userId: string, profileData: any) => {
+    try {
+        const userRef = doc(db, 'users', userId);
+
+        // Remove undefined/null/empty string values to avoid Firestore errors
+        const cleanData = Object.fromEntries(
+            Object.entries(profileData || {}).filter(([_, v]) => v !== undefined && v !== null && v !== '')
+        );
+
+        const dataToWrite = {
+            ...cleanData,
+            isActive: cleanData.isActive ?? true,
+            isAdmin: cleanData.isAdmin ?? false,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        };
+
+        await setDoc(userRef, dataToWrite);
+        return { id: userId, ...dataToWrite };
+    } catch (error) {
+        console.error('Error creating user profile:', error);
+        throw error;
+    }
+};
+
+// Update user profile (partial updates)
+export const updateUserProfile = async (userId: string, updates: any) => {
+    try {
+        const userRef = doc(db, 'users', userId);
+
+        const cleanUpdates = Object.fromEntries(
+            Object.entries(updates || {}).filter(([_, v]) => v !== undefined && v !== null && v !== '')
+        );
+
+        await updateDoc(userRef, {
+            ...cleanUpdates,
+            updatedAt: serverTimestamp()
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Error updating user profile:', error);
+        throw error;
+    }
+};
+
+// Subscribe to notifications for a user (real-time listener)
+export const subscribeToNotifications = (
+    userId: string,
+    callback: (notifications: any[]) => void
+) => {
+    const q = query(
+        collection(db, 'notifications'),
+        where('userId', '==', userId),
+        orderBy('createdAt', 'desc')
+    );
+
+    return onSnapshot(q, (snapshot) => {
+        const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        callback(items);
+    });
+};
+
+// Chat and Messaging Functions
+
+// Create or get existing chat room between two users
+export const createOrGetChatRoom = async (userId1: string, userId2: string): Promise<string> => {
+    try {
+        // Check if chat room already exists
+        const chatRoomsRef = collection(db, 'chatRooms');
+        const q = query(
+            chatRoomsRef,
+            where('participants', 'array-contains', userId1)
+        );
+
+        const snapshot = await getDocs(q);
+        const existingRoom = snapshot.docs.find(doc => {
+            const data = doc.data();
+            return data.participants.includes(userId2);
+        });
+
+        if (existingRoom) {
+            return existingRoom.id;
+        }
+
+        // Create new chat room
+        const newRoomData = {
+            participants: [userId1, userId2],
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            lastMessage: null,
+            lastMessageAt: null,
+            unreadCount: {
+                [userId1]: 0,
+                [userId2]: 0
+            }
+        };
+
+        const roomRef = await addDoc(collection(db, 'chatRooms'), newRoomData);
+        return roomRef.id;
+    } catch (error) {
+        console.error('Error creating/getting chat room:', error);
+        throw error;
+    }
+};
+
+// Get chat rooms for a user
+export const getChatRooms = async (userId: string): Promise<any[]> => {
+    try {
+        const chatRoomsRef = collection(db, 'chatRooms');
+        const q = query(
+            chatRoomsRef,
+            where('participants', 'array-contains', userId),
+            orderBy('updatedAt', 'desc')
+        );
+
+        const snapshot = await getDocs(q);
+        const rooms = [];
+
+        for (const doc of snapshot.docs) {
+            const roomData = doc.data();
+            const otherUserId = roomData.participants.find((id: string) => id !== userId);
+
+            if (otherUserId) {
+                try {
+                    const otherUserProfile = await getUserProfile(otherUserId) as any;
+                    console.log('getChatRooms - otherUserProfile:', {
+                        otherUserId,
+                        otherUserProfile,
+                        currentShipId: otherUserProfile?.currentShipId,
+                        departmentId: otherUserProfile?.departmentId,
+                        roleId: otherUserProfile?.roleId
+                    });
+                    rooms.push({
+                        id: doc.id,
+                        ...roomData,
+                        otherUserId,
+                        otherUserProfile: {
+                            displayName: otherUserProfile.displayName,
+                            profilePhoto: otherUserProfile.profilePhoto,
+                            currentShipId: otherUserProfile.currentShipId,
+                            departmentId: otherUserProfile.departmentId,
+                            roleId: otherUserProfile.roleId
+                        }
+                    });
+                } catch (error) {
+                    console.error(`Error fetching profile for user ${otherUserId}:`, error);
+                    // Add room with minimal data if profile fetch fails
+                    rooms.push({
+                        id: doc.id,
+                        ...roomData,
+                        otherUserId,
+                        otherUserProfile: {
+                            displayName: 'Unknown User',
+                            profilePhoto: null,
+                            currentShipId: null,
+                            departmentId: null,
+                            roleId: null
+                        }
+                    });
+                }
+            }
+        }
+
+        return rooms;
+    } catch (error) {
+        console.error('Error fetching chat rooms:', error);
+        throw error;
+    }
+};
+
+// Send a message
+export const sendMessage = async (
+    roomId: string,
+    senderId: string,
+    message: string,
+    messageType: 'text' | 'image' | 'file' = 'text'
+): Promise<string> => {
+    try {
+        const messagesRef = collection(db, 'chatMessages');
+        const messageData = {
+            roomId,
+            senderId,
+            message,
+            messageType,
+            createdAt: serverTimestamp(),
+            isRead: false
+        };
+
+        const messageRef = await addDoc(messagesRef, messageData);
+
+        // Update chat room with last message info
+        const roomRef = doc(db, 'chatRooms', roomId);
+        await updateDoc(roomRef, {
+            lastMessage: message,
+            lastMessageAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+
+        // Increment unread count for other participants
+        const roomDoc = await getDoc(roomRef);
+        if (roomDoc.exists()) {
+            const roomData = roomDoc.data();
+            const otherParticipants = roomData.participants.filter((id: string) => id !== senderId);
+
+            const unreadUpdates: any = {};
+            otherParticipants.forEach((participantId: string) => {
+                unreadUpdates[`unreadCount.${participantId}`] = increment(1);
+            });
+
+            if (Object.keys(unreadUpdates).length > 0) {
+                await updateDoc(roomRef, unreadUpdates);
+            }
+        }
+
+        return messageRef.id;
+    } catch (error) {
+        console.error('Error sending message:', error);
+        throw error;
+    }
+};
+
+// Get messages for a chat room
+export const getMessages = async (roomId: string, messageLimit: number = 50): Promise<any[]> => {
+    try {
+        const messagesRef = collection(db, 'chatMessages');
+        const q = query(
+            messagesRef,
+            where('roomId', '==', roomId),
+            orderBy('createdAt', 'desc'),
+            limit(messageLimit)
+        );
+
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        })).reverse(); // Reverse to show oldest first
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+        throw error;
+    }
+};
+
+// Mark messages as read
+export const markMessagesAsRead = async (roomId: string, userId: string): Promise<void> => {
+    try {
+        // Get all messages in the room and filter in memory to avoid index issues
+        const messagesRef = collection(db, 'chatMessages');
+        const q = query(
+            messagesRef,
+            where('roomId', '==', roomId)
+        );
+
+        const snapshot = await getDocs(q);
+        const batch = writeBatch(db);
+        let hasUpdates = false;
+
+        // Filter messages that need to be marked as read
+        snapshot.docs.forEach(doc => {
+            const messageData = doc.data();
+            if (messageData.senderId !== userId && messageData.isRead === false) {
+                batch.update(doc.ref, { isRead: true });
+                hasUpdates = true;
+            }
+        });
+
+        // Only commit if there are updates
+        if (hasUpdates) {
+            await batch.commit();
+        }
+
+        // Reset unread count for the user
+        const roomRef = doc(db, 'chatRooms', roomId);
+        await updateDoc(roomRef, {
+            [`unreadCount.${userId}`]: 0
+        });
+    } catch (error) {
+        console.error('Error marking messages as read:', error);
+        throw error;
+    }
+};
+
+// Get unread message count for a user
+export const getUnreadMessageCount = async (userId: string): Promise<number> => {
+    try {
+        const chatRoomsRef = collection(db, 'chatRooms');
+        const q = query(
+            chatRoomsRef,
+            where('participants', 'array-contains', userId)
+        );
+
+        const snapshot = await getDocs(q);
+        let totalUnread = 0;
+
+        snapshot.docs.forEach(doc => {
+            const data = doc.data();
+            totalUnread += data.unreadCount?.[userId] || 0;
+        });
+
+        return totalUnread;
+    } catch (error) {
+        console.error('Error getting unread message count:', error);
+        return 0;
+    }
+};
+
 
 export const getNotificationsForUser = async (
     userId: string,
@@ -606,149 +932,6 @@ export const markAllNotificationsAsRead = async (userId: string): Promise<void> 
     }
 };
 
-export const markMessagesAsRead = async (roomId: string, userId: string): Promise<void> => {
-    try {
-        const messagesRef = collection(db, 'chatRooms', roomId, 'messages');
-        const q = query(messagesRef, where('senderId', '!=', userId), where('isRead', '==', false));
-        const querySnapshot = await getDocs(q);
-
-        const batch: Promise<void>[] = [];
-        querySnapshot.forEach((doc) => {
-            batch.push(updateDoc(doc.ref, {
-                isRead: true,
-                readAt: serverTimestamp()
-            }));
-        });
-
-        await Promise.all(batch);
-    } catch (error) {
-        console.error('Error marking messages as read:', error);
-        throw error;
-    }
-};
-
-// Real-time listeners
-export const subscribeToChatMessages = (
-    roomId: string,
-    callback: (messages: ChatMessage[]) => void
-) => {
-    const messagesQuery = query(
-        collection(db, 'chatMessages'),
-        where('roomId', '==', roomId),
-        orderBy('createdAt', 'asc')
-    );
-
-    return onSnapshot(messagesQuery, (snapshot) => {
-        const messages = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as ChatMessage));
-        callback(messages);
-    });
-};
-
-export const subscribeToNotifications = (
-    userId: string,
-    callback: (notifications: Notification[]) => void
-) => {
-    const notificationsQuery = query(
-        collection(db, 'notifications'),
-        where('userId', '==', userId),
-        orderBy('createdAt', 'desc')
-    );
-
-    return onSnapshot(notificationsQuery, (snapshot) => {
-        const notifications = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        } as Notification));
-        callback(notifications);
-    });
-};
-
-// User profile functions
-export const getUserProfile = async (userId: string) => {
-    const userDoc = await getDoc(doc(db, 'users', userId));
-    if (userDoc.exists()) {
-        return { id: userDoc.id, ...userDoc.data() };
-    }
-    throw new Error('User profile not found');
-};
-
-export const createUserProfile = async (userId: string, profileData: any) => {
-    const userRef = doc(db, 'users', userId);
-
-    // Filter out undefined values and empty strings to prevent Firestore errors
-    const cleanProfileData = Object.fromEntries(
-        Object.entries(profileData).filter(([_, value]) =>
-            value !== undefined && value !== '' && value !== null
-        )
-    );
-
-    // Ensure required fields have proper values
-    const safeProfileData = {
-        ...cleanProfileData,
-        isActive: cleanProfileData.isActive ?? true,
-        isAdmin: cleanProfileData.isAdmin ?? false,
-        isEmailVerified: cleanProfileData.isEmailVerified ?? false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-    };
-
-    await setDoc(userRef, safeProfileData);
-    return { id: userId, ...safeProfileData };
-};
-
-export const updateUserProfile = async (userId: string, data: any) => {
-    const userRef = doc(db, 'users', userId);
-
-    // Filter out undefined, null, and empty string values
-    const cleanData = Object.fromEntries(
-        Object.entries(data).filter(([_, value]) =>
-            value !== undefined && value !== '' && value !== null
-        )
-    );
-
-    await updateDoc(userRef, {
-        ...cleanData,
-        updatedAt: serverTimestamp()
-    });
-};
-
-
-// Chat room functions
-export const getChatRooms = async (userId: string): Promise<IChatRoom[]> => {
-    const chatRoomsQuery = query(
-        collection(db, 'chatRooms'),
-        where('participants', 'array-contains', userId),
-        orderBy('updatedAt', 'desc')
-    );
-
-    const snapshot = await getDocs(chatRoomsQuery);
-    return snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-            id: doc.id,
-            room_id: doc.id,
-            other_user_id: data.other_user_id || '',
-            other_user_name: data.other_user_name || '',
-            other_user_avatar: data.other_user_avatar || '',
-            ship_name: data.ship_name || '',
-            department_name: data.department_name || '',
-            role_name: data.role_name || '',
-            last_message_content: data.last_message_content || '',
-            last_message_time: data.last_message_time || '',
-            last_message_status: data.last_message_status || '',
-            unread_count: data.unread_count || 0,
-            created_at: data.created_at || '',
-            updated_at: data.updated_at || '',
-            participants: data.participants || [],
-            lastMessage: data.lastMessage,
-            lastActivity: data.lastActivity || '',
-            unreadCount: data.unreadCount || 0
-        } as IChatRoom;
-    });
-};
 
 // Department and Role Management
 export interface Department {
@@ -1241,6 +1424,25 @@ export const updatePrivacySettings = async (userId: string, settings: any) => {
         });
     } catch (error) {
         console.error('Error updating privacy settings:', error);
+        throw error;
+    }
+};
+
+// Get all roles
+export const getRoles = async (): Promise<Role[]> => {
+    try {
+        const rolesRef = collection(db, 'roles');
+        const q = query(rolesRef);
+        const querySnapshot = await getDocs(q);
+
+        const roles = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        } as Role));
+
+        return roles.sort((a, b) => a.name.localeCompare(b.name));
+    } catch (error) {
+        console.error('Error fetching roles:', error);
         throw error;
     }
 };

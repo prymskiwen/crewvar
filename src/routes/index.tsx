@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { AuthRoutes, EmailVerification, VerificationPending } from "../pages/auth";
 import { Onboarding, Home, ExploreShips, MyProfile, Favorites, Privacy, Moderation, PortConnections, ShipAssignment, Chat, Dashboard, TermsOfService, PrivacyPolicy, Support, Contact, FAQ, AdminDashboard, AdminUserDetail, AdminSupport } from "../pages";
+import { ChatRoom } from "../pages/chat";
 import { WhosInPort } from "../pages/port";
 import { TodayOnBoard, CrewMemberProfile } from "../pages/crew";
 import { PendingRequests, MyConnections } from "../pages/connections";
@@ -30,6 +31,7 @@ export const AppRoutes = () => {
             <Route path="my-profile" element={<MyProfile />} />
             <Route path="chat" element={<Chat />} />
             <Route path="chat/:userId" element={<Chat />} />
+            <Route path="chat/room/:roomId" element={<ChatRoom />} />
             <Route path="privacy" element={<Privacy />} />
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             <Route path="terms-of-service" element={<TermsOfService />} />

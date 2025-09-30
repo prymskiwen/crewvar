@@ -14,7 +14,8 @@ import {
     getDepartments,
     getRolesByDepartment,
     getUserConnections,
-    getPendingConnectionRequests
+    getPendingConnectionRequests,
+    createOrGetChatRoom
 } from "../../firebase/firestore";
 
 // Custom Dropdown Component for Mobile-Friendly Selection
@@ -335,6 +336,31 @@ export const ExploreShips = () => {
         }
     };
 
+    // Start chat handler
+    const handleStartChat = async (memberId: string, memberName: string) => {
+        if (!currentUser?.uid) {
+            toast.error('You must be logged in to start a chat');
+            return;
+        }
+
+        try {
+            setLoadingStates(prev => ({ ...prev, [memberId]: true }));
+
+            // Create or get chat room
+            await createOrGetChatRoom(currentUser.uid, memberId);
+
+            // Navigate to chat with the specific user
+            navigate(`/chat/${memberId}`);
+
+            toast.success(`Starting chat with ${memberName}`);
+        } catch (error: any) {
+            console.error('Failed to start chat:', error);
+            toast.error(error.message || 'Failed to start chat');
+        } finally {
+            setLoadingStates(prev => ({ ...prev, [memberId]: false }));
+        }
+    };
+
     // View profile handler
     const handleViewProfile = (memberId: string) => {
         // Navigate to member's profile page
@@ -592,12 +618,21 @@ export const ExploreShips = () => {
 
                                                         if (status === 'connected') {
                                                             return (
-                                                                <button
-                                                                    disabled
-                                                                    className="flex-1 sm:flex-none px-3 py-2 bg-gray-400 text-white text-xs sm:text-sm font-medium rounded-lg cursor-not-allowed transition-colors"
-                                                                >
-                                                                    Connected
-                                                                </button>
+                                                                <div className="flex space-x-2">
+                                                                    <button
+                                                                        onClick={() => handleStartChat(member.id, member.displayName)}
+                                                                        disabled={loadingStates[member.id]}
+                                                                        className="flex-1 sm:flex-none px-3 py-2 bg-blue-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                                    >
+                                                                        {loadingStates[member.id] ? 'Starting...' : 'Start Chat'}
+                                                                    </button>
+                                                                    <button
+                                                                        disabled
+                                                                        className="flex-1 sm:flex-none px-3 py-2 bg-gray-400 text-white text-xs sm:text-sm font-medium rounded-lg cursor-not-allowed transition-colors"
+                                                                    >
+                                                                        Connected
+                                                                    </button>
+                                                                </div>
                                                             );
                                                         } else if (status === 'pending') {
                                                             return (

@@ -1,7 +1,7 @@
 export { default as Dashboard } from './Dashboard';
 export { Home } from './Home';
 export { ExploreShips } from './ExploreShips';
-export { ChatPage as Chat } from './Chat';
+export { ChatPage as Chat } from '../chat/Chat';
 export { PortConnections } from './PortConnections';
 export { ShipAssignment } from './ShipAssignment';
 export { ConnectionRequests } from './ConnectionRequests';

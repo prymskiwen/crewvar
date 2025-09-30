@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { HiBell, HiCheck, HiX, HiCog } from 'react-icons/hi';
 import { Link } from 'react-router-dom';
+import { formatTimeAgo } from '../../utils/data';
 
 // TODO: Define INotification interface
 interface INotification {
@@ -84,20 +85,6 @@ export const NotificationDropdown = ({ isOpen, onClose }: NotificationDropdownPr
         }
     };
 
-    const formatTimeAgo = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-
-        if (diffInMinutes < 1) return 'Just now';
-        if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-
-        const diffInHours = Math.floor(diffInMinutes / 60);
-        if (diffInHours < 24) return `${diffInHours}h ago`;
-
-        const diffInDays = Math.floor(diffInHours / 24);
-        return `${diffInDays}d ago`;
-    };
 
     if (!isOpen) return null;
 

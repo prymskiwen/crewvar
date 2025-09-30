@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContextFirebase';
-import { getNotifications, getReceivedConnectionRequests } from '../firebase/firestore';
+import { getNotifications, getReceivedConnectionRequests, getUnreadMessageCount } from '../firebase/firestore';
 import {
     HiBell,
     HiHome,
@@ -39,6 +39,14 @@ const AppBar = ({
         queryKey: ['receivedConnectionRequests', currentUser?.uid],
         queryFn: () => getReceivedConnectionRequests(currentUser!.uid),
         enabled: !!currentUser?.uid
+    });
+
+    // Fetch unread message count
+    const { data: unreadMessageCount = 0 } = useQuery({
+        queryKey: ['unreadMessageCount', currentUser?.uid],
+        queryFn: () => getUnreadMessageCount(currentUser!.uid),
+        enabled: !!currentUser?.uid,
+        refetchInterval: 30000 // Refetch every 30 seconds
     });
 
     const unreadNotifications = notifications.filter((n: any) => !n.isRead).length;
@@ -160,6 +168,12 @@ const AppBar = ({
                                     {item.name === 'Connection Requests' && connectionRequests.length > 0 && (
                                         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
                                             {connectionRequests.length}
+                                        </span>
+                                    )}
+                                    {/* Show badge for Messages if there are unread messages */}
+                                    {item.name === 'Messages' && unreadMessageCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                                            {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
                                         </span>
                                     )}
                                 </Link>

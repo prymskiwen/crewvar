@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatTimeAgo } from '../../utils/data';
 
 // TODO: Define INotification interface
 interface INotification {
@@ -121,24 +122,6 @@ export const NotificationBell = ({ className = '' }: NotificationBellProps) => {
         }
     };
 
-    const formatTimeAgo = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-        if (diffInSeconds < 60) {
-            return 'Just now';
-        } else if (diffInSeconds < 3600) {
-            const minutes = Math.floor(diffInSeconds / 60);
-            return `${minutes}m ago`;
-        } else if (diffInSeconds < 86400) {
-            const hours = Math.floor(diffInSeconds / 3600);
-            return `${hours}h ago`;
-        } else {
-            const days = Math.floor(diffInSeconds / 86400);
-            return `${days}d ago`;
-        }
-    };
 
     return (
         <div className={`relative ${className}`} ref={dropdownRef}>

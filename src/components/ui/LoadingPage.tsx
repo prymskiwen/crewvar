@@ -24,7 +24,7 @@ export const LoadingPage: React.FC<LoadingPageProps> = ({
                     </div>
                 )}
                 {!showLogo && (
-                    <div className="mb-4">
+                    <div className="mb-4 flex items-center justify-center">
                         <LoadingSpinner size="xl" color="primary" />
                     </div>
                 )}

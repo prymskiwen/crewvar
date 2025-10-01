@@ -1,5 +1,5 @@
 // Dashboard pages
-export { Dashboard, Home, ExploreShips, Chat, PortConnections, ShipAssignment } from './dashboard';
+export { Dashboard, CrewMemberCard, TodayOnBoardCard, WhosInPortCard, ConnectionPendingCard, Home, ExploreShips, PortConnections, ShipAssignment } from './dashboard';
 
 // Profile pages  
 export { Onboarding, MyProfile, Favorites, Privacy, Moderation } from './profile';
@@ -12,3 +12,15 @@ export { Support, Contact, FAQ } from './support';
 
 // Legal pages
 export { PrivacyPolicy, TermsOfService } from './legal';
+
+// Chat pages
+export { Chat, ChatRoom, ChatRoomsSearchFilter, ChatRoomsSummary, ChatRoomsList, ChatRoomsListItem } from './chat';
+
+// Connection pages
+export { MyConnections, PendingRequests } from './connections';
+
+// Crew pages
+export { CrewMemberProfile, TodayOnBoard } from './crew';
+
+// Port pages
+export { WhosInPort } from './port';

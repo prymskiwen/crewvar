@@ -19,7 +19,7 @@ import {
 } from '../firebase/realtime';
 
 export const useRealtimeFeatures = (roomId?: string) => {
-    const { currentUser } = useAuth();
+    const { currentUser, userProfile } = useAuth();
 
     // Debug logging to track hook calls
     console.log('🔍 useRealtimeFeatures called with roomId:', roomId, 'currentUser:', !!currentUser);
@@ -44,7 +44,8 @@ export const useRealtimeFeatures = (roomId?: string) => {
                     return;
                 }
 
-                await setUserPresence(currentUser.uid, currentUser.displayName || 'Unknown User', 'online');
+                const displayName = userProfile?.displayName || currentUser.displayName || 'Unknown User';
+                await setUserPresence(currentUser.uid, displayName, 'online');
                 setIsOnline(true);
             } catch (error) {
                 console.error('Error setting user presence:', error);
@@ -67,7 +68,8 @@ export const useRealtimeFeatures = (roomId?: string) => {
 
         const joinRoom = async () => {
             try {
-                await joinRoomPresence(roomId, currentUser.uid, currentUser.displayName || 'Unknown User');
+                const displayName = userProfile?.displayName || currentUser.displayName || 'Unknown User';
+                await joinRoomPresence(roomId, currentUser.uid, displayName);
             } catch (error) {
                 console.error('Error joining room presence:', error);
             }
@@ -81,7 +83,7 @@ export const useRealtimeFeatures = (roomId?: string) => {
                 leaveRoomPresence(roomId, currentUser.uid);
             }
         };
-    }, [roomId, currentUser]);
+    }, [roomId, currentUser, userProfile]);
 
     // Subscribe to typing indicators
     useEffect(() => {
@@ -125,8 +127,9 @@ export const useRealtimeFeatures = (roomId?: string) => {
         if (!roomId || !currentUser || isTyping) return;
 
         setIsTyping(true);
-        startTyping(roomId, currentUser.uid, currentUser.displayName || 'Unknown User');
-    }, [roomId, currentUser, isTyping]);
+        const displayName = userProfile?.displayName || currentUser.displayName || 'Unknown User';
+        startTyping(roomId, currentUser.uid, displayName);
+    }, [roomId, currentUser, userProfile, isTyping]);
 
     const handleStopTyping = useCallback(() => {
         if (!roomId || !currentUser || !isTyping) return;

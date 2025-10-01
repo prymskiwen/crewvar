@@ -32,45 +32,6 @@ const Footer = () => {
                         </div>
                     </div>
 
-                    {/* Quick Links Column */}
-                    <div>
-                        <h4 className="text-base font-semibold mb-4 text-white">Quick Links</h4>
-                        <ul className="space-y-3">
-                            <li>
-                                <Link
-                                    to="/dashboard"
-                                    className="text-white/80 hover:text-white transition-colors text-sm flex items-center"
-                                >
-                                    Dashboard
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    to="/explore-ships"
-                                    className="text-white/80 hover:text-white transition-colors text-sm flex items-center"
-                                >
-                                    Explore Ships
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    to="/chat"
-                                    className="text-white/80 hover:text-white transition-colors text-sm flex items-center"
-                                >
-                                    Messages
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    to="/profile"
-                                    className="text-white/80 hover:text-white transition-colors text-sm flex items-center"
-                                >
-                                    My Profile
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-
                     {/* Support Column */}
                     <div>
                         <h4 className="text-base font-semibold mb-4 text-white">Support</h4>

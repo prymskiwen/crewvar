@@ -88,12 +88,6 @@ export const TodayOnBoardCard = ({ onConnectClick }: TodayOnBoardCardProps) => {
                     <span className="bg-[#069B93] text-white text-xs px-2 py-1 rounded-full font-medium">
                         {crew.length}
                     </span>
-                    <button
-                        onClick={onConnectClick}
-                        className="px-2 py-1 bg-[#069B93] text-white text-xs rounded hover:bg-[#058a7a] transition-colors"
-                    >
-                        Connect
-                    </button>
                 </div>
             </div>
 

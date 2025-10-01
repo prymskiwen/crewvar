@@ -150,7 +150,7 @@ const DashboardSidebar = ({ isOpen, onToggle, setShowCheckInDialog }: {
                 <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/20">
                     <div className="text-center">
                         <p className="text-white/60 text-xs">
-                            © 2024 Crewvar
+                            © 2025 Crewvar
                         </p>
                         <p className="text-white/40 text-xs mt-1">
                             Connect with your crew

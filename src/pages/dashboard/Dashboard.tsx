@@ -23,7 +23,7 @@ const Dashboard = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                     {/* Today on Board */}
                     <div>
-                        <TodayOnBoardCard onConnectClick={() => console.log('Connect clicked')} />
+                        <TodayOnBoardCard />
                     </div>
 
                     {/* Who's in Your Port */}

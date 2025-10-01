@@ -5,11 +5,7 @@ import { getProfilePhotoUrl } from '../../utils/images';
 import { useAuth } from '../../context/AuthContextFirebase';
 import { getCrewMembers } from '../../firebase/firestore';
 
-interface TodayOnBoardCardProps {
-    onConnectClick: () => void;
-}
-
-export const TodayOnBoardCard = ({ onConnectClick }: TodayOnBoardCardProps) => {
+export const TodayOnBoardCard = () => {
     const { currentUser, userProfile } = useAuth();
     const [crewData, setCrewData] = useState<any[]>([]);
 

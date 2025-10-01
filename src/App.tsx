@@ -9,40 +9,40 @@ import { ScrollToTop } from "./layout";
 
 const AppContent = React.memo(() => {
     return (
-        <RealtimeProvider>
-            <ErrorBoundary>
-                <ScrollToTop />
-                <AuthGuard>
-                    <BanGuard>
-                        <ConditionalGuards>
-                            <AppRoutes />
-                        </ConditionalGuards>
-                    </BanGuard>
-                </AuthGuard>
-            </ErrorBoundary>
-        </RealtimeProvider>
+        <ErrorBoundary>
+            <ScrollToTop />
+            <AuthGuard>
+                <BanGuard>
+                    <ConditionalGuards>
+                        <AppRoutes />
+                    </ConditionalGuards>
+                </BanGuard>
+            </AuthGuard>
+        </ErrorBoundary>
     );
 });
 
 const App = React.memo(() => {
     return (
         <AuthProvider>
-            <ToastContainer
-                autoClose={3500}
-                draggable={false}
-                pauseOnHover={false}
-                enableMultiContainer={false}
-                closeOnClick={true}
-                newestOnTop={true}
-                position="top-right"
-                hideProgressBar={false}
-                rtl={false}
-                limit={5}
-                style={{
-                    touchAction: 'manipulation'
-                }}
-            />
-            <AppContent />
+            <RealtimeProvider>
+                <ToastContainer
+                    autoClose={3500}
+                    draggable={false}
+                    pauseOnHover={false}
+                    enableMultiContainer={false}
+                    closeOnClick={true}
+                    newestOnTop={true}
+                    position="top-right"
+                    hideProgressBar={false}
+                    rtl={false}
+                    limit={5}
+                    style={{
+                        touchAction: 'manipulation'
+                    }}
+                />
+                <AppContent />
+            </RealtimeProvider>
         </AuthProvider>
     );
 });

@@ -87,8 +87,10 @@ export const ChatRoomsSearchFilter: React.FC<ChatRoomsSearchFilterProps> = ({
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Ship Filter */}
                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Ship
+                                </label>
                                 <Autocomplete
-                                    label="Ship"
                                     value={selectedShip}
                                     onChange={(value) => setSelectedShip(value)}
                                     options={[
@@ -101,8 +103,10 @@ export const ChatRoomsSearchFilter: React.FC<ChatRoomsSearchFilterProps> = ({
 
                             {/* Department Filter */}
                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Department
+                                </label>
                                 <Autocomplete
-                                    label="Department"
                                     value={selectedDepartment}
                                     onChange={(value) => setSelectedDepartment(value)}
                                     options={[
@@ -115,8 +119,10 @@ export const ChatRoomsSearchFilter: React.FC<ChatRoomsSearchFilterProps> = ({
 
                             {/* Role Filter */}
                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Role
+                                </label>
                                 <Autocomplete
-                                    label="Role"
                                     value={selectedRole}
                                     onChange={(value) => setSelectedRole(value)}
                                     options={[

@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContextFirebase';
 import { getNotifications, getReceivedConnectionRequests, getUnreadMessageCount } from '../firebase/firestore';
+import { LiveNotifications } from '../components/notifications/LiveNotifications';
 import {
     HiBell,
     HiHome,
@@ -25,7 +26,10 @@ const AppBar = ({
     const navigate = useNavigate();
     const location = useLocation();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
+    const notificationsRef = useRef<HTMLDivElement>(null);
+
 
     // Fetch notifications count
     const { data: notifications = [] } = useQuery({
@@ -68,11 +72,14 @@ const AppBar = ({
         ...(isAdmin ? [{ name: 'Admin Panel', path: '/admin' }] : []),
     ];
 
-    // Close dropdown when clicking outside
+    // Close dropdowns when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
                 setIsProfileOpen(false);
+            }
+            if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+                setIsNotificationsOpen(false);
             }
         };
 
@@ -184,18 +191,26 @@ const AppBar = ({
                     {/* Right side - User actions */}
                     <div className="flex items-center space-x-3">
                         {/* Notifications */}
-                        <button
-                            onClick={() => navigate('/all-notifications')}
-                            className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
-                        >
-                            <HiBell className="w-5 h-5 text-gray-600" />
-                            {/* Notification badge */}
-                            {unreadNotifications > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                                </span>
-                            )}
-                        </button>
+                        <div className="relative" ref={notificationsRef}>
+                            <button
+                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+                            >
+                                <HiBell className="w-5 h-5 text-gray-600" />
+                                {/* Notification badge */}
+                                {unreadNotifications > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                                        {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* Live Notifications Dropdown */}
+                            <LiveNotifications
+                                isOpen={isNotificationsOpen}
+                                onClose={() => setIsNotificationsOpen(false)}
+                            />
+                        </div>
 
                         {/* User Profile Dropdown */}
                         <div className="relative" ref={profileRef}>

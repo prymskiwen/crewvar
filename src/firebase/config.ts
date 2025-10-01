@@ -26,35 +26,6 @@ const firebaseConfig = {
   databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL
 };
 
-// Validate required fields
-if (!firebaseConfig.apiKey) {
-  console.error('❌ VITE_FIREBASE_API_KEY is missing or undefined');
-}
-if (!firebaseConfig.projectId) {
-  console.error('❌ VITE_FIREBASE_PROJECT_ID is missing or undefined');
-}
-
-// Debug Firebase configuration
-console.log('🔧 Firebase Configuration Debug:', {
-  apiKey: firebaseConfig.apiKey ? '✅ Set' : '❌ Missing',
-  authDomain: firebaseConfig.authDomain ? '✅ Set' : '❌ Missing',
-  projectId: firebaseConfig.projectId ? '✅ Set' : '❌ Missing',
-  storageBucket: firebaseConfig.storageBucket ? '✅ Set' : '❌ Missing',
-  messagingSenderId: firebaseConfig.messagingSenderId ? '✅ Set' : '❌ Missing',
-  appId: firebaseConfig.appId ? '✅ Set' : '❌ Missing',
-  databaseURL: firebaseConfig.databaseURL ? '✅ Set' : '❌ Missing'
-});
-
-// Check if we're in development mode
-if (import.meta.env.DEV) {
-  console.log('🔧 Development mode detected - Firebase services may be limited');
-  console.log('📝 Environment variables:', {
-    VITE_FIREBASE_API_KEY: import.meta.env.VITE_FIREBASE_API_KEY ? 'Set' : 'Missing',
-    VITE_FIREBASE_PROJECT_ID: import.meta.env.VITE_FIREBASE_PROJECT_ID ? 'Set' : 'Missing',
-    VITE_FIREBASE_STORAGE_BUCKET: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ? 'Set' : 'Missing'
-  });
-}
-
 /**
  * Firebase singleton instance to prevent multiple initializations
  */
@@ -84,7 +55,12 @@ class FirebaseSingleton {
         console.error("❌ Firebase initialization failed:", error);
 
         // If app already exists, get the existing instance
-        this._app = initializeApp(firebaseConfig, 'default');
+        try {
+          this._app = initializeApp(firebaseConfig, 'default');
+        } catch (secondError) {
+          console.error("❌ Second Firebase initialization attempt failed:", secondError);
+          throw secondError;
+        }
       }
     }
     return this._app;
@@ -148,8 +124,10 @@ class FirebaseSingleton {
           console.warn('⚠️ Firebase Realtime Database URL not configured - database will be disabled');
           return null;
         }
-        this._database = getDatabase(this.app);
-        console.log('✅ Firebase Realtime Database initialized successfully');
+
+        // Ensure app is initialized first
+        const app = this.app;
+        this._database = getDatabase(app);
       } catch (error) {
         console.warn('⚠️ Firebase Realtime Database is not available:', error);
         return null;
@@ -188,57 +166,5 @@ export const storage: FirebaseStorage | null = firebaseInstance.storage;
 export const functions: Functions | null = firebaseInstance.functions;
 export const database: Database | null = firebaseInstance.database;
 export const app: FirebaseApp = firebaseInstance.app;
-
-/**
- * Connect to Firebase emulators in development mode
- * 
- * @note Emulators are disabled by default to use production Firebase
- * Uncomment the code below to enable emulator connections
- */
-/*
-const connectToEmulators = (): void => {
-  if (!import.meta.env.DEV) return;
-
-  try {
-    // Auth emulator
-    if (!auth.emulatorConfig) {
-      connectAuthEmulator(auth, 'http://localhost:9099');
-    }
-
-    // Firestore emulator
-    try {
-      connectFirestoreEmulator(db, 'localhost', 8080);
-    } catch (error) {
-      console.log('Firestore emulator already connected or not available');
-    }
-
-    // Storage emulator
-    try {
-      connectStorageEmulator(storage, 'localhost', 9199);
-    } catch (error) {
-      console.log('Storage emulator already connected or not available');
-    }
-
-    // Functions emulator
-    try {
-      connectFunctionsEmulator(functions, 'localhost', 5001);
-    } catch (error) {
-      console.log('Functions emulator already connected or not available');
-    }
-
-    // Realtime Database emulator
-    try {
-      connectDatabaseEmulator(database, 'localhost', 9000);
-    } catch (error) {
-      console.log('Database emulator already connected or not available');
-    }
-  } catch (error) {
-    console.warn('Firebase emulator connection failed:', error);
-  }
-};
-
-// Uncomment the line below to enable emulator connections
-// connectToEmulators();
-*/
 
 export default app;

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IUserProfile } from "../../types/connections";
 import { sampleConnectionContext } from "../../data/samples/connections-data";
-import { ReportUserModal } from "../reports/ReportUserModal";
+import { ReportUserModal } from "../../pages/chat/ChatRoom/ReportUserModal";
 
 interface ConnectionRequestProps {
     profile: IUserProfile;

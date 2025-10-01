@@ -11,7 +11,7 @@ import { ChatRoomsList } from './ChatRoomsList';
 import { getShipName, getDepartmentName, getRoleName } from '../../utils/data';
 import logo from '../../assets/images/Home/logo.png';
 
-export const ChatPage: React.FC = () => {
+export const Chat: React.FC = () => {
   const { userId } = useParams<{ userId?: string }>();
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();

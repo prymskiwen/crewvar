@@ -17,6 +17,7 @@ import {
     increment,
     onSnapshot
 } from 'firebase/firestore';
+import { sendLiveNotification } from './realtime';
 import { db } from './config';
 
 // Types
@@ -228,6 +229,18 @@ export const sendConnectionRequest = async (
             },
             isRead: false
         });
+
+        // Send live notification
+        try {
+            await sendLiveNotification(
+                receiverId,
+                'connection_request',
+                'New Connection Request',
+                message || 'Someone wants to connect with you!'
+            );
+        } catch (error) {
+            console.error('Error sending live notification:', error);
+        }
 
         return requestRef.id;
     } catch (error) {
@@ -533,7 +546,6 @@ export const getUserProfile = async (userId: string) => {
         const userDoc = await getDoc(doc(db, 'users', userId));
         if (userDoc.exists()) {
             const userData = userDoc.data();
-            console.log('getUserProfile - Raw user data:', { userId, userData });
             return { id: userDoc.id, ...userData };
         }
         throw new Error('User profile not found');

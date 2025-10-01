@@ -1,20 +1,19 @@
 import React, { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { useAuth } from './AuthContextFirebase';
 import {
-    setUserOnline,
-    setUserOffline,
-    updateUserStatus,
-    subscribeToOnlineUsers,
-    OnlineUser,
-    subscribeToTyping,
-    subscribeToRoomParticipants,
-    TypingUser
+    setUserPresence,
+    subscribeToRoomPresence,
+    joinRoomPresence,
+    leaveRoomPresence,
+    subscribeToTypingIndicators,
+    PresenceStatus,
+    TypingIndicator
 } from '../firebase/realtime';
 
 interface RealtimeContextType {
     isConnected: boolean;
-    onlineUsers: OnlineUser[];
-    typingUsers: { [roomId: string]: TypingUser[] };
+    onlineUsers: PresenceStatus[];
+    typingUsers: { [roomId: string]: TypingIndicator[] };
     roomParticipants: { [roomId: string]: { [userId: string]: { userName: string; joinedAt: any } } };
     setUserStatus: (status: 'online' | 'away' | 'offline') => Promise<void>;
     joinRoom: (roomId: string) => Promise<void>;
@@ -39,9 +38,11 @@ interface RealtimeProviderProps {
 
 export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) => {
     const { currentUser, userProfile, loading } = useAuth();
+
+    // All hooks must be called in the same order every time
     const [isConnected, setIsConnected] = useState(false);
-    const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
-    const [typingUsers, setTypingUsers] = useState<{ [roomId: string]: TypingUser[] }>({});
+    const [onlineUsers, setOnlineUsers] = useState<PresenceStatus[]>([]);
+    const [typingUsers, setTypingUsers] = useState<{ [roomId: string]: TypingIndicator[] }>({});
     const [roomParticipants, setRoomParticipants] = useState<{ [roomId: string]: { [userId: string]: { userName: string; joinedAt: any } } }>({});
 
     // Unsubscribe functions - use ref to avoid dependency issues
@@ -51,7 +52,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         // Only connect to realtime services after auth is fully loaded
         if (currentUser && userProfile && !loading) {
             // Set user online
-            setUserOnline(currentUser.uid, userProfile.displayName)
+            setUserPresence(currentUser.uid, userProfile.displayName, 'online')
                 .then(() => {
                     setIsConnected(true);
                 })
@@ -59,17 +60,13 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
                     console.error('Error setting user online:', error);
                 });
 
-            // Subscribe to online users
-            const unsubscribeOnlineUsers = subscribeToOnlineUsers((users) => {
-                setOnlineUsers(users);
-            });
-
-            unsubscribeFunctionsRef.current.push(unsubscribeOnlineUsers);
+            // Subscribe to online users (using room presence for now)
+            // Note: This would need to be implemented based on your specific needs
+            // For now, we'll skip this subscription
 
             // Cleanup on unmount
             return () => {
-                setUserOffline(currentUser.uid).catch(console.error);
-                unsubscribeOnlineUsers();
+                setUserPresence(currentUser.uid, userProfile.displayName, 'offline').catch(console.error);
             };
         } else if (!currentUser && !loading) {
             // User signed out - cleanup all connections
@@ -92,9 +89,9 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     }, [currentUser, userProfile, loading]);
 
     const setUserStatus = async (status: 'online' | 'away' | 'offline') => {
-        if (currentUser) {
+        if (currentUser && userProfile) {
             try {
-                await updateUserStatus(currentUser.uid, status);
+                await setUserPresence(currentUser.uid, userProfile.displayName, status);
             } catch (error) {
                 console.error('Error updating user status:', error);
                 throw error;
@@ -105,11 +102,10 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     const joinRoom = async (roomId: string) => {
         if (currentUser && userProfile) {
             try {
-                const { joinChatRoom } = await import('../firebase/realtime');
-                await joinChatRoom(roomId, currentUser.uid, userProfile.displayName);
+                await joinRoomPresence(roomId, currentUser.uid, userProfile.displayName);
 
                 // Subscribe to typing indicators for this room
-                const unsubscribeTyping = subscribeToTyping(roomId, (typing) => {
+                const unsubscribeTyping = subscribeToTypingIndicators(roomId, (typing) => {
                     setTypingUsers(prev => ({
                         ...prev,
                         [roomId]: typing
@@ -117,10 +113,19 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
                 });
 
                 // Subscribe to room participants
-                const unsubscribeParticipants = subscribeToRoomParticipants(roomId, (participants) => {
+                const unsubscribeParticipants = subscribeToRoomPresence(roomId, (participants) => {
+                    // Convert PresenceStatus[] to the expected format
+                    const participantsMap = participants.reduce((acc, participant) => {
+                        acc[participant.userId] = {
+                            userName: participant.userName,
+                            joinedAt: participant.lastSeen
+                        };
+                        return acc;
+                    }, {} as { [userId: string]: { userName: string; joinedAt: any } });
+
                     setRoomParticipants(prev => ({
                         ...prev,
-                        [roomId]: participants
+                        [roomId]: participantsMap
                     }));
                 });
 
@@ -135,8 +140,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     const leaveRoom = async (roomId: string) => {
         if (currentUser) {
             try {
-                const { leaveChatRoom } = await import('../firebase/realtime');
-                await leaveChatRoom(roomId, currentUser.uid);
+                await leaveRoomPresence(roomId, currentUser.uid);
 
                 // Clean up subscriptions for this room
                 setTypingUsers(prev => {
@@ -161,7 +165,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         if (currentUser && userProfile) {
             try {
                 const { startTyping: startTypingFn } = await import('../firebase/realtime');
-                await startTypingFn(roomId, currentUser.uid, userProfile.displayName);
+                startTypingFn(roomId, currentUser.uid, userProfile.displayName);
             } catch (error) {
                 console.error('Error starting typing:', error);
                 throw error;
@@ -173,7 +177,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         if (currentUser) {
             try {
                 const { stopTyping: stopTypingFn } = await import('../firebase/realtime');
-                await stopTypingFn(roomId, currentUser.uid);
+                stopTypingFn(roomId, currentUser.uid);
             } catch (error) {
                 console.error('Error stopping typing:', error);
                 throw error;

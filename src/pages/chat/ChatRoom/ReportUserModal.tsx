@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { ReportUserModalProps } from '../../types';
+import { ReportUserModalProps } from '../../../types';
 
 const REPORT_REASONS = [
   'Inappropriate behavior',

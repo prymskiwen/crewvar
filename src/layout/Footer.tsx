@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { HiMail, HiPhone, HiHeart, HiShieldCheck } from 'react-icons/hi';
+import { HiMail, HiShieldCheck } from 'react-icons/hi';
 import logo from '../assets/images/Home/logo.png';
 
 const Footer = () => {
@@ -93,20 +93,11 @@ const Footer = () => {
                             </li>
                             <li>
                                 <a
-                                    href="mailto:support@crewvar.com"
+                                    href="/contact"
                                     className="text-white/80 hover:text-white transition-colors text-sm flex items-center"
                                 >
                                     <HiMail className="w-4 h-4 mr-2" />
                                     support@crewvar.com
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    href="tel:+1-555-CREWVAR"
-                                    className="text-white/80 hover:text-white transition-colors text-sm flex items-center"
-                                >
-                                    <HiPhone className="w-4 h-4 mr-2" />
-                                    +1 (555) CREWVAR
                                 </a>
                             </li>
                         </ul>
@@ -189,9 +180,6 @@ const Footer = () => {
                         <div className="text-center lg:text-left">
                             <p className="text-white/80 text-sm">
                                 © {currentYear} Crewvar. All rights reserved.
-                            </p>
-                            <p className="text-white/60 text-xs mt-1">
-                                Made with <HiHeart className="inline w-3 h-3 text-red-400" /> for the crew community
                             </p>
                         </div>
 

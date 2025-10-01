@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { CrewMemberCard } from './CrewMemberCard';
 import { getProfilePhotoUrl } from '../../utils/images';
 import { useAuth } from '../../context/AuthContextFirebase';
-import { getCrewMembers } from '../../firebase/firestore';
+import { getCrewMembers, getUserConnections } from '../../firebase/firestore';
 
 export const TodayOnBoardCard = () => {
     const { currentUser, userProfile } = useAuth();
@@ -21,6 +21,14 @@ export const TodayOnBoardCard = () => {
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 
+    // Fetch user's connections to check connection status
+    const { data: userConnections = [] } = useQuery({
+        queryKey: ['userConnections', currentUser?.uid],
+        queryFn: () => getUserConnections(currentUser!.uid),
+        enabled: !!currentUser?.uid,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
     // Filter and limit crew data
     useEffect(() => {
         if (crewResponse?.crew) {
@@ -33,6 +41,14 @@ export const TodayOnBoardCard = () => {
     }, [crewResponse, currentUser?.uid]);
 
     const crew = crewData || [];
+
+    // Check connection status for a member
+    const getConnectionStatus = (memberId: string) => {
+        const isConnected = userConnections.some(connection =>
+            connection.connectedUserId === memberId
+        );
+        return isConnected ? 'connected' : 'not_connected';
+    };
 
     const handleViewAll = () => {
         window.location.href = '/today-onboard';
@@ -98,7 +114,8 @@ export const TodayOnBoardCard = () => {
                                 department: member.departmentName || member.department_name || 'Not specified',
                                 avatar: getProfilePhotoUrl(member.profilePhoto || member.profile_photo),
                                 shipName: member.shipName || member.ship_name,
-                                cruiseLineName: member.cruiseLineName || member.cruise_line_name
+                                cruiseLineName: member.cruiseLineName || member.cruise_line_name,
+                                connectionStatus: getConnectionStatus(member.id)
                             }} />
                         ))}
                     </div>

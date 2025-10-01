@@ -7,6 +7,7 @@ interface CrewMemberCardProps {
         avatar: string;
         shipName?: string;
         cruiseLineName?: string;
+        connectionStatus?: string;
     };
 }
 
@@ -41,7 +42,13 @@ export const CrewMemberCard = ({ member }: CrewMemberCardProps) => {
                 </div>
             </div>
             <div className="flex items-center space-x-1 lg:space-x-2 flex-shrink-0">
-                <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded">✓</span>
+                {member.connectionStatus === 'connected' ? (
+                    <span className="bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded font-medium">
+                        Connected
+                    </span>
+                ) : (
+                    <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded">✓</span>
+                )}
                 <button
                     onClick={() => window.location.href = `/crew/${member.id}`}
                     className="px-2 py-1 lg:px-3 lg:py-1.5 text-xs lg:text-sm bg-[#069B93] text-white rounded hover:bg-[#058a7a] transition-colors"

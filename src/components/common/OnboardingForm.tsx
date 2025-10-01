@@ -12,6 +12,7 @@ import {
     Department,
     Role
 } from "../../firebase/firestore";
+import { uploadProfilePhoto } from "../../firebase/storage";
 import { Spinner } from "../Elements/Spinner";
 import { ShipSelection } from "./ShipSelection";
 import { AssignmentForm } from "./AssignmentForm";
@@ -184,12 +185,39 @@ const OnboardingForm = () => {
 
         setIsSubmitting(true);
         try {
-            const updateData = {
+            const updateData: any = {
                 displayName: data.displayName,
                 departmentId: data.departmentId,
                 roleId: data.roleId,
                 currentShipId: data.currentShipId
             };
+
+            // Handle profile photo upload if a file is selected
+            if (data.profilePhoto && data.profilePhoto instanceof File) {
+                console.log('Uploading profile photo:', data.profilePhoto.name);
+                
+                // Show upload progress
+                toast.info('Uploading profile photo...');
+                
+                try {
+                    const photoUrl = await uploadProfilePhoto(
+                        data.profilePhoto, 
+                        currentUser.uid,
+                        (progress) => {
+                            console.log('Upload progress:', progress);
+                        }
+                    );
+                    
+                    // Add photo URL to update data
+                    updateData.profilePhoto = photoUrl;
+                    console.log('Profile photo uploaded successfully:', photoUrl);
+                    
+                } catch (uploadError) {
+                    console.error('Error uploading profile photo:', uploadError);
+                    toast.error('Failed to upload profile photo. Please try again.');
+                    return;
+                }
+            }
 
             // Update user profile
             await updateUserProfile(currentUser.uid, updateData);

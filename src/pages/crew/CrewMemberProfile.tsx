@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { getProfilePhotoUrl } from "../../utils/images";
-import { getUserProfile, getRoles, getDepartments, getShips, getCruiseLines, sendConnectionRequest, getUserConnections, getPendingConnectionRequests } from "../../firebase/firestore";
+import { getUserProfile, getRoles, getDepartments, getShips, getCruiseLines, sendConnectionRequest, getUserConnections, getPendingConnectionRequests, createOrGetChatRoom } from "../../firebase/firestore";
 import { useAuth } from "../../context/AuthContextFirebase";
 import logo from "../../assets/images/Home/logo.png";
 
@@ -236,6 +236,26 @@ export const CrewMemberProfile = () => {
         }
     };
 
+    // Handle starting a conversation
+    const handleStartConversation = async () => {
+        if (!userId || !currentUser?.uid) return;
+
+        try {
+            toast.info('Starting conversation...');
+            
+            // Create or get existing chat room
+            const chatRoomId = await createOrGetChatRoom(currentUser.uid, userId);
+            
+            // Navigate to the chat room
+            navigate(`/chat/room/${chatRoomId}`);
+            
+            toast.success('Conversation started!');
+        } catch (error: any) {
+            console.error('Error starting conversation:', error);
+            toast.error('Failed to start conversation. Please try again.');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-white flex flex-col">
             {/* Mobile Header - Matching Messages Page Style */}
@@ -356,7 +376,7 @@ export const CrewMemberProfile = () => {
                                         )}
                                         {isConnected && (
                                             <button
-                                                onClick={() => navigate(`/chat/${userId}`)}
+                                                onClick={handleStartConversation}
                                                 className="w-full px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
                                             >
                                                 Send Message

@@ -367,6 +367,15 @@ export const respondToConnectionRequest = async (
                     },
                     isRead: false
                 });
+
+                // Automatically create a chat room for the connected users
+                try {
+                    const chatRoomId = await createOrGetChatRoom(requesterId, receiverId);
+                    console.log('Chat room created automatically:', chatRoomId);
+                } catch (chatError) {
+                    console.error('Error creating chat room:', chatError);
+                    // Don't throw error here as connection is already successful
+                }
             }
         } else {
             // Create notification for declined request

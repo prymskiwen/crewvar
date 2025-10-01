@@ -193,6 +193,16 @@ export const CrewMemberProfile = () => {
     const isConnected = connectionStatusValue === 'connected';
     const isPending = connectionStatusValue === 'pending';
     const isDeclined = connectionStatusValue === 'declined';
+    
+    // Privacy levels
+    const isLevel1 = !isConnected && !isPending; // Public level - basic info only
+    const isLevel2 = isConnected; // Connected level - full profile access
+    
+    // Debug logging for profile data
+    console.log('CrewMemberProfile - profile.displayName:', profile?.displayName);
+    console.log('CrewMemberProfile - profile keys:', profile ? Object.keys(profile) : 'No profile');
+    console.log('CrewMemberProfile - isLevel1:', isLevel1);
+    console.log('CrewMemberProfile - isLevel2:', isLevel2);
 
     // Handle sending connection request
     const handleSendConnectionRequest = async () => {
@@ -386,8 +396,8 @@ export const CrewMemberProfile = () => {
                                     </div>
                                 </div>
 
-                                {/* Level 2 Content - Only visible when connected */}
-                                {!isConnected && !isPending ? (
+                                {/* Level 1 Content - Public (always visible) */}
+                                {isLevel1 && (
                                     <div className="text-center py-8 sm:py-12">
                                         <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                             <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -403,7 +413,10 @@ export const CrewMemberProfile = () => {
                                             Send Connection Request
                                         </button>
                                     </div>
-                                ) : (
+                                )}
+
+                                {/* Level 2 Content - Only visible when connected */}
+                                {isLevel2 && (
                                     <div className="space-y-6">
                                         {/* Bio Section */}
                                         {(profile.bio || profile.bio_text) && (

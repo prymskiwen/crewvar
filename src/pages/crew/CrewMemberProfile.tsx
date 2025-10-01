@@ -1,41 +1,134 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { getProfilePhotoUrl } from "../../utils/images";
+import { getUserProfile, getRoles, getDepartments, getShips, getCruiseLines, sendConnectionRequest, getUserConnections, getPendingConnectionRequests } from "../../firebase/firestore";
+import { useAuth } from "../../context/AuthContextFirebase";
 import logo from "../../assets/images/Home/logo.png";
 
 export const CrewMemberProfile = () => {
     const { userId } = useParams<{ userId: string }>();
     const navigate = useNavigate();
-    // TODO: Implement Firebase crew profile and connection functionality
-    const crewProfile: any = {
-        display_name: 'John Doe',
-        profile_photo: null,
-        role_name: 'Captain',
-        department_name: 'Bridge',
-        ship_name: 'Sample Ship',
-        cruise_line_name: 'Sample Cruise Line',
-        bio: 'Sample bio text',
-        additional_photos: [],
-        phone: null,
-        instagram: null,
-        twitter: null,
-        facebook: null,
-        snapchat: null,
-        website: null
-    };
-    const profileLoading = false;
-    const error = null;
-    const connectionStatus: any = { status: 'none' };
-    const sendConnectionRequest = {
-        mutateAsync: async (data: any) => {
-            // Placeholder function
-            console.log('Send connection request:', data);
-        },
-        isLoading: false
-    };
+    const { currentUser } = useAuth();
     const [connectionMessage, setConnectionMessage] = useState('');
     const [showMessageInput, setShowMessageInput] = useState(false);
+
+    // Fetch user profile
+    const { data: crewProfile, isLoading: profileLoading, error } = useQuery({
+        queryKey: ['userProfile', userId],
+        queryFn: () => getUserProfile(userId!),
+        enabled: !!userId,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    // Fetch reference data
+    const { data: allRoles = [] } = useQuery({
+        queryKey: ['roles'],
+        queryFn: getRoles,
+        staleTime: 10 * 60 * 1000, // 10 minutes
+    });
+
+    const { data: departments = [] } = useQuery({
+        queryKey: ['departments'],
+        queryFn: getDepartments,
+        staleTime: 10 * 60 * 1000, // 10 minutes
+    });
+
+    const { data: allShips = [] } = useQuery({
+        queryKey: ['ships'],
+        queryFn: getShips,
+        staleTime: 10 * 60 * 1000, // 10 minutes
+    });
+
+    const { data: cruiseLines = [] } = useQuery({
+        queryKey: ['cruiseLines'],
+        queryFn: getCruiseLines,
+        staleTime: 10 * 60 * 1000, // 10 minutes
+    });
+
+    // Fetch user's connections to check connection status
+    const { data: userConnections = [] } = useQuery({
+        queryKey: ['userConnections', currentUser?.uid],
+        queryFn: () => getUserConnections(currentUser!.uid),
+        enabled: !!currentUser?.uid,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    // Fetch pending connection requests
+    const { data: pendingRequests = [] } = useQuery({
+        queryKey: ['pendingRequests', currentUser?.uid],
+        queryFn: () => getPendingConnectionRequests(currentUser!.uid),
+        enabled: !!currentUser?.uid,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    // Helper functions to get names from IDs
+    const getRoleName = (roleId: string) => {
+        if (!roleId) return 'Crew Member';
+        const role = allRoles.find(r => r.id === roleId);
+        return role ? role.name : 'Crew Member';
+    };
+
+    const getDepartmentName = (departmentId: string) => {
+        if (!departmentId) return 'No Department';
+        const department = departments.find(d => d.id === departmentId);
+        return department ? department.name : 'No Department';
+    };
+
+    const getShipName = (shipId: string) => {
+        if (!shipId) return 'No Ship';
+        const ship = allShips.find(s => s.id === shipId);
+        return ship ? ship.name : 'No Ship';
+    };
+
+    const getCruiseLineName = (cruiseLineId: string) => {
+        if (!cruiseLineId) return 'No Cruise Line';
+        const cruiseLine = cruiseLines.find(c => c.id === cruiseLineId);
+        return cruiseLine ? cruiseLine.name : 'No Cruise Line';
+    };
+
+    // Check connection status for this user
+    const getConnectionStatus = () => {
+        if (!userId || !currentUser?.uid) return 'none';
+        
+        // Check if already connected
+        const isConnected = userConnections.some(connection =>
+            connection.connectedUserId === userId
+        );
+        
+        if (isConnected) {
+            return 'connected';
+        }
+        
+        // Check if there's a pending request
+        const hasPendingRequest = pendingRequests.some(request =>
+            request.receiverId === userId
+        );
+        
+        if (hasPendingRequest) {
+            return 'pending';
+        }
+        
+        return 'none';
+    };
+
+    const connectionStatus = { status: getConnectionStatus() };
+
+    // Send connection request mutation
+    const sendConnectionRequestMutation = useMutation({
+        mutationFn: async (data: { receiverId: string; message?: string }) => {
+            if (!currentUser?.uid) throw new Error('User not authenticated');
+            return await sendConnectionRequest(currentUser.uid, data.receiverId, data.message);
+        },
+        onSuccess: () => {
+            // Refetch pending requests to update UI
+            // The query will automatically refetch due to React Query's cache invalidation
+        },
+        onError: (error: any) => {
+            console.error('Failed to send connection request:', error);
+        }
+    });
 
     // Debug logging
     console.log('CrewMemberProfile - userId:', userId);
@@ -93,7 +186,7 @@ export const CrewMemberProfile = () => {
         );
     }
 
-    const profile = crewProfile;
+    const profile = crewProfile as any;
 
     // Use real connection status from API instead of profile data
     const connectionStatusValue = connectionStatus?.status || 'none';
@@ -106,7 +199,7 @@ export const CrewMemberProfile = () => {
         if (!userId) return;
 
         try {
-            await sendConnectionRequest.mutateAsync({
+            await sendConnectionRequestMutation.mutateAsync({
                 receiverId: userId,
                 message: connectionMessage || undefined
             });
@@ -122,7 +215,7 @@ export const CrewMemberProfile = () => {
             });
         } catch (error: any) {
             console.error('Failed to send connection request:', error);
-            toast.error(error.response?.data?.error || 'Failed to send connection request. Please try again.', {
+            toast.error(error.message || 'Failed to send connection request. Please try again.', {
                 position: "top-right",
                 autoClose: 5000,
                 hideProgressBar: false,
@@ -176,7 +269,7 @@ export const CrewMemberProfile = () => {
                                     <div className="flex justify-center sm:justify-start">
                                         <div className="relative">
                                             <img
-                                                src={getProfilePhotoUrl(profile.profile_photo)}
+                                                src={getProfilePhotoUrl(profile.profilePhoto || profile.profile_photo)}
                                                 alt="Profile"
                                                 className="w-24 h-24 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-white shadow-lg"
                                             />
@@ -184,8 +277,8 @@ export const CrewMemberProfile = () => {
                                         </div>
                                     </div>
                                     <div className="text-center sm:text-left flex-1">
-                                        <h1 className="text-xl sm:text-2xl font-bold">{profile.display_name}</h1>
-                                        <p className="text-[#B9F3DF] text-base sm:text-lg">{profile.role_name || 'Crew Member'}</p>
+                                        <h1 className="text-xl sm:text-2xl font-bold">{profile.displayName || 'Unknown User'}</h1>
+                                        <p className="text-[#B9F3DF] text-base sm:text-lg">{getRoleName(profile.roleId)}</p>
                                         <div className="flex items-center justify-center sm:justify-start space-x-2 mt-2">
                                             <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                                             <span className="text-sm text-[#B9F3DF]">Online now</span>
@@ -222,10 +315,10 @@ export const CrewMemberProfile = () => {
                                                         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                                                             <button
                                                                 onClick={handleSendConnectionRequest}
-                                                                disabled={sendConnectionRequest.isLoading}
+                                                                disabled={sendConnectionRequestMutation.isLoading}
                                                                 className="flex-1 px-6 py-3 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                                             >
-                                                                {sendConnectionRequest.isLoading ? 'Sending...' : 'Send Request'}
+                                                                {sendConnectionRequestMutation.isLoading ? 'Sending...' : 'Send Request'}
                                                             </button>
                                                             <button
                                                                 onClick={() => {
@@ -268,19 +361,27 @@ export const CrewMemberProfile = () => {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                                             <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Role</h3>
-                                            <p className="text-gray-600 text-sm sm:text-base">{profile.role_name || 'Not specified'}</p>
+                                            <p className="text-gray-600 text-sm sm:text-base">{getRoleName(profile.roleId || '')}</p>
                                         </div>
                                         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                                             <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Department</h3>
-                                            <p className="text-gray-600 text-sm sm:text-base">{profile.department_name || 'Not specified'}</p>
+                                            <p className="text-gray-600 text-sm sm:text-base">{getDepartmentName(profile.departmentId || '')}</p>
                                         </div>
                                         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                                             <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Ship</h3>
-                                            <p className="text-gray-600 text-sm sm:text-base">{profile.ship_name || 'Not specified'}</p>
+                                            <p className="text-gray-600 text-sm sm:text-base">{getShipName(profile.currentShipId || '')}</p>
                                         </div>
                                         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                                             <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Cruise Line</h3>
-                                            <p className="text-gray-600 text-sm sm:text-base">{profile.cruise_line_name || 'Not specified'}</p>
+                                            <p className="text-gray-600 text-sm sm:text-base">
+                                                {profile.currentShipId ? 
+                                                    (() => {
+                                                        const ship = allShips.find(s => s.id === profile.currentShipId);
+                                                        return ship ? getCruiseLineName(ship.cruiseLineId) : 'Not specified';
+                                                    })() 
+                                                    : 'Not specified'
+                                                }
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -305,21 +406,21 @@ export const CrewMemberProfile = () => {
                                 ) : (
                                     <div className="space-y-6">
                                         {/* Bio Section */}
-                                        {profile.bio && (
+                                        {(profile.bio || profile.bio_text) && (
                                             <div>
                                                 <h2 className="text-lg font-semibold text-gray-900 mb-3">About</h2>
                                                 <div className="bg-gray-50 rounded-lg p-4">
-                                                    <p className="text-gray-700 leading-relaxed">{profile.bio}</p>
+                                                    <p className="text-gray-700 leading-relaxed">{profile.bio || profile.bio_text}</p>
                                                 </div>
                                             </div>
                                         )}
 
                                         {/* Additional Photos Section - Mobile Optimized */}
-                                        {profile.additional_photos && profile.additional_photos.length > 0 && (
+                                        {(profile.photos || profile.additional_photos) && (profile.photos || profile.additional_photos)?.length > 0 && (
                                             <div>
                                                 <h2 className="text-lg font-semibold text-gray-900 mb-3">Photos</h2>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                                                    {profile.additional_photos.map((photo: string, index: number) => (
+                                                    {(profile.photos || profile.additional_photos || []).map((photo: string, index: number) => (
                                                         <div key={index} className="relative group">
                                                             <img
                                                                 src={photo}
@@ -336,7 +437,7 @@ export const CrewMemberProfile = () => {
                                         <div>
                                             <h2 className="text-lg font-semibold text-gray-900 mb-3">Contact Information</h2>
                                             <div className="space-y-3">
-                                                {profile.phone && (
+                                                {(profile.phone || profile.phone_number) && (
                                                     <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                                                         <div className="flex items-center space-x-3">
                                                             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -346,7 +447,7 @@ export const CrewMemberProfile = () => {
                                                             </div>
                                                             <div className="min-w-0 flex-1">
                                                                 <h3 className="font-medium text-gray-900 text-sm sm:text-base">Phone</h3>
-                                                                <p className="text-gray-600 text-sm sm:text-base truncate">{profile.phone}</p>
+                                                                <p className="text-gray-600 text-sm sm:text-base truncate">{profile.phone || profile.phone_number}</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -355,11 +456,12 @@ export const CrewMemberProfile = () => {
                                         </div>
 
                                         {/* Social Media Links - Mobile Optimized */}
-                                        {(profile.instagram || profile.twitter || profile.facebook || profile.snapchat || profile.website) && (
+                                        {(profile.instagram || profile.twitter || profile.facebook || profile.snapchat || profile.website || 
+                                          profile.instagram_handle || profile.twitter_handle || profile.facebook_url || profile.snapchat_username || profile.website_url) && (
                                             <div>
                                                 <h2 className="text-lg font-semibold text-gray-900 mb-3">Social Media & Links</h2>
                                                 <div className="space-y-3">
-                                                    {profile.instagram && (
+                                                    {(profile.instagram || profile.instagram_handle) && (
                                                         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                                                             <div className="flex items-center space-x-3">
                                                                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-pink-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -367,14 +469,14 @@ export const CrewMemberProfile = () => {
                                                                 </div>
                                                                 <div className="min-w-0 flex-1">
                                                                     <h3 className="font-medium text-gray-900 text-sm sm:text-base">Instagram</h3>
-                                                                    <a href={profile.instagram} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm truncate block">
-                                                                        {profile.instagram}
+                                                                    <a href={profile.instagram || profile.instagram_handle} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm truncate block">
+                                                                        {profile.instagram || profile.instagram_handle}
                                                                     </a>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     )}
-                                                    {profile.twitter && (
+                                                    {(profile.twitter || profile.twitter_handle) && (
                                                         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                                                             <div className="flex items-center space-x-3">
                                                                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -382,14 +484,14 @@ export const CrewMemberProfile = () => {
                                                                 </div>
                                                                 <div className="min-w-0 flex-1">
                                                                     <h3 className="font-medium text-gray-900 text-sm sm:text-base">Twitter</h3>
-                                                                    <a href={profile.twitter} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm truncate block">
-                                                                        {profile.twitter}
+                                                                    <a href={profile.twitter || profile.twitter_handle} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm truncate block">
+                                                                        {profile.twitter || profile.twitter_handle}
                                                                     </a>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     )}
-                                                    {profile.facebook && (
+                                                    {(profile.facebook || profile.facebook_url) && (
                                                         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                                                             <div className="flex items-center space-x-3">
                                                                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -397,14 +499,14 @@ export const CrewMemberProfile = () => {
                                                                 </div>
                                                                 <div className="min-w-0 flex-1">
                                                                     <h3 className="font-medium text-gray-900 text-sm sm:text-base">Facebook</h3>
-                                                                    <a href={profile.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm truncate block">
-                                                                        {profile.facebook}
+                                                                    <a href={profile.facebook || profile.facebook_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm truncate block">
+                                                                        {profile.facebook || profile.facebook_url}
                                                                     </a>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     )}
-                                                    {profile.snapchat && (
+                                                    {(profile.snapchat || profile.snapchat_username) && (
                                                         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                                                             <div className="flex items-center space-x-3">
                                                                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -412,12 +514,12 @@ export const CrewMemberProfile = () => {
                                                                 </div>
                                                                 <div className="min-w-0 flex-1">
                                                                     <h3 className="font-medium text-gray-900 text-sm sm:text-base">Snapchat</h3>
-                                                                    <p className="text-gray-600 text-xs sm:text-sm truncate">{profile.snapchat}</p>
+                                                                    <p className="text-gray-600 text-xs sm:text-sm truncate">{profile.snapchat || profile.snapchat_username}</p>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     )}
-                                                    {profile.website && (
+                                                    {(profile.website || profile.website_url) && (
                                                         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                                                             <div className="flex items-center space-x-3">
                                                                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -427,8 +529,8 @@ export const CrewMemberProfile = () => {
                                                                 </div>
                                                                 <div className="min-w-0 flex-1">
                                                                     <h3 className="font-medium text-gray-900 text-sm sm:text-base">Website</h3>
-                                                                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm truncate block">
-                                                                        {profile.website}
+                                                                    <a href={profile.website || profile.website_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm truncate block">
+                                                                        {profile.website || profile.website_url}
                                                                     </a>
                                                                 </div>
                                                             </div>

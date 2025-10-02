@@ -9,9 +9,11 @@ interface CrewMemberCardProps {
         cruiseLineName?: string;
         connectionStatus?: string;
     };
+    onConnect?: (memberId: string, memberName: string) => void;
+    isConnecting?: boolean;
 }
 
-export const CrewMemberCard = ({ member }: CrewMemberCardProps) => {
+export const CrewMemberCard = ({ member, onConnect, isConnecting }: CrewMemberCardProps) => {
     return (
         <div className="flex items-center justify-between p-2 lg:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group">
             <div className="flex items-center space-x-2 lg:space-x-3 flex-1 min-w-0">
@@ -46,6 +48,22 @@ export const CrewMemberCard = ({ member }: CrewMemberCardProps) => {
                     <span className="bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded font-medium">
                         Connected
                     </span>
+                ) : member.connectionStatus === 'pending' ? (
+                    <span className="bg-yellow-100 text-yellow-700 text-xs px-1.5 py-0.5 rounded font-medium">
+                        Pending
+                    </span>
+                ) : onConnect ? (
+                    <button
+                        onClick={() => onConnect(member.id, member.name)}
+                        disabled={isConnecting}
+                        className={`px-2 py-1 lg:px-3 lg:py-1.5 text-xs lg:text-sm rounded transition-colors ${
+                            isConnecting 
+                                ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+                                : 'bg-green-600 text-white hover:bg-green-700'
+                        }`}
+                    >
+                        {isConnecting ? 'Connecting...' : 'Quick Connect'}
+                    </button>
                 ) : (
                     <span className="bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded">✓</span>
                 )}

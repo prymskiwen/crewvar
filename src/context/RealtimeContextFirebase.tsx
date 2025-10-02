@@ -8,7 +8,7 @@ import {
     subscribeToTypingIndicators,
     PresenceStatus,
     TypingIndicator
-} from '../firebase/realtime';
+} from '../firebase/firestore';
 
 interface RealtimeContextType {
     isConnected: boolean;
@@ -56,7 +56,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
                 .then(() => {
                     setIsConnected(true);
                 })
-                .catch((error) => {
+                .catch((error: any) => {
                     console.error('Error setting user online:', error);
                 });
 
@@ -105,7 +105,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
                 await joinRoomPresence(roomId, currentUser.uid, userProfile.displayName);
 
                 // Subscribe to typing indicators for this room
-                const unsubscribeTyping = subscribeToTypingIndicators(roomId, (typing) => {
+                const unsubscribeTyping = subscribeToTypingIndicators(roomId, (typing: TypingIndicator[]) => {
                     setTypingUsers(prev => ({
                         ...prev,
                         [roomId]: typing
@@ -113,9 +113,9 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
                 });
 
                 // Subscribe to room participants
-                const unsubscribeParticipants = subscribeToRoomPresence(roomId, (participants) => {
+                const unsubscribeParticipants = subscribeToRoomPresence(roomId, (participants: PresenceStatus[]) => {
                     // Convert PresenceStatus[] to the expected format
-                    const participantsMap = participants.reduce((acc, participant) => {
+                    const participantsMap = participants.reduce((acc: any, participant: PresenceStatus) => {
                         acc[participant.userId] = {
                             userName: participant.userName,
                             joinedAt: participant.lastSeen
@@ -164,7 +164,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     const startTyping = async (roomId: string) => {
         if (currentUser && userProfile) {
             try {
-                const { startTyping: startTypingFn } = await import('../firebase/realtime');
+                const { startTyping: startTypingFn } = await import('../firebase/firestore');
                 startTypingFn(roomId, currentUser.uid, userProfile.displayName);
             } catch (error) {
                 console.error('Error starting typing:', error);
@@ -176,7 +176,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     const stopTyping = async (roomId: string) => {
         if (currentUser) {
             try {
-                const { stopTyping: stopTypingFn } = await import('../firebase/realtime');
+                const { stopTyping: stopTypingFn } = await import('../firebase/firestore');
                 stopTypingFn(roomId, currentUser.uid);
             } catch (error) {
                 console.error('Error stopping typing:', error);

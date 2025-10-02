@@ -14,7 +14,6 @@ import {
 } from "../../components/profile";
 import { getProfilePhotoUrl } from "../../utils/images";
 import {
-    updateUserProfile,
     getShips,
     getCruiseLines,
     getDepartments,
@@ -24,7 +23,7 @@ import { toast } from "react-toastify";
 import { DashboardLayout } from "../../layout/DashboardLayout";
 
 export const MyProfile = () => {
-    const { currentUser, userProfile } = useAuth();
+    const { currentUser, userProfile, updateUserProfile: updateUserProfileFromAuth } = useAuth();
     const queryClient = useQueryClient();
 
     const { data: allShips = [], isLoading: shipsLoading } = useQuery({
@@ -59,7 +58,7 @@ export const MyProfile = () => {
     const updateUserProfileMutation = useMutation({
         mutationFn: async (data: any) => {
             if (!currentUser?.uid) throw new Error('User not authenticated');
-            await updateUserProfile(currentUser.uid, data);
+            await updateUserProfileFromAuth(data);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['user', 'profile'] });
@@ -89,7 +88,7 @@ export const MyProfile = () => {
     const updateProfileDetailsMutation = useMutation({
         mutationFn: async (data: any) => {
             if (!currentUser?.uid) throw new Error('User not authenticated');
-            await updateUserProfile(currentUser.uid, data);
+            await updateUserProfileFromAuth(data);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['user', 'profile'] });
@@ -139,6 +138,36 @@ export const MyProfile = () => {
         currentCruiseLineId: '',
         cruiseLineId: '',
     });
+
+    // Sync local profile state with userProfile from AuthContext
+    useEffect(() => {
+        if (userProfile) {
+            setProfile(prev => ({
+                ...prev,
+                displayName: userProfile.displayName || '',
+                avatar: userProfile.profilePhoto || '',
+                bio: userProfile.bio || '',
+                contacts: {
+                    email: userProfile.email || '',
+                    phone: userProfile.phone || '',
+                    social: ['']
+                },
+                socialMedia: {
+                    instagram: userProfile.instagram || '',
+                    twitter: userProfile.twitter || '',
+                    facebook: userProfile.facebook || '',
+                    snapchat: userProfile.snapchat || '',
+                    website: userProfile.website || ''
+                },
+                // Job information - CRITICAL: Keep the currentShipId from userProfile
+                departmentId: userProfile.departmentId || '',
+                roleId: userProfile.roleId || '',
+                currentShipId: userProfile.currentShipId || '', // This was the missing piece!
+                currentCruiseLineId: '',
+                cruiseLineId: '',
+            }));
+        }
+    }, [userProfile]);
 
     const updateUserProfileFunc = async (data: any) => {
         await updateUserProfileMutation.mutateAsync(data);
@@ -251,6 +280,15 @@ export const MyProfile = () => {
 
     const handleProfileEditSave = async (profileData: any) => {
         try {
+            console.log('🔧 Profile update data:', {
+                displayName: profileData.displayName,
+                profilePhoto: profile.avatar,
+                departmentId: profileData.departmentId || '',
+                roleId: profileData.roleId || '',
+                currentShipId: profile.currentShipId,
+                userProfileCurrentShipId: userProfile?.currentShipId
+            });
+
             await updateUserProfileFunc({
                 displayName: profileData.displayName,
                 profilePhoto: profile.avatar,

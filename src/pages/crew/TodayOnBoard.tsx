@@ -167,12 +167,13 @@ export const TodayOnBoardPage = () => {
     // Connection request mutation
     const sendConnectionRequestMutation = useMutation(
         async (params: { requesterId: string; receiverId: string; message?: string }) => {
-            return await sendConnectionRequest(params.receiverId, params.message || '');
+            return await sendConnectionRequest(params.requesterId, params.receiverId, params.message || '');
         },
         {
             onSuccess: () => {
                 queryClient.invalidateQueries({ queryKey: ['pendingRequests'] });
                 queryClient.invalidateQueries({ queryKey: ['userConnections'] });
+                queryClient.invalidateQueries({ queryKey: ['receivedConnectionRequests'] });
             },
             onError: (error: any) => {
                 console.error('Failed to send connection request:', error);
@@ -197,17 +198,17 @@ export const TodayOnBoardPage = () => {
         }
     );
 
-    const handleConnect = async (memberId: string, memberName: string) => {
+    const handleConnect = async (memberId: string, _memberName: string) => {
         try {
             setLoadingStates(prev => ({ ...prev, [memberId]: true }));
 
             await sendConnectionRequestMutation.mutateAsync({
                 requesterId: currentUser!.uid,
                 receiverId: memberId,
-                message: `Hi ${memberName}! I'd like to connect with you.`
+                message: "Hi! I'd love to connect with you and be friends. Please accept my connection request! 😊"
             });
 
-            toast.success(`Connection request sent to ${memberName}!`);
+            toast.success('Connection request sent successfully!');
         } catch (error: any) {
             console.error('Error sending connection request:', error);
             toast.error(error.response?.data?.error || 'Failed to send connection request. Please try again.');
@@ -425,7 +426,7 @@ export const TodayOnBoardPage = () => {
                                                         disabled={loadingStates[member.id]}
                                                                     className="flex-1 sm:flex-none px-3 py-2 bg-[#069B93] text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-[#058a7a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                                     >
-                                                        {loadingStates[member.id] ? 'Sending...' : 'Connect'}
+                                                        {loadingStates[member.id] ? 'Connecting...' : 'Quick Connect'}
                                                     </button>
                                                             );
                                                         }

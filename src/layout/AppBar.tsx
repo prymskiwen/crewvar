@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContextFirebase';
-import { getNotifications, getReceivedConnectionRequests, getUnreadMessageCount } from '../firebase/firestore';
+import { getNotifications, getReceivedConnectionRequests, getUnreadMessageCount, subscribeToLiveNotifications, LiveNotification, testLiveNotification } from '../firebase/firestore';
 import { LiveNotifications } from '../components/notifications/LiveNotifications';
 import {
     HiBell,
@@ -27,6 +27,7 @@ const AppBar = ({
     const location = useLocation();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [liveNotifications, setLiveNotifications] = useState<LiveNotification[]>([]);
     const profileRef = useRef<HTMLDivElement>(null);
     const notificationsRef = useRef<HTMLDivElement>(null);
 
@@ -53,7 +54,41 @@ const AppBar = ({
         refetchInterval: 30000 // Refetch every 30 seconds
     });
 
-    const unreadNotifications = notifications.filter((n: any) => !n.isRead).length;
+    // Subscribe to live notifications
+    useEffect(() => {
+        if (!currentUser) {
+            console.log('🔔 No current user, skipping live notifications subscription');
+            return;
+        }
+
+        console.log('🔔 Setting up live notifications subscription for user:', currentUser.uid);
+        const unsubscribe = subscribeToLiveNotifications(currentUser.uid, (notifications: LiveNotification[]) => {
+            console.log('🔔 Live notifications received in AppBar:', notifications.length, 'notifications');
+            console.log('🔔 Notifications data:', notifications);
+            setLiveNotifications(notifications);
+        });
+
+        return () => {
+            console.log('🔔 Cleaning up live notifications subscription');
+            unsubscribe();
+        };
+    }, [currentUser]);
+
+    // Calculate total unread notifications (live + legacy)
+    const unreadLiveNotifications = liveNotifications.filter(n => !n.read);
+    const unreadLegacyNotifications = notifications.filter((n: any) => !n.isRead);
+    const unreadNotifications = unreadLiveNotifications.length + unreadLegacyNotifications.length;
+
+    // Test function for live notifications
+    const testNotification = async () => {
+        if (!currentUser) return;
+        try {
+            await testLiveNotification(currentUser.uid);
+            toast.success('Test notification sent!');
+        } catch (error) {
+            toast.error('Failed to send test notification');
+        }
+    };
 
     // Check if user is admin
     const isAdmin = !!currentUser && (
@@ -190,6 +225,15 @@ const AppBar = ({
 
                     {/* Right side - User actions */}
                     <div className="flex items-center space-x-3">
+                        {/* Test Button (temporary for debugging) */}
+                        <button
+                            onClick={testNotification}
+                            className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-xs bg-blue-100 text-blue-600"
+                            title="Test Live Notification"
+                        >
+                            Test
+                        </button>
+
                         {/* Notifications */}
                         <div className="relative" ref={notificationsRef}>
                             <button

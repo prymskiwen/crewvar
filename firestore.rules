@@ -63,6 +63,68 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
+    // Live Notifications - users can read/write their own live notifications
+    match /liveNotifications/{notificationId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null;
+      // Admins can read all live notifications for statistics
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // Typing indicators - users can read/write typing indicators for rooms they participate in
+    match /typing/{typingId} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(resource.data.roomId)).data.participants;
+      allow create: if request.auth != null;
+    }
+    
+    // Presence - users can read all presence, write their own
+    match /presence/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Room Presence - users can read/write room presence for rooms they participate in
+    match /roomPresence/{presenceId} {
+      allow read, write: if request.auth != null && 
+        request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(resource.data.roomId)).data.participants;
+      allow create: if request.auth != null;
+    }
+    
+    // Test collection - for testing purposes
+    match /test/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Ship Searches - for port detection system
+    match /shipSearches/{searchId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.searcherUserId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.searcherUserId;
+      // Admins can read all searches for analytics
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // Port Links - temporary ship-to-ship connections
+    match /portLinks/{linkId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow write: if request.auth != null;
+      // Only system can update port links (for expiration)
+      allow update: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // Assignments - users can read/write their own assignments
+    match /assignments/{assignmentId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      // Admins can read all assignments for statistics
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
     // Reports - users can create reports, admins can read all
     match /reports/{reportId} {
       allow create: if request.auth != null;

@@ -1,6 +1,9 @@
+import { useQuery } from "@tanstack/react-query";
 import { ICruiseAssignment } from "../../types/calendar";
 import { formatDateRange, getDaysDifference } from "../../data/utilities/calendar-data";
 import { HiPencil, HiCalendar } from "react-icons/hi";
+import { useAuth } from "../../context/AuthContextFirebase";
+import { getUserAssignments, getCruiseLines, getShips } from "../../firebase/firestore";
 
 interface CalendarViewProps {
     onAddAssignment?: () => void;
@@ -13,10 +16,41 @@ export const CalendarView = ({
     onEditAssignment,
     className = ""
 }: CalendarViewProps) => {
-    // TODO: Implement Firebase calendar functionality
-    const assignments: ICruiseAssignment[] = [];
-    const cruiseLines: any[] = [];
-    const allShips: any[] = [];
+    const { currentUser } = useAuth();
+
+    // Fetch user assignments
+    const { data: assignments = [], isLoading: assignmentsLoading } = useQuery({
+        queryKey: ['userAssignments', currentUser?.uid],
+        queryFn: () => {
+            if (!currentUser?.uid) throw new Error('No user ID');
+            return getUserAssignments(currentUser.uid);
+        },
+        enabled: !!currentUser?.uid,
+        retry: 3,
+        retryDelay: 1000,
+    });
+
+    // Fetch cruise lines for name resolution
+    const { data: cruiseLines = [] } = useQuery({
+        queryKey: ['cruiseLines'],
+        queryFn: getCruiseLines,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    // Fetch ships for name resolution
+    const { data: allShips = [] } = useQuery({
+        queryKey: ['ships'],
+        queryFn: getShips,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    console.log('📅 CalendarView Debug:', {
+        currentUser: currentUser?.uid,
+        assignments: assignments.length,
+        assignmentsLoading,
+        cruiseLines: cruiseLines.length,
+        ships: allShips.length
+    });
 
     const getStatusColor = (status: ICruiseAssignment['status']) => {
         switch (status) {
@@ -38,8 +72,9 @@ export const CalendarView = ({
         return cruiseLine?.name || 'Unknown Cruise Line';
     };
 
-    // Sort assignments by start date (upcoming first, then current, then completed)
-    const sortedAssignments = [...assignments].sort((a, b) => {
+    // Cast assignments to proper type and sort by start date (upcoming first, then current, then completed)
+    const typedAssignments = assignments as ICruiseAssignment[];
+    const sortedAssignments = [...typedAssignments].sort((a, b) => {
         // Current assignments first
         if (a.status === 'current' && b.status !== 'current') return -1;
         if (b.status === 'current' && a.status !== 'current') return 1;

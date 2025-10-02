@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { HiPlus, HiArrowLeft } from 'react-icons/hi';
 import { CalendarView, AssignmentForm } from '../../components/common';
 import { ICruiseAssignment } from '../../types/calendar';
+import { useAuth } from '../../context/AuthContextFirebase';
 
 export const CalendarPage = () => {
+    const { currentUser } = useAuth();
+    const queryClient = useQueryClient();
     const [showAssignmentForm, setShowAssignmentForm] = useState(false);
     const [editingAssignment, setEditingAssignment] = useState<ICruiseAssignment | null>(null);
 
@@ -21,6 +25,12 @@ export const CalendarPage = () => {
     const handleCloseForm = () => {
         setShowAssignmentForm(false);
         setEditingAssignment(null);
+    };
+
+    const handleAssignmentSuccess = () => {
+        // Refresh assignments when one is added/updated
+        queryClient.invalidateQueries({ queryKey: ['userAssignments', currentUser?.uid] });
+        console.log('📅 Assignment saved successfully - refreshing list');
     };
 
     return (
@@ -57,10 +67,7 @@ export const CalendarPage = () => {
                         <AssignmentForm
                             editingAssignment={editingAssignment}
                             onClose={handleCloseForm}
-                            onSuccess={() => {
-                                // Optional: Add any success handling here
-                                console.log('Assignment saved successfully');
-                            }}
+                            onSuccess={handleAssignmentSuccess}
                         />
                     </div>
                 ) : (

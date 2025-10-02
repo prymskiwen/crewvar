@@ -15,7 +15,8 @@ import {
     getRolesByDepartment,
     getUserConnections,
     getPendingConnectionRequests,
-    createOrGetChatRoom
+    createOrGetChatRoom,
+    trackShipSearch
 } from "../../firebase/firestore";
 
 // Custom Dropdown Component for Mobile-Friendly Selection
@@ -182,7 +183,7 @@ const CustomDropdown = ({
 
 export const ExploreShips = () => {
     const navigate = useNavigate();
-    const { currentUser } = useAuth();
+    const { currentUser, userProfile } = useAuth();
     const queryClient = useQueryClient();
     const [selectedCruiseLine, setSelectedCruiseLine] = useState<string>("");
     const [selectedShip, setSelectedShip] = useState<string>("");
@@ -456,6 +457,28 @@ export const ExploreShips = () => {
         setSelectedShip(""); // Reset ship selection
     };
 
+    // Handle ship selection and track search for port detection
+    const handleShipChange = async (shipName: string) => {
+        setSelectedShip(shipName);
+        
+        // Track ship search for port detection
+        if (currentUser?.uid && userProfile?.currentShipId && shipName) {
+            const targetShip = availableShips?.find(ship => ship.name === shipName);
+            if (targetShip?.id) {
+                try {
+                    await trackShipSearch(
+                        currentUser.uid,
+                        userProfile.currentShipId,
+                        targetShip.id
+                    );
+                } catch (error) {
+                    console.error('Error tracking ship search:', error);
+                    // Don't show error to user - this is background functionality
+                }
+            }
+        }
+    };
+
     return (
         <DashboardLayout>
             <div className="min-h-screen bg-gray-50">
@@ -521,7 +544,7 @@ export const ExploreShips = () => {
                             {/* Ship Selection */}
                             <CustomDropdown
                                 value={selectedShip}
-                                onChange={setSelectedShip}
+                                onChange={handleShipChange}
                                 options={availableShips || []}
                                 placeholder="All Ships"
                                 disabled={shipsLoading || shipsByCruiseLineLoading}

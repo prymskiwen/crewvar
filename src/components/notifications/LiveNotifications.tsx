@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContextFirebase';
-import { subscribeToLiveNotifications, markNotificationAsRead, LiveNotification } from '../../firebase/realtime';
+import { subscribeToLiveNotifications, markLiveNotificationAsRead, clearAllNotifications, LiveNotification } from '../../firebase/firestore';
 import { formatTimeAgo } from '../../utils/data';
 
 interface LiveNotificationsProps {
@@ -12,25 +12,51 @@ export const LiveNotifications: React.FC<LiveNotificationsProps> = ({ isOpen, on
     const { currentUser } = useAuth();
     const [notifications, setNotifications] = useState<LiveNotification[]>([]);
     const [loading, setLoading] = useState(true);
+    const [clearingAll, setClearingAll] = useState(false);
 
     useEffect(() => {
-        if (!currentUser || !isOpen) return;
+        if (!currentUser) {
+            console.log('🔔 LiveNotifications: No current user, skipping subscription');
+            return;
+        }
 
-        const unsubscribe = subscribeToLiveNotifications(currentUser.uid, (liveNotifications) => {
+        console.log('🔔 LiveNotifications: Setting up subscription for user:', currentUser.uid);
+        const unsubscribe = subscribeToLiveNotifications(currentUser.uid, (liveNotifications: LiveNotification[]) => {
+            console.log('🔔 LiveNotifications: Received notifications:', liveNotifications.length, 'notifications');
+            console.log('🔔 LiveNotifications: Notifications data:', liveNotifications);
             setNotifications(liveNotifications);
             setLoading(false);
         });
 
-        return unsubscribe;
-    }, [currentUser, isOpen]);
+        return () => {
+            console.log('🔔 LiveNotifications: Cleaning up subscription');
+            unsubscribe();
+        };
+    }, [currentUser]);
 
     const handleMarkAsRead = async (notificationId: string) => {
         if (!currentUser) return;
 
         try {
-            await markNotificationAsRead(currentUser.uid, notificationId);
+            await markLiveNotificationAsRead(notificationId);
         } catch (error) {
             console.error('Error marking notification as read:', error);
+        }
+    };
+
+    const handleClearAll = async () => {
+        if (!currentUser || clearingAll) return;
+
+        setClearingAll(true);
+        try {
+            console.log('🗑️ Clearing all notifications for user:', currentUser.uid);
+            await clearAllNotifications(currentUser.uid);
+            console.log('✅ All notifications cleared successfully');
+            // The real-time subscription will automatically update the UI
+        } catch (error) {
+            console.error('❌ Error clearing all notifications:', error);
+        } finally {
+            setClearingAll(false);
         }
     };
 
@@ -153,13 +179,18 @@ export const LiveNotifications: React.FC<LiveNotificationsProps> = ({ isOpen, on
             {notifications.length > 0 && (
                 <div className="p-4 border-t border-gray-200">
                     <button
-                        onClick={() => {
-                            // Clear all notifications logic here
-                            console.log('Clear all notifications');
-                        }}
-                        className="w-full text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                        onClick={handleClearAll}
+                        disabled={clearingAll}
+                        className="w-full text-sm text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                     >
-                        Clear all notifications
+                        {clearingAll ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+                                <span>Clearing...</span>
+                            </>
+                        ) : (
+                            <span>Clear all notifications</span>
+                        )}
                     </button>
                 </div>
             )}

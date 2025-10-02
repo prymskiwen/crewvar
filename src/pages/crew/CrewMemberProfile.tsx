@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { getProfilePhotoUrl } from "../../utils/images";
 import { getUserProfile, getRoles, getDepartments, getShips, getCruiseLines, sendConnectionRequest, getUserConnections, getPendingConnectionRequests, createOrGetChatRoom } from "../../firebase/firestore";
@@ -11,10 +11,11 @@ export const CrewMemberProfile = () => {
     const { userId } = useParams<{ userId: string }>();
     const navigate = useNavigate();
     const { currentUser } = useAuth();
+    const queryClient = useQueryClient();
     const [connectionMessage, setConnectionMessage] = useState('');
     const [showMessageInput, setShowMessageInput] = useState(false);
 
-    // Fetch user profile
+    // Fetch user profile first (most important)
     const { data: crewProfile, isLoading: profileLoading, error } = useQuery({
         queryKey: ['userProfile', userId],
         queryFn: () => getUserProfile(userId!),
@@ -22,71 +23,75 @@ export const CrewMemberProfile = () => {
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 
-    // Fetch reference data
-    const { data: allRoles = [] } = useQuery({
+    // Fetch reference data only after profile is loaded (to avoid unnecessary calls)
+    const { data: allRoles = [], isLoading: rolesLoading } = useQuery({
         queryKey: ['roles'],
         queryFn: getRoles,
+        enabled: !!crewProfile, // Only fetch after profile is loaded
         staleTime: 10 * 60 * 1000, // 10 minutes
     });
 
-    const { data: departments = [] } = useQuery({
+    const { data: departments = [], isLoading: departmentsLoading } = useQuery({
         queryKey: ['departments'],
         queryFn: getDepartments,
+        enabled: !!crewProfile, // Only fetch after profile is loaded
         staleTime: 10 * 60 * 1000, // 10 minutes
     });
 
-    const { data: allShips = [] } = useQuery({
+    const { data: allShips = [], isLoading: shipsLoading } = useQuery({
         queryKey: ['ships'],
         queryFn: getShips,
+        enabled: !!crewProfile, // Only fetch after profile is loaded
         staleTime: 10 * 60 * 1000, // 10 minutes
     });
 
-    const { data: cruiseLines = [] } = useQuery({
+    const { data: cruiseLines = [], isLoading: cruiseLinesLoading } = useQuery({
         queryKey: ['cruiseLines'],
         queryFn: getCruiseLines,
+        enabled: !!crewProfile, // Only fetch after profile is loaded
         staleTime: 10 * 60 * 1000, // 10 minutes
     });
 
-    // Fetch user's connections to check connection status
+    // Fetch user's connections to check connection status (only if user is authenticated)
     const { data: userConnections = [] } = useQuery({
         queryKey: ['userConnections', currentUser?.uid],
         queryFn: () => getUserConnections(currentUser!.uid),
-        enabled: !!currentUser?.uid,
+        enabled: !!currentUser?.uid && !!crewProfile, // Only fetch after profile is loaded
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 
-    // Fetch pending connection requests
+    // Fetch pending connection requests (only if user is authenticated)
     const { data: pendingRequests = [] } = useQuery({
         queryKey: ['pendingRequests', currentUser?.uid],
         queryFn: () => getPendingConnectionRequests(currentUser!.uid),
-        enabled: !!currentUser?.uid,
+        enabled: !!currentUser?.uid && !!crewProfile, // Only fetch after profile is loaded
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 
-    // Helper functions to get names from IDs
-    const getRoleName = (roleId: string) => {
+    // Helper functions to get names from IDs (memoized for performance)
+    const getRoleName = useMemo(() => (roleId: string) => {
         if (!roleId) return 'Crew Member';
         const role = allRoles.find(r => r.id === roleId);
         return role ? role.name : 'Crew Member';
-    };
+    }, [allRoles]);
 
-    const getDepartmentName = (departmentId: string) => {
+    const getDepartmentName = useMemo(() => (departmentId: string) => {
         if (!departmentId) return 'No Department';
         const department = departments.find(d => d.id === departmentId);
         return department ? department.name : 'No Department';
-    };
+    }, [departments]);
 
-    const getShipName = (shipId: string) => {
+    const getShipName = useMemo(() => (shipId: string) => {
         if (!shipId) return 'No Ship';
         const ship = allShips.find(s => s.id === shipId);
         return ship ? ship.name : 'No Ship';
-    };
+    }, [allShips]);
 
-    const getCruiseLineName = (cruiseLineId: string) => {
+    const getCruiseLineName = useMemo(() => (cruiseLineId: string) => {
         if (!cruiseLineId) return 'No Cruise Line';
         const cruiseLine = cruiseLines.find(c => c.id === cruiseLineId);
         return cruiseLine ? cruiseLine.name : 'No Cruise Line';
-    };
+    }, [cruiseLines]);
 
     // Check connection status for this user
     const getConnectionStatus = () => {
@@ -122,20 +127,20 @@ export const CrewMemberProfile = () => {
             return await sendConnectionRequest(currentUser.uid, data.receiverId, data.message);
         },
         onSuccess: () => {
-            // Refetch pending requests to update UI
-            // The query will automatically refetch due to React Query's cache invalidation
+            // Invalidate queries to update UI immediately
+            queryClient.invalidateQueries({ queryKey: ['userConnections'] });
+            queryClient.invalidateQueries({ queryKey: ['pendingRequests'] });
+            queryClient.invalidateQueries({ queryKey: ['receivedConnectionRequests'] });
         },
         onError: (error: any) => {
             console.error('Failed to send connection request:', error);
         }
     });
 
-    // Debug logging
-    console.log('CrewMemberProfile - userId:', userId);
-    console.log('CrewMemberProfile - profileLoading:', profileLoading);
-    console.log('CrewMemberProfile - error:', error);
-    console.log('CrewMemberProfile - crewProfile:', crewProfile);
-    console.log('CrewMemberProfile - connectionStatus:', connectionStatus);
+    // Debug logging (reduced for performance)
+    if (process.env.NODE_ENV === 'development') {
+        console.log('CrewMemberProfile - userId:', userId, 'profileLoading:', profileLoading);
+    }
 
     // Show loading state
     if (profileLoading) {
@@ -150,6 +155,9 @@ export const CrewMemberProfile = () => {
             </div>
         );
     }
+
+    // Show loading state for reference data (after profile is loaded)
+    const isReferenceDataLoading = rolesLoading || departmentsLoading || shipsLoading || cruiseLinesLoading;
 
     // Show error state
     if (error || !crewProfile) {
@@ -198,11 +206,10 @@ export const CrewMemberProfile = () => {
     const isLevel1 = !isConnected && !isPending; // Public level - basic info only
     const isLevel2 = isConnected; // Connected level - full profile access
     
-    // Debug logging for profile data
-    console.log('CrewMemberProfile - profile.displayName:', profile?.displayName);
-    console.log('CrewMemberProfile - profile keys:', profile ? Object.keys(profile) : 'No profile');
-    console.log('CrewMemberProfile - isLevel1:', isLevel1);
-    console.log('CrewMemberProfile - isLevel2:', isLevel2);
+    // Debug logging for profile data (reduced for performance)
+    if (process.env.NODE_ENV === 'development') {
+        console.log('CrewMemberProfile - profile.displayName:', profile?.displayName, 'isLevel1:', isLevel1, 'isLevel2:', isLevel2);
+    }
 
     // Handle sending connection request
     const handleSendConnectionRequest = async () => {
@@ -388,32 +395,39 @@ export const CrewMemberProfile = () => {
                                 {/* Basic Information - Mobile Optimized */}
                                 <div>
                                     <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                                            <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Role</h3>
-                                            <p className="text-gray-600 text-sm sm:text-base">{getRoleName(profile.roleId || '')}</p>
+                                    {isReferenceDataLoading ? (
+                                        <div className="text-center py-8">
+                                            <div className="w-6 h-6 border-2 border-[#069B93] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                            <p className="text-gray-500 text-sm">Loading details...</p>
                                         </div>
-                                        <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                                            <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Department</h3>
-                                            <p className="text-gray-600 text-sm sm:text-base">{getDepartmentName(profile.departmentId || '')}</p>
+                                    ) : (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                                                <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Role</h3>
+                                                <p className="text-gray-600 text-sm sm:text-base">{getRoleName(profile.roleId || '')}</p>
+                                            </div>
+                                            <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                                                <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Department</h3>
+                                                <p className="text-gray-600 text-sm sm:text-base">{getDepartmentName(profile.departmentId || '')}</p>
+                                            </div>
+                                            <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                                                <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Ship</h3>
+                                                <p className="text-gray-600 text-sm sm:text-base">{getShipName(profile.currentShipId || '')}</p>
+                                            </div>
+                                            <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                                                <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Cruise Line</h3>
+                                                <p className="text-gray-600 text-sm sm:text-base">
+                                                    {profile.currentShipId ? 
+                                                        (() => {
+                                                            const ship = allShips.find(s => s.id === profile.currentShipId);
+                                                            return ship ? getCruiseLineName(ship.cruiseLineId) : 'Not specified';
+                                                        })() 
+                                                        : 'Not specified'
+                                                    }
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                                            <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Ship</h3>
-                                            <p className="text-gray-600 text-sm sm:text-base">{getShipName(profile.currentShipId || '')}</p>
-                                        </div>
-                                        <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                                            <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Cruise Line</h3>
-                                            <p className="text-gray-600 text-sm sm:text-base">
-                                                {profile.currentShipId ? 
-                                                    (() => {
-                                                        const ship = allShips.find(s => s.id === profile.currentShipId);
-                                                        return ship ? getCruiseLineName(ship.cruiseLineId) : 'Not specified';
-                                                    })() 
-                                                    : 'Not specified'
-                                                }
-                                            </p>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
 
                                 {/* Level 1 Content - Public (always visible) */}

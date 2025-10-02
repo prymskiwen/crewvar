@@ -1,7 +1,8 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import logo from '../../assets/images/Home/logo.png';
 
 export const TermsOfService = () => {
+    const navigate = useNavigate();
     const sections = [
         {
             title: "1. Acceptance of Terms",
@@ -103,15 +104,15 @@ export const TermsOfService = () => {
                         <p className="text-base sm:text-lg mb-4 sm:mb-6 opacity-90">
                             If you have any questions about these Terms of Service, please don't hesitate to contact us.
                         </p>
-                        <a
-                            href="mailto:support@crewvar.com"
+                        <button
+                            onClick={() => navigate('/contact')}
                             className="inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 bg-white text-[#069B93] rounded-xl hover:bg-gray-100 transition-colors font-semibold text-sm sm:text-base"
                         >
                             <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
                             Contact Support
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>

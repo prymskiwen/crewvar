@@ -17,8 +17,60 @@ import {
     increment,
     onSnapshot
 } from 'firebase/firestore';
-import { sendLiveNotification } from './realtime';
+// Removed realtime import - all features now use Firestore
 import { db } from './config';
+
+// Realtime Features Types (migrated from Realtime Database)
+export interface TypingIndicator {
+    isTyping: boolean;
+    timestamp: number;
+    userId: string;
+    userName: string;
+}
+
+export interface PresenceStatus {
+    status: 'online' | 'offline' | 'away';
+    lastSeen: number;
+    userId: string;
+    userName: string;
+}
+
+export interface LiveNotification {
+    id: string;
+    type: 'message' | 'connection_request' | 'system';
+    title: string;
+    message: string;
+    userId: string;
+    roomId?: string; // Optional field - only present for message notifications
+    timestamp: number;
+    read: boolean;
+}
+
+// Port Detection System Interfaces
+export interface ShipSearch {
+    id?: string;
+    searcherUserId: string;
+    searcherShipId: string;
+    targetShipId: string;
+    searchDate: string; // YYYY-MM-DD format
+    timestamp: number;
+}
+
+export interface PortLink {
+    id?: string;
+    shipAId: string;
+    shipBId: string;
+    shipAName?: string;
+    shipBName?: string;
+    linkDate: string; // YYYY-MM-DD
+    createdAt: number;
+    expiresAt: number; // End of day timestamp
+    searchCount: {
+        shipA: number; // Users from Ship A who searched Ship B
+        shipB: number; // Users from Ship B who searched Ship A
+    };
+    isActive: boolean;
+}
 
 // Types
 export interface ChatRoom {
@@ -206,6 +258,12 @@ export const sendConnectionRequest = async (
     message?: string
 ): Promise<string> => {
     try {
+        console.log('🔗 sendConnectionRequest called with:', {
+            requesterId,
+            receiverId,
+            message
+        });
+
         const requestData = {
             requesterId,
             receiverId,
@@ -217,29 +275,18 @@ export const sendConnectionRequest = async (
 
         const requestRef = await addDoc(collection(db, 'connectionRequests'), requestData);
 
-        // Create notification for the receiver
-        await createNotification({
-            userId: receiverId,
-            type: 'connection_request',
-            title: 'New Connection Request',
-            message: message || 'Someone wants to connect with you!',
-            data: {
-                requesterId,
-                requestId: requestRef.id
-            },
-            isRead: false
-        });
-
-        // Send live notification
+        // Send live notification (no need for legacy notification as well)
         try {
-            await sendLiveNotification(
+            console.log('📤 Sending live notification to user:', receiverId, 'with message:', message || 'Someone wants to connect with you!');
+            const notification = await sendLiveNotification(
                 receiverId,
                 'connection_request',
                 'New Connection Request',
                 message || 'Someone wants to connect with you!'
             );
+            console.log('✅ Live notification sent successfully:', notification.id);
         } catch (error) {
-            console.error('Error sending live notification:', error);
+            console.error('❌ Error sending live notification:', error);
         }
 
         return requestRef.id;
@@ -374,6 +421,14 @@ export const respondToConnectionRequest = async (
                     console.log('Chat room created automatically:', chatRoomId);
                 } catch (chatError) {
                     console.error('Error creating chat room:', chatError);
+                    // Don't throw error here as connection is already successful
+                }
+
+                // Check if this new connection triggers a port link
+                try {
+                    await checkPortLinksOnConnection(requesterId, receiverId);
+                } catch (portLinkError) {
+                    console.error('Error checking port links on connection:', portLinkError);
                     // Don't throw error here as connection is already successful
                 }
             }
@@ -1393,6 +1448,172 @@ export const updateUserShipAssignment = async (userId: string, shipId: string) =
     }
 };
 
+// ============================================================================
+// ASSIGNMENT FUNCTIONS
+// ============================================================================
+
+// Add a new assignment
+export const addAssignment = async (userId: string, assignmentData: {
+    cruiseLineId: string;
+    shipId: string;
+    startDate: string;
+    endDate: string;
+    description?: string;
+    status?: string;
+}) => {
+    try {
+        const assignmentsRef = collection(db, 'assignments');
+        const assignment = {
+            userId,
+            cruiseLineId: assignmentData.cruiseLineId,
+            shipId: assignmentData.shipId,
+            startDate: assignmentData.startDate,
+            endDate: assignmentData.endDate,
+            description: assignmentData.description || '',
+            status: assignmentData.status || 'upcoming',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        };
+
+        const docRef = await addDoc(assignmentsRef, assignment);
+        console.log('✅ Assignment added successfully:', docRef.id);
+        return docRef.id;
+    } catch (error) {
+        console.error('❌ Error adding assignment:', error);
+        throw error;
+    }
+};
+
+// Update an existing assignment
+export const updateAssignment = async (assignmentId: string, assignmentData: {
+    cruiseLineId?: string;
+    shipId?: string;
+    startDate?: string;
+    endDate?: string;
+    description?: string;
+    status?: string;
+}) => {
+    try {
+        const assignmentRef = doc(db, 'assignments', assignmentId);
+        const updateData = {
+            ...assignmentData,
+            updatedAt: serverTimestamp()
+        };
+
+        // Remove undefined values
+        Object.keys(updateData).forEach(key => {
+            if (updateData[key as keyof typeof updateData] === undefined) {
+                delete updateData[key as keyof typeof updateData];
+            }
+        });
+
+        await updateDoc(assignmentRef, updateData);
+        console.log('✅ Assignment updated successfully:', assignmentId);
+        return true;
+    } catch (error) {
+        console.error('❌ Error updating assignment:', error);
+        throw error;
+    }
+};
+
+// Delete an assignment
+export const deleteAssignment = async (assignmentId: string) => {
+    try {
+        const assignmentRef = doc(db, 'assignments', assignmentId);
+        await deleteDoc(assignmentRef);
+        console.log('✅ Assignment deleted successfully:', assignmentId);
+        return true;
+    } catch (error) {
+        console.error('❌ Error deleting assignment:', error);
+        throw error;
+    }
+};
+
+// Get user assignments
+export const getUserAssignments = async (userId: string) => {
+    try {
+        if (!userId) {
+            console.warn('⚠️ getUserAssignments: No userId provided');
+            return [];
+        }
+
+        console.log('📅 Fetching assignments for user:', userId);
+        
+        const assignmentsRef = collection(db, 'assignments');
+        const q = query(
+            assignmentsRef,
+            where('userId', '==', userId)
+        );
+
+        const snapshot = await getDocs(q);
+        const assignments = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        // Sort by start date (client-side to avoid index requirements)
+        assignments.sort((a: any, b: any) => {
+            const dateA = new Date(a.startDate || 0);
+            const dateB = new Date(b.startDate || 0);
+            return dateA.getTime() - dateB.getTime();
+        });
+
+        console.log('📅 Found assignments:', assignments.length);
+        return assignments;
+    } catch (error) {
+        console.error('❌ Error fetching user assignments:', error);
+        return []; // Return empty array instead of throwing
+    }
+};
+
+// Get assignments for a date range
+export const getAssignmentsForDateRange = async (userId: string, startDate: string, endDate: string) => {
+    try {
+        if (!userId) {
+            console.warn('⚠️ getAssignmentsForDateRange: No userId provided');
+            return [];
+        }
+
+        console.log('📅 Fetching assignments for date range:', { userId, startDate, endDate });
+        
+        const assignmentsRef = collection(db, 'assignments');
+        const q = query(
+            assignmentsRef,
+            where('userId', '==', userId)
+        );
+
+        const snapshot = await getDocs(q);
+        let assignments = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        // Filter by date range client-side
+        assignments = assignments.filter((assignment: any) => {
+            const assignmentStart = new Date(assignment.startDate);
+            const assignmentEnd = new Date(assignment.endDate);
+            const rangeStart = new Date(startDate);
+            const rangeEnd = new Date(endDate);
+
+            // Check if assignment overlaps with the date range
+            return assignmentStart <= rangeEnd && assignmentEnd >= rangeStart;
+        });
+
+        // Sort by start date
+        assignments.sort((a: any, b: any) => {
+            const dateA = new Date(a.startDate || 0);
+            const dateB = new Date(b.startDate || 0);
+            return dateA.getTime() - dateB.getTime();
+        });
+
+        console.log('📅 Found assignments in range:', assignments.length);
+        return assignments;
+    } catch (error) {
+        console.error('❌ Error fetching assignments for date range:', error);
+        return []; // Return empty array instead of throwing
+    }
+};
+
 // Privacy settings functions
 export const getPrivacySettings = async (userId: string) => {
     try {
@@ -1741,5 +1962,879 @@ export const getCrewMembers = async (params: {
     } catch (error) {
         console.error('Error fetching crew members:', error);
         throw error;
+    }
+};
+
+// ============================================================================
+// REALTIME FEATURES (Firestore-based, migrated from Realtime Database)
+// ============================================================================
+
+// Typing Indicators
+export const setTypingIndicator = async (roomId: string, userId: string, userName: string, isTyping: boolean) => {
+    try {
+        const typingRef = doc(db, 'typing', `${roomId}_${userId}`);
+        
+        if (isTyping) {
+            await setDoc(typingRef, {
+                isTyping: true,
+                timestamp: Date.now(),
+                userId,
+                userName,
+                roomId
+            }, { merge: true });
+
+            // Auto-remove typing indicator after 3 seconds
+            setTimeout(async () => {
+                try {
+                    await deleteDoc(typingRef);
+                } catch (error) {
+                    console.error('Error auto-removing typing indicator:', error);
+                }
+            }, 3000);
+        } else {
+            await deleteDoc(typingRef);
+        }
+    } catch (error) {
+        console.error('Error setting typing indicator:', error);
+    }
+};
+
+export const subscribeToTypingIndicators = (roomId: string, callback: (typingUsers: TypingIndicator[]) => void) => {
+    try {
+        const typingRef = collection(db, 'typing');
+        const q = query(typingRef, where('roomId', '==', roomId));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const typingUsers: TypingIndicator[] = [];
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                // Only include recent typing indicators (within 5 seconds)
+                if (data.isTyping && Date.now() - data.timestamp < 5000) {
+                    typingUsers.push({
+                        isTyping: data.isTyping,
+                        timestamp: data.timestamp,
+                        userId: data.userId,
+                        userName: data.userName
+                    });
+                }
+            });
+            callback(typingUsers);
+        });
+
+        return unsubscribe;
+    } catch (error) {
+        console.error('Error subscribing to typing indicators:', error);
+        return () => {};
+    }
+};
+
+// Online Presence
+export const setUserPresence = async (userId: string, userName: string, status: 'online' | 'offline' | 'away' = 'online') => {
+    try {
+        if (!userId || !userName) {
+            console.log('Missing userId or userName for presence');
+            return;
+        }
+
+        const presenceRef = doc(db, 'presence', userId);
+        
+        const presenceData = {
+            status,
+            lastSeen: Date.now(),
+            userId,
+            userName
+        };
+
+        await setDoc(presenceRef, presenceData, { merge: true });
+        console.log('✅ User presence set successfully');
+        return presenceData;
+    } catch (error) {
+        console.error('Error setting user presence:', error);
+        // Don't throw error to prevent app crashes
+        return null;
+    }
+};
+
+export const subscribeToUserPresence = (userId: string, callback: (presence: PresenceStatus | null) => void) => {
+    try {
+        const presenceRef = doc(db, 'presence', userId);
+
+        const unsubscribe = onSnapshot(presenceRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.data();
+                callback({
+                    status: data.status,
+                    lastSeen: data.lastSeen,
+                    userId: data.userId,
+                    userName: data.userName
+                });
+            } else {
+                callback(null);
+            }
+        });
+
+        return unsubscribe;
+    } catch (error) {
+        console.error('Error subscribing to user presence:', error);
+        return () => {};
+    }
+};
+
+export const subscribeToRoomPresence = (roomId: string, callback: (presenceList: PresenceStatus[]) => void) => {
+    try {
+        const roomPresenceRef = collection(db, 'roomPresence');
+        const q = query(roomPresenceRef, where('roomId', '==', roomId));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const presenceList: PresenceStatus[] = [];
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                presenceList.push({
+                    status: data.status,
+                    lastSeen: data.lastSeen,
+                    userId: data.userId,
+                    userName: data.userName
+                });
+            });
+            callback(presenceList);
+        });
+
+        return unsubscribe;
+    } catch (error) {
+        console.error('Error subscribing to room presence:', error);
+        return () => {};
+    }
+};
+
+export const joinRoomPresence = async (roomId: string, userId: string, userName: string) => {
+    try {
+        const roomPresenceRef = doc(db, 'roomPresence', `${roomId}_${userId}`);
+        const userPresenceRef = doc(db, 'presence', userId);
+
+        const presenceData = {
+            status: 'online',
+            lastSeen: Date.now(),
+            userId,
+            userName,
+            roomId
+        };
+
+        await setDoc(roomPresenceRef, presenceData, { merge: true });
+        await setDoc(userPresenceRef, presenceData, { merge: true });
+
+        return presenceData;
+    } catch (error) {
+        console.error('Error joining room presence:', error);
+        throw error;
+    }
+};
+
+export const leaveRoomPresence = async (roomId: string, userId: string) => {
+    try {
+        const roomPresenceRef = doc(db, 'roomPresence', `${roomId}_${userId}`);
+        await deleteDoc(roomPresenceRef);
+    } catch (error) {
+        console.error('Error leaving room presence:', error);
+    }
+};
+
+// Live Notifications
+export const sendLiveNotification = async (
+    userId: string,
+    type: 'message' | 'connection_request' | 'system',
+    title: string,
+    message: string,
+    roomId?: string
+) => {
+    try {
+        console.log('🔔 sendLiveNotification called with:', {
+            userId,
+            type,
+            title,
+            message,
+            roomId
+        });
+
+        const notificationsRef = collection(db, 'liveNotifications');
+        
+        // Build notification data, filtering out undefined values
+        const notificationData: any = {
+            type,
+            title,
+            message,
+            userId,
+            timestamp: Date.now(),
+            read: false
+        };
+
+        // Only add roomId if it's defined
+        if (roomId) {
+            notificationData.roomId = roomId;
+        }
+
+        console.log('🔔 About to save notification data:', notificationData);
+
+        const docRef = await addDoc(notificationsRef, notificationData);
+        
+        console.log('🔔 Notification saved to Firestore with ID:', docRef.id);
+        
+        return {
+            id: docRef.id,
+            ...notificationData
+        };
+    } catch (error) {
+        console.error('❌ Error sending live notification:', error);
+        throw error;
+    }
+};
+
+export const subscribeToLiveNotifications = (userId: string, callback: (notifications: LiveNotification[]) => void) => {
+    try {
+        console.log('🔔 Setting up live notifications subscription for user:', userId);
+        const notificationsRef = collection(db, 'liveNotifications');
+        const q = query(
+            notificationsRef, 
+            where('userId', '==', userId),
+            limit(50)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            console.log('📥 Live notifications snapshot received:', snapshot.docs.length, 'documents for user:', userId);
+            const notifications: LiveNotification[] = [];
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                console.log('📥 Processing notification document:', doc.id, 'data:', data);
+                
+                const notification: LiveNotification = {
+                    id: doc.id,
+                    type: data.type,
+                    title: data.title,
+                    message: data.message,
+                    userId: data.userId,
+                    timestamp: data.timestamp,
+                    read: data.read
+                };
+                
+                // Only add roomId if it exists
+                if (data.roomId) {
+                    notification.roomId = data.roomId;
+                }
+                
+                notifications.push(notification);
+            });
+            
+            // Sort notifications by timestamp (newest first) - client-side sorting
+            notifications.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            
+            console.log('📥 Calling callback with', notifications.length, 'notifications for user:', userId);
+            
+            console.log('📋 Processed notifications:', notifications.length, 'notifications');
+            callback(notifications);
+        }, (error) => {
+            console.error('❌ Live notifications subscription error:', error);
+        });
+
+        return unsubscribe;
+    } catch (error) {
+        console.error('Error subscribing to live notifications:', error);
+        return () => {};
+    }
+};
+
+export const markLiveNotificationAsRead = async (notificationId: string) => {
+    try {
+        const notificationRef = doc(db, 'liveNotifications', notificationId);
+        await updateDoc(notificationRef, { read: true });
+    } catch (error) {
+        console.error('Error marking live notification as read:', error);
+    }
+};
+
+export const clearAllNotifications = async (userId: string) => {
+    try {
+        const notificationsRef = collection(db, 'liveNotifications');
+        const q = query(notificationsRef, where('userId', '==', userId));
+        const snapshot = await getDocs(q);
+        
+        const batch = writeBatch(db);
+        snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+        });
+        
+        await batch.commit();
+    } catch (error) {
+        console.error('Error clearing notifications:', error);
+    }
+};
+
+// Convenience functions
+export const startTyping = (roomId: string, userId: string, userName: string) => {
+    setTypingIndicator(roomId, userId, userName, true);
+};
+
+export const stopTyping = (roomId: string, userId: string) => {
+    setTypingIndicator(roomId, userId, '', false);
+};
+
+// Cleanup functions
+export const cleanupPresence = async (userId: string) => {
+    try {
+        const presenceRef = doc(db, 'presence', userId);
+        await deleteDoc(presenceRef);
+    } catch (error) {
+        console.error('Error cleaning up presence:', error);
+    }
+};
+
+export const cleanupRoomPresence = async (roomId: string, userId: string) => {
+    try {
+        const roomPresenceRef = doc(db, 'roomPresence', `${roomId}_${userId}`);
+        await deleteDoc(roomPresenceRef);
+    } catch (error) {
+        console.error('Error cleaning up room presence:', error);
+    }
+};
+
+// Test function (simplified for Firestore)
+export const testDatabaseConnection = async (): Promise<boolean> => {
+    try {
+        console.log('🧪 Testing Firestore connection...');
+        const testRef = doc(db, 'test', 'connection');
+        await setDoc(testRef, { timestamp: Date.now() });
+        await deleteDoc(testRef);
+        console.log('✅ Firestore connection test successful');
+        return true;
+    } catch (error) {
+        console.error('❌ Firestore connection test failed:', error);
+        return false;
+    }
+};
+
+// Test function for live notifications
+export const testLiveNotification = async (userId: string): Promise<boolean> => {
+    try {
+        console.log('🧪 Testing live notification creation for user:', userId);
+        const notification = await sendLiveNotification(
+            userId,
+            'system',
+            'Test Notification',
+            'This is a test notification to verify the system is working'
+        );
+        console.log('✅ Live notification test successful:', notification.id);
+        return true;
+    } catch (error) {
+        console.error('❌ Live notification test failed:', error);
+        return false;
+    }
+};
+
+// Real-time subscription for connection requests
+export const subscribeToConnectionRequests = (userId: string, callback: (requests: any[]) => void) => {
+    try {
+        console.log('🔗 Setting up connection requests subscription for user:', userId);
+        const requestsRef = collection(db, 'connectionRequests');
+        const q = query(
+            requestsRef,
+            where('receiverId', '==', userId),
+            where('status', '==', 'pending'),
+            limit(50)
+        );
+
+        const unsubscribe = onSnapshot(q, async (snapshot) => {
+            console.log('📥 Connection requests snapshot received:', snapshot.docs.length, 'documents');
+            
+            // Get basic request data
+            const requests = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as any[];
+
+            // Helper functions to get names (same as getReceivedConnectionRequests)
+            const getDepartmentName = async (departmentId: string) => {
+                try {
+                    const departmentDoc = await getDoc(doc(db, 'departments', departmentId));
+                    return departmentDoc.exists() ? departmentDoc.data().name : 'Unknown Department';
+                } catch (error) {
+                    return 'Unknown Department';
+                }
+            };
+
+            const getRoleName = async (roleId: string) => {
+                try {
+                    const roleDoc = await getDoc(doc(db, 'roles', roleId));
+                    return roleDoc.exists() ? roleDoc.data().name : 'Unknown Role';
+                } catch (error) {
+                    return 'Unknown Role';
+                }
+            };
+
+            // Fetch requester profiles for each request
+            const requestsWithProfiles = await Promise.all(
+                requests.map(async (request) => {
+                    try {
+                        const requesterProfile = await getUserProfile(request.requesterId) as any;
+
+                        // Get ship and cruise line information
+                        let shipName = 'Not specified';
+                        let cruiseLineName = 'Not specified';
+
+                        if (requesterProfile.currentShipId) {
+                            try {
+                                const shipDoc = await getDoc(doc(db, 'ships', requesterProfile.currentShipId));
+                                if (shipDoc.exists()) {
+                                    const shipData = shipDoc.data();
+                                    shipName = shipData.name;
+
+                                    // Get cruise line from ship
+                                    if (shipData.cruiseLineId) {
+                                        const cruiseLineDoc = await getDoc(doc(db, 'cruiseLines', shipData.cruiseLineId));
+                                        if (cruiseLineDoc.exists()) {
+                                            cruiseLineName = cruiseLineDoc.data().name;
+                                        }
+                                    }
+                                }
+                            } catch (error) {
+                                // Ignore ship/cruise line errors
+                            }
+                        }
+
+                        return {
+                            ...request,
+                            requesterName: requesterProfile.displayName,
+                            requesterPhoto: requesterProfile.profilePhoto,
+                            shipName,
+                            cruiseLineName,
+                            departmentName: requesterProfile.departmentId ? await getDepartmentName(requesterProfile.departmentId) : 'Not specified',
+                            roleName: requesterProfile.roleId ? await getRoleName(requesterProfile.roleId) : 'Not specified'
+                        };
+                    } catch (error) {
+                        console.error(`Error fetching profile for ${request.requesterId}:`, error);
+                        return {
+                            ...request,
+                            requesterName: 'Unknown User',
+                            requesterPhoto: null,
+                            shipName: 'Not specified',
+                            cruiseLineName: 'Not specified',
+                            departmentName: 'Not specified',
+                            roleName: 'Not specified'
+                        };
+                    }
+                })
+            );
+
+            // Sort by createdAt descending in memory
+            const sortedRequests = requestsWithProfiles.sort((a, b) => {
+                const aTime = (a as any).createdAt?.seconds || 0;
+                const bTime = (b as any).createdAt?.seconds || 0;
+                return bTime - aTime;
+            });
+
+            console.log('📋 Processed connection requests:', sortedRequests.length, 'requests');
+            callback(sortedRequests);
+        }, (error) => {
+            console.error('❌ Connection requests subscription error:', error);
+        });
+
+        return unsubscribe;
+    } catch (error) {
+        console.error('Error subscribing to connection requests:', error);
+        return () => {};
+    }
+};
+
+// ========================================
+// PORT DETECTION SYSTEM
+// ========================================
+
+// Helper function to get today's date in YYYY-MM-DD format
+const getTodayDateString = (): string => {
+    return new Date().toISOString().split('T')[0];
+};
+
+// Helper function to get end of day timestamp
+const getEndOfDayTimestamp = (): number => {
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    return endOfDay.getTime();
+};
+
+// Track when a user searches for another ship
+export const trackShipSearch = async (
+    searcherUserId: string,
+    searcherShipId: string,
+    targetShipId: string
+): Promise<void> => {
+    try {
+        // Don't track searches for the same ship
+        if (searcherShipId === targetShipId) return;
+
+        const today = getTodayDateString();
+        const searchesRef = collection(db, 'shipSearches');
+        
+        // Check if this user already searched for this ship today
+        const existingSearchQuery = query(
+            searchesRef,
+            where('searcherUserId', '==', searcherUserId),
+            where('targetShipId', '==', targetShipId),
+            where('searchDate', '==', today)
+        );
+        
+        const existingSearch = await getDocs(existingSearchQuery);
+        
+        // Only track one search per user per target ship per day
+        if (existingSearch.empty) {
+            const searchData: ShipSearch = {
+                searcherUserId,
+                searcherShipId,
+                targetShipId,
+                searchDate: today,
+                timestamp: Date.now()
+            };
+            
+            await addDoc(searchesRef, searchData);
+            console.log('🔍 Tracked ship search:', searcherShipId, '→', targetShipId);
+            
+            // Check if this search triggers a port link
+            await checkAndCreatePortLink(searcherShipId, targetShipId);
+        }
+    } catch (error) {
+        console.error('Error tracking ship search:', error);
+    }
+};
+
+// Check if two ships should be linked based on actual connections between users
+const checkAndCreatePortLink = async (shipAId: string, shipBId: string): Promise<void> => {
+    try {
+        // Get all users from both ships
+        const usersRef = collection(db, 'users');
+        
+        const [shipAUsersSnapshot, shipBUsersSnapshot] = await Promise.all([
+            getDocs(query(usersRef, where('currentShipId', '==', shipAId))),
+            getDocs(query(usersRef, where('currentShipId', '==', shipBId)))
+        ]);
+        
+        const shipAUserIds = shipAUsersSnapshot.docs.map(doc => doc.id);
+        const shipBUserIds = shipBUsersSnapshot.docs.map(doc => doc.id);
+        
+        // Count connections between users from these two ships
+        const connectionsRef = collection(db, 'connections');
+        let connectionCount = 0;
+        
+        // Check connections from Ship A users to Ship B users
+        for (const shipAUserId of shipAUserIds) {
+            const connectionsQuery = query(
+                connectionsRef,
+                where('userId', '==', shipAUserId)
+            );
+            
+            const connectionsSnapshot = await getDocs(connectionsQuery);
+            
+            connectionsSnapshot.forEach(doc => {
+                const connection = doc.data();
+                if (shipBUserIds.includes(connection.connectedUserId)) {
+                    connectionCount++;
+                }
+            });
+        }
+        
+        console.log('🔗 Connection count between ships:', {
+            shipA: shipAId,
+            shipB: shipBId,
+            connectionCount,
+            threshold: 5
+        });
+        
+        // Check if threshold is met (5+ connections between the ships)
+        if (connectionCount >= 5) {
+            await createPortLink(shipAId, shipBId, connectionCount, 0);
+        }
+    } catch (error) {
+        console.error('Error checking port link threshold:', error);
+    }
+};
+
+// Create a port link between two ships
+const createPortLink = async (
+    shipAId: string,
+    shipBId: string,
+    shipASearchCount: number,
+    shipBSearchCount: number
+): Promise<void> => {
+    try {
+        const today = getTodayDateString();
+        const portLinksRef = collection(db, 'portLinks');
+        
+        // Check if link already exists for today
+        const existingLinkQuery = query(
+            portLinksRef,
+            where('linkDate', '==', today),
+            where('isActive', '==', true)
+        );
+        
+        const existingLinks = await getDocs(existingLinkQuery);
+        const linkExists = existingLinks.docs.some(doc => {
+            const data = doc.data();
+            return (data.shipAId === shipAId && data.shipBId === shipBId) ||
+                   (data.shipAId === shipBId && data.shipBId === shipAId);
+        });
+        
+        if (linkExists) {
+            console.log('🚢 Port link already exists for today');
+            return;
+        }
+        
+        // Get ship names for better UX
+        const [shipADoc, shipBDoc] = await Promise.all([
+            getDoc(doc(db, 'ships', shipAId)),
+            getDoc(doc(db, 'ships', shipBId))
+        ]);
+        
+        const shipAName = shipADoc.exists() ? shipADoc.data().name : 'Unknown Ship';
+        const shipBName = shipBDoc.exists() ? shipBDoc.data().name : 'Unknown Ship';
+        
+        const portLinkData: PortLink = {
+            shipAId,
+            shipBId,
+            shipAName,
+            shipBName,
+            linkDate: today,
+            createdAt: Date.now(),
+            expiresAt: getEndOfDayTimestamp(),
+            searchCount: {
+                shipA: shipASearchCount,
+                shipB: shipBSearchCount
+            },
+            isActive: true
+        };
+        
+        await addDoc(portLinksRef, portLinkData);
+        
+        console.log('🚢 Port link created:', {
+            shipA: shipAName,
+            shipB: shipBName,
+            date: today,
+            searchCounts: { shipA: shipASearchCount, shipB: shipBSearchCount }
+        });
+        
+        // Send notifications to users on both ships
+        await sendPortLinkNotifications(shipAId, shipBId, shipAName, shipBName);
+        
+    } catch (error) {
+        console.error('Error creating port link:', error);
+    }
+};
+
+// Send notifications when ships are linked
+const sendPortLinkNotifications = async (
+    shipAId: string,
+    shipBId: string,
+    shipAName: string,
+    shipBName: string
+): Promise<void> => {
+    try {
+        // Get users from both ships
+        const usersRef = collection(db, 'users');
+        
+        const [shipAUsersQuery, shipBUsersQuery] = await Promise.all([
+            getDocs(query(usersRef, where('currentShipId', '==', shipAId))),
+            getDocs(query(usersRef, where('currentShipId', '==', shipBId)))
+        ]);
+        
+        // Send notifications to Ship A users about Ship B
+        const shipANotifications = shipAUsersQuery.docs.map(userDoc => 
+            sendLiveNotification(
+                userDoc.id,
+                'system',
+                '🚢 Ship in Port',
+                `It looks like ${shipBName} is in port with you today!`
+            )
+        );
+        
+        // Send notifications to Ship B users about Ship A
+        const shipBNotifications = shipBUsersQuery.docs.map(userDoc => 
+            sendLiveNotification(
+                userDoc.id,
+                'system',
+                '🚢 Ship in Port',
+                `It looks like ${shipAName} is in port with you today!`
+            )
+        );
+        
+        await Promise.all([...shipANotifications, ...shipBNotifications]);
+        
+        console.log('🔔 Port link notifications sent to both ships');
+        
+    } catch (error) {
+        console.error('Error sending port link notifications:', error);
+    }
+};
+
+// Create a manual port link between two ships
+export const createManualPortLink = async (
+    currentShipId: string,
+    targetShipId: string
+): Promise<void> => {
+    try {
+        console.log('🚢 Creating manual port link:', { currentShipId, targetShipId });
+        
+        // Use the private createPortLink function with manual search counts
+        await createPortLink(currentShipId, targetShipId, 1, 1);
+        
+        console.log('✅ Manual port link created successfully');
+    } catch (error) {
+        console.error('Error creating manual port link:', error);
+        throw error;
+    }
+};
+
+// Get active port links for a ship today
+export const getActivePortLinks = async (shipId: string): Promise<PortLink[]> => {
+    try {
+        const today = getTodayDateString();
+        const portLinksRef = collection(db, 'portLinks');
+        
+        const q = query(
+            portLinksRef,
+            where('linkDate', '==', today),
+            where('isActive', '==', true)
+        );
+        
+        const snapshot = await getDocs(q);
+        const links: PortLink[] = [];
+        
+        snapshot.forEach(doc => {
+            const data = doc.data() as PortLink;
+            // Include links where this ship is either shipA or shipB
+            if (data.shipAId === shipId || data.shipBId === shipId) {
+                links.push({
+                    id: doc.id,
+                    ...data
+                });
+            }
+        });
+        
+        return links;
+    } catch (error) {
+        console.error('Error fetching active port links:', error);
+        return [];
+    }
+};
+
+// Get suggested crew profiles from linked ships
+export const getSuggestedPortCrewProfiles = async (
+    currentUserShipId: string,
+    currentUserDepartmentId?: string,
+    maxResults: number = 6
+): Promise<any[]> => {
+    try {
+        const activeLinks = await getActivePortLinks(currentUserShipId);
+        
+        if (activeLinks.length === 0) {
+            return [];
+        }
+        
+        // Get the other ship(s) we're linked with
+        const linkedShipIds = activeLinks.map(link => 
+            link.shipAId === currentUserShipId ? link.shipBId : link.shipAId
+        );
+        
+        const usersRef = collection(db, 'users');
+        const suggestedProfiles: any[] = [];
+        
+        for (const linkedShipId of linkedShipIds) {
+            let q = query(
+                usersRef,
+                where('currentShipId', '==', linkedShipId),
+                limit(maxResults)
+            );
+            
+            // Prioritize same department if available
+            if (currentUserDepartmentId) {
+                q = query(
+                    usersRef,
+                    where('currentShipId', '==', linkedShipId),
+                    where('departmentId', '==', currentUserDepartmentId),
+                    limit(Math.ceil(maxResults / 2))
+                );
+            }
+            
+            const snapshot = await getDocs(q);
+            snapshot.forEach(doc => {
+                const userData = doc.data();
+                suggestedProfiles.push({
+                    id: doc.id,
+                    displayName: userData.displayName,
+                    profilePhoto: userData.profilePhoto,
+                    roleId: userData.roleId,
+                    departmentId: userData.departmentId,
+                    currentShipId: userData.currentShipId
+                });
+            });
+        }
+        
+        return suggestedProfiles.slice(0, maxResults);
+    } catch (error) {
+        console.error('Error fetching suggested port crew profiles:', error);
+        return [];
+    }
+};
+
+// Check for port links when a new connection is made
+export const checkPortLinksOnConnection = async (userId1: string, userId2: string): Promise<void> => {
+    try {
+        // Get user profiles to find their ships
+        const [user1Profile, user2Profile] = await Promise.all([
+            getUserProfile(userId1),
+            getUserProfile(userId2)
+        ]);
+        
+        const ship1Id = (user1Profile as any)?.currentShipId;
+        const ship2Id = (user2Profile as any)?.currentShipId;
+        
+        // Only check if users are on different ships
+        if (ship1Id && ship2Id && ship1Id !== ship2Id) {
+            console.log('🔗 New connection between different ships, checking port link threshold:', {
+                ship1: ship1Id,
+                ship2: ship2Id,
+                user1: userId1,
+                user2: userId2
+            });
+            
+            await checkAndCreatePortLink(ship1Id, ship2Id);
+        }
+    } catch (error) {
+        console.error('Error checking port links on connection:', error);
+    }
+};
+
+// Clean up expired port links (should be run daily)
+export const cleanupExpiredPortLinks = async (): Promise<void> => {
+    try {
+        const now = Date.now();
+        const portLinksRef = collection(db, 'portLinks');
+        
+        const expiredLinksQuery = query(
+            portLinksRef,
+            where('expiresAt', '<', now),
+            where('isActive', '==', true)
+        );
+        
+        const expiredLinks = await getDocs(expiredLinksQuery);
+        
+        if (expiredLinks.empty) {
+            console.log('🧹 No expired port links to clean up');
+            return;
+        }
+        
+        const batch = writeBatch(db);
+        expiredLinks.forEach(doc => {
+            batch.update(doc.ref, { isActive: false });
+        });
+        
+        await batch.commit();
+        console.log(`🧹 Cleaned up ${expiredLinks.size} expired port links`);
+        
+    } catch (error) {
+        console.error('Error cleaning up expired port links:', error);
     }
 };

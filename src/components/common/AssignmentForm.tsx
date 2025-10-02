@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { toast } from "react-toastify";
 import { ShipSelection } from "./ShipSelection";
 import { IAssignmentFormData, ICruiseAssignment } from "../../types/calendar";
+import { useAuth } from "../../context/AuthContextFirebase";
+import { addAssignment, updateAssignment } from "../../firebase/firestore";
 
 interface AssignmentFormProps {
     onClose: () => void;
@@ -28,17 +31,7 @@ export const AssignmentForm = ({
     className = "",
     editingAssignment = null
 }: AssignmentFormProps) => {
-    // TODO: Implement Firebase calendar functionality
-    const addAssignment = async (assignmentData: any) => {
-        // Placeholder function - TODO: Implement Firebase assignment creation
-        console.log('Adding assignment:', assignmentData);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-    };
-    const updateAssignment = async (assignmentId: string, assignmentData: any) => {
-        // Placeholder function - TODO: Implement Firebase assignment update
-        console.log('Updating assignment:', assignmentId, assignmentData);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-    };
+    const { currentUser } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedCruiseLineId, setSelectedCruiseLineId] = useState<string>("");
 
@@ -118,8 +111,13 @@ export const AssignmentForm = ({
     }, [watchedStartDate, watchedEndDate, setValue]);
 
     const onSubmit = async (data: IAssignmentFormData) => {
-        console.log('🚨 FORM SUBMITTED! This should not happen automatically!', data);
-        console.log('🚨 isEditing:', isEditing, 'editingAssignment:', editingAssignment);
+        if (!currentUser) {
+            toast.error('You must be logged in to create assignments');
+            return;
+        }
+
+        console.log('📅 FORM SUBMITTED:', data);
+        console.log('📅 isEditing:', isEditing, 'editingAssignment:', editingAssignment);
         setIsSubmitting(true);
 
         try {
@@ -130,25 +128,29 @@ export const AssignmentForm = ({
                     shipId: data.shipId,
                     startDate: data.startDate,
                     endDate: data.endDate,
+                    description: data.description,
                     status: editingAssignment.status // Keep existing status
                 });
+                toast.success('Assignment updated successfully!');
             } else {
                 // Create new assignment
-                await addAssignment({
+                await addAssignment(currentUser.uid, {
                     cruiseLineId: data.cruiseLineId,
                     shipId: data.shipId,
                     startDate: data.startDate,
                     endDate: data.endDate,
+                    description: data.description,
                     status: 'upcoming'
                 });
+                toast.success('Assignment created successfully!');
             }
 
-            console.log('🚨 FORM SUCCESS - Calling onSuccess and onClose');
+            console.log('📅 FORM SUCCESS - Calling onSuccess and onClose');
             onSuccess?.();
             onClose();
         } catch (error) {
             console.error(`Failed to ${isEditing ? 'update' : 'add'} assignment:`, error);
-            // Don't close the form on error, let user see the error
+            toast.error(`Failed to ${isEditing ? 'update' : 'create'} assignment. Please try again.`);
         } finally {
             setIsSubmitting(false);
         }

@@ -1,108 +1,175 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { LoadingPage } from '../../components/ui';
 import logo from '../../assets/images/Home/logo.png';
 import { getProfilePhotoUrl } from '../../utils/images';
+import { useAuth } from '../../context/AuthContextFirebase';
+import { getActivePortLinks, getSuggestedPortCrewProfiles, createManualPortLink, getCruiseLines, getShips, getRoles, getDepartments, sendConnectionRequest } from '../../firebase/firestore';
+import { ShipSelection } from '../../components/common/ShipSelection';
 
-// TODO: Define ICrewMember interface
+// Real crew member interface matching our data structure
 interface ICrewMember {
     id: string;
     displayName: string;
-    roleName: string;
-    departmentName: string;
-    shipName: string;
-    cruiseLineName: string;
+    roleId: string;
+    departmentId: string;
+    currentShipId: string;
     profilePhoto?: string;
 }
 
 export const WhosInPortPage = () => {
+    const { userProfile, currentUser } = useAuth();
     const [showLinkModal, setShowLinkModal] = useState(false);
     const [selectedCruiseLineId, setSelectedCruiseLineId] = useState("");
     const [selectedShipId, setSelectedShipId] = useState("");
     const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
     const [searchQuery, setSearchQuery] = useState('');
 
-    const today = new Date().toISOString().split('T')[0];
-
-    // TODO: Implement Firebase port linking functionality
-    const crewData = {
-        crew: [] as ICrewMember[],
-        linkedShips: [] as any[],
-        portName: 'Sample Port'
-    };
-    const crewLoading = false;
-    const crewError = null;
-    const cruiseLines: any[] = [];
-    const cruiseLinesLoading = false;
-    const shipsByCruiseLine: any[] = [];
-    const shipsByCruiseLineLoading = false;
-    const linkShips = async (data: any) => {
-        // Placeholder function
-        console.log('Link ships:', data);
-    };
-    const sendConnectionRequestMutation = {
-        mutateAsync: async (data: any) => {
-            console.log('Send connection request:', data);
+    // Get active port links for current user's ship
+    const { data: activePortLinks = [] } = useQuery({
+        queryKey: ['activePortLinks', userProfile?.currentShipId],
+        queryFn: () => {
+            if (!userProfile?.currentShipId) throw new Error('No ship ID');
+            return getActivePortLinks(userProfile.currentShipId);
         },
-        isLoading: false
+        enabled: !!userProfile?.currentShipId,
+        refetchInterval: 60000,
+    });
+
+    // Get ALL suggested crew profiles from linked ships (no limit for full page)
+    const { data: suggestedCrew = [], isLoading: crewLoading, error: crewError } = useQuery({
+        queryKey: ['allPortCrew', userProfile?.currentShipId, userProfile?.departmentId],
+        queryFn: () => {
+            if (!userProfile?.currentShipId) throw new Error('No ship ID');
+            return getSuggestedPortCrewProfiles(
+                userProfile.currentShipId,
+                userProfile?.departmentId,
+                50 // Show up to 50 profiles on full page
+            );
+        },
+        enabled: !!userProfile?.currentShipId && activePortLinks.length > 0,
+        refetchInterval: 300000,
+    });
+
+    // Get cruise lines for ship selection
+    const { data: cruiseLines = [], isLoading: cruiseLinesLoading } = useQuery({
+        queryKey: ['cruiseLines'],
+        queryFn: getCruiseLines,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+
+    // Get roles and departments for name resolution
+    const { data: allRoles = [] } = useQuery({
+        queryKey: ['roles'],
+        queryFn: getRoles,
+        staleTime: 10 * 60 * 1000, // 10 minutes
+    });
+
+    const { data: departments = [] } = useQuery({
+        queryKey: ['departments'],
+        queryFn: getDepartments,
+        staleTime: 10 * 60 * 1000, // 10 minutes
+    });
+
+    // Get all ships and filter by cruise line client-side
+    const { data: allShips = [], isLoading: shipsLoading } = useQuery({
+        queryKey: ['ships'],
+        queryFn: getShips,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    // Filter ships by selected cruise line
+    const shipsByCruiseLine = selectedCruiseLineId 
+        ? allShips.filter((ship: any) => ship.cruiseLineId === selectedCruiseLineId)
+        : [];
+    const shipsByCruiseLineLoading = shipsLoading;
+
+    const crew = suggestedCrew || [];
+    const linkedShips = activePortLinks || [];
+    const hasActivePortLinks = activePortLinks.length > 0;
+
+    // Debug logging
+    console.log('WhosInPort Debug:', {
+        crew: crew.length,
+        allRoles: allRoles.length,
+        departments: departments.length,
+        sampleCrewMember: crew[0],
+        sampleRole: allRoles[0],
+        sampleDepartment: departments[0]
+    });
+
+    // Helper functions to resolve IDs to names
+    const getRoleName = (roleId: string) => {
+        console.log('getRoleName called with:', roleId);
+        console.log('allRoles:', allRoles);
+        const role = allRoles.find((r: any) => r.id === roleId);
+        console.log('Found role:', role);
+        return role?.name || roleId;
     };
+
+    const getDepartmentName = (departmentId: string) => {
+        console.log('getDepartmentName called with:', departmentId);
+        console.log('departments:', departments);
+        const department = departments.find((d: any) => d.id === departmentId);
+        console.log('Found department:', department);
+        return department?.name || departmentId;
+    };
+
+    // Real connection request mutation
+    const sendConnectionRequestMutation = useMutation({
+        mutationFn: async (data: { receiverId: string; memberName?: string; message?: string }) => {
+            if (!currentUser?.uid) throw new Error('User not authenticated');
+            return await sendConnectionRequest(currentUser.uid, data.receiverId, data.message);
+        },
+        onSuccess: (_, variables) => {
+            const displayName = variables.memberName || 'user';
+            toast.success(`Connection request sent to ${displayName}!`);
+        },
+        onError: (error: any) => {
+            console.error('Failed to send connection request:', error);
+            toast.error('Failed to send connection request. Please try again.');
+        }
+    });
 
     const handleLinkShips = async () => {
-        if (!selectedCruiseLineId || !selectedShipId) return;
+        if (!selectedCruiseLineId || !selectedShipId || !userProfile?.currentShipId) return;
 
         try {
-            await linkShips({
-                shipId: selectedShipId,
-                date: today
-            });
-
+            await createManualPortLink(userProfile.currentShipId, selectedShipId);
+            
+            toast.success('Ships linked successfully!');
             setShowLinkModal(false);
             setSelectedCruiseLineId("");
             setSelectedShipId("");
         } catch (error) {
             console.error('Failed to link ships:', error);
-            alert('Failed to link ships. Please try again.');
+            toast.error('Failed to link ships. Please try again.');
         }
     };
 
     const handleConnect = async (memberId: string, memberName: string) => {
+        // Prevent duplicate requests if already loading
+        if (loadingStates[memberId] || sendConnectionRequestMutation.isLoading) {
+            return;
+        }
+
         try {
             // Set loading state for this specific member
             setLoadingStates(prev => ({ ...prev, [memberId]: true }));
 
             // Send connection request using the real API
+            // The mutation already handles success/error toasts, so we don't need to show them here
             await sendConnectionRequestMutation.mutateAsync({
                 receiverId: memberId,
+                memberName: memberName,
                 message: `Hi ${memberName}! I'd like to connect with you.`
             });
 
-            // Show success message
-            toast.success(`Connection request sent to ${memberName}!`);
-
         } catch (error: any) {
+            // Error handling is already done in the mutation's onError callback
             console.error('Failed to send connection request:', error);
-
-            // Handle specific error cases
-            const errorMessage = error.response?.data?.error;
-            const errorArray = error.response?.data?.errors;
-            const status = error.response?.status;
-
-            if (status === 500) {
-                toast.error('Server error. Please try again later.');
-                console.log('Server error - backend issue');
-            } else if (errorMessage === 'Connection already exists' || errorMessage === 'Connection request already sent') {
-                toast.info('Connection request already sent to this user!');
-            } else if (errorArray && errorArray.length > 0) {
-                const firstError = errorArray[0];
-                if (firstError.msg && firstError.msg.includes('already sent')) {
-                    toast.info('Connection request already sent to this user!');
-                } else {
-                    toast.error(`Error: ${firstError.msg || 'Failed to send connection request'}`);
-                }
-            } else {
-                toast.error('Failed to send connection request. Please try again.');
-            }
         } finally {
             // Clear loading state
             setLoadingStates(prev => ({ ...prev, [memberId]: false }));
@@ -114,9 +181,7 @@ export const WhosInPortPage = () => {
         window.location.href = `/profile/${memberId}`;
     };
 
-    const crew = crewData?.crew || [];
-    const linkedShips = Array.isArray(crewData?.linkedShips) ? crewData.linkedShips.length : 0;
-    const portName = crewData?.portName;
+    // Use the real data from queries
 
     // Filter possible friends based on search query
     const filteredCrew = crew.filter((member: ICrewMember) => {
@@ -125,8 +190,8 @@ export const WhosInPortPage = () => {
         const query = searchQuery.toLowerCase();
         return (
             member.displayName?.toLowerCase().includes(query) ||
-            member.shipName?.toLowerCase().includes(query) ||
-            member.cruiseLineName?.toLowerCase().includes(query)
+            member.roleId?.toLowerCase().includes(query) ||
+            member.departmentId?.toLowerCase().includes(query)
         );
     });
 
@@ -158,6 +223,62 @@ export const WhosInPortPage = () => {
         );
     }
 
+    // Show message when no port links are active
+    if (!hasActivePortLinks) {
+        return (
+            <div className="min-h-screen bg-white flex flex-col">
+                {/* Header */}
+                <div className="bg-teal-600 text-white p-3 sm:p-4 sticky top-0 z-10">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2 sm:space-x-3">
+                            <button
+                                onClick={() => window.location.href = '/dashboard'}
+                                className="p-2 hover:bg-teal-700 rounded-lg transition-colors"
+                            >
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            <div>
+                                <h1 className="text-base sm:text-lg font-bold">Who's in Port</h1>
+                                <p className="text-xs text-teal-100">No ships detected in port</p>
+                            </div>
+                        </div>
+                        <Link to="/dashboard" className="flex items-center hover:bg-teal-700 rounded-lg px-2 sm:px-3 py-2 transition-colors">
+                            <img
+                                src={logo}
+                                alt="Crewvar Logo"
+                                className="h-5 sm:h-6 w-auto brightness-0 invert"
+                                style={{ filter: 'brightness(0) invert(1)' }}
+                            />
+                        </Link>
+                    </div>
+                </div>
+
+                {/* No Port Links Content */}
+                <div className="flex-1 flex items-center justify-center p-4">
+                    <div className="text-center max-w-md">
+                        <div className="w-20 h-20 bg-gradient-to-br from-teal-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg className="w-10 h-10 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">No Ships in Port</h2>
+                        <p className="text-gray-600 mb-6">
+                            No other ships have been detected in port with you today. Ships are automatically linked when crew members search for each other.
+                        </p>
+                        <button
+                            onClick={() => setShowLinkModal(true)}
+                            className="px-6 py-3 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-lg hover:from-teal-700 hover:to-blue-700 transition-all duration-200 font-medium"
+                        >
+                            Link Ships Manually
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-white flex flex-col">
             {/* Mobile Header - Matching Messages Page Style */}
@@ -175,7 +296,12 @@ export const WhosInPortPage = () => {
                         <div>
                             <h1 className="text-base sm:text-lg font-bold">Who's in Port</h1>
                             <p className="text-xs text-teal-100">
-                                {portName ? `Currently docked in ${portName}` : `${crew.length} possible friends found`}
+                                {linkedShips.length > 0 
+                                    ? `Connected with ${linkedShips.map(link => 
+                                        link.shipAId === userProfile?.currentShipId ? link.shipBName : link.shipAName
+                                      ).join(', ')}`
+                                    : `${crew.length} crew members found`
+                                }
                             </p>
                         </div>
                     </div>
@@ -199,13 +325,13 @@ export const WhosInPortPage = () => {
                         <div className="flex items-center space-x-3">
                             <div className="w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
                             <span className="text-base font-semibold text-blue-800">
-                                {linkedShips > 0
-                                    ? `🔗 Linked with ${linkedShips} ship${linkedShips > 1 ? 's' : ''} today`
+                                {linkedShips.length > 0
+                                    ? `🔗 Linked with ${linkedShips.length} ship${linkedShips.length > 1 ? 's' : ''} today`
                                     : '⚓ No ships linked today'
                                 }
                             </span>
                         </div>
-                        {linkedShips === 0 && (
+                        {linkedShips.length === 0 && (
                             <p className="text-blue-600 text-sm mt-2 ml-7">
                                 Click "Link Ships" to connect with other ships in your port and discover friends
                             </p>
@@ -282,14 +408,14 @@ export const WhosInPortPage = () => {
                                                             {member.displayName}
                                                         </h4>
                                                         <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
-                                                            {member.shipName && (
+                                                            {member.roleId && (
                                                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                                    {member.shipName}
+                                                                    {getRoleName(member.roleId)}
                                                                 </span>
                                                             )}
-                                                            {member.cruiseLineName && (
+                                                            {member.departmentId && (
                                                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                                                                    {member.cruiseLineName}
+                                                                    {getDepartmentName(member.departmentId)}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -458,6 +584,52 @@ export const WhosInPortPage = () => {
                     )}
                 </div>
             </div>
+
+            {/* Manual Link Ships Modal */}
+            {showLinkModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+                        <div className="text-center mb-6">
+                            <div className="w-12 h-12 bg-gradient-to-r from-teal-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-semibold text-gray-900 mb-2">Manual Ship Linking</h3>
+                            <p className="text-sm text-gray-600">
+                                Tell us which ship is docked with you today. This creates an immediate connection for crew discovery.
+                            </p>
+                        </div>
+
+                        <div className="space-y-6">
+                            <ShipSelection
+                                selectedCruiseLineId={selectedCruiseLineId}
+                                selectedShipId={selectedShipId}
+                                onCruiseLineChange={setSelectedCruiseLineId}
+                                onShipChange={setSelectedShipId}
+                                placeholder="Select a cruise line"
+                                disabled={false}
+                            />
+                        </div>
+
+                        <div className="flex space-x-3 mt-8">
+                            <button
+                                onClick={() => setShowLinkModal(false)}
+                                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleLinkShips}
+                                disabled={!selectedCruiseLineId || !selectedShipId}
+                                className="flex-1 px-4 py-2 bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-lg hover:from-teal-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                            >
+                                Link Ships
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -8,7 +8,7 @@ import {
     leaveRoomPresence,
     sendLiveNotification,
     subscribeToLiveNotifications,
-    markNotificationAsRead,
+    markLiveNotificationAsRead,
     startTyping,
     stopTyping,
     cleanupPresence,
@@ -16,7 +16,7 @@ import {
     TypingIndicator,
     PresenceStatus,
     LiveNotification
-} from '../firebase/realtime';
+} from '../firebase/firestore';
 
 export const useRealtimeFeatures = (roomId?: string) => {
     const { currentUser, userProfile } = useAuth();
@@ -89,10 +89,10 @@ export const useRealtimeFeatures = (roomId?: string) => {
     useEffect(() => {
         if (!roomId) return;
 
-        const unsubscribe = subscribeToTypingIndicators(roomId, (typingUsers) => {
+        const unsubscribe = subscribeToTypingIndicators(roomId, (typingUsers: TypingIndicator[]) => {
             // Filter out current user from typing indicators
             const otherUsersTyping = typingUsers.filter(
-                user => user.userId !== currentUser?.uid
+                (user: TypingIndicator) => user.userId !== currentUser?.uid
             );
             setTypingUsers(otherUsersTyping);
         });
@@ -104,7 +104,7 @@ export const useRealtimeFeatures = (roomId?: string) => {
     useEffect(() => {
         if (!roomId) return;
 
-        const unsubscribe = subscribeToRoomPresence(roomId, (presenceList) => {
+        const unsubscribe = subscribeToRoomPresence(roomId, (presenceList: PresenceStatus[]) => {
             setRoomPresence(presenceList);
         });
 
@@ -115,7 +115,7 @@ export const useRealtimeFeatures = (roomId?: string) => {
     useEffect(() => {
         if (!currentUser) return;
 
-        const unsubscribe = subscribeToLiveNotifications(currentUser.uid, (notifications) => {
+        const unsubscribe = subscribeToLiveNotifications(currentUser.uid, (notifications: LiveNotification[]) => {
             setLiveNotifications(notifications);
         });
 
@@ -168,7 +168,7 @@ export const useRealtimeFeatures = (roomId?: string) => {
         if (!currentUser) return;
 
         try {
-            await markNotificationAsRead(currentUser.uid, notificationId);
+            await markLiveNotificationAsRead(notificationId);
         } catch (error) {
             console.error('Error marking notification as read:', error);
         }

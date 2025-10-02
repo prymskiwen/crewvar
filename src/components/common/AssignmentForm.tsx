@@ -293,21 +293,9 @@ export const AssignmentForm = ({
                         Cancel
                     </button>
                     <button
-                        type="button"
-                        onClick={() => {
-                            console.log('Manual submit button clicked');
-                            const formData = {
-                                cruiseLineId: watch("cruiseLineId"),
-                                shipId: watch("shipId"),
-                                startDate: watch("startDate"),
-                                endDate: watch("endDate"),
-                                description: watch("description")
-                            };
-                            console.log('Form data:', formData);
-                            onSubmit(formData);
-                        }}
+                        type="submit"
                         disabled={isSubmitting}
-                        className="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors disabled:opacity-50"
+                        className="flex-1 px-4 py-2 text-white bg-[#069B93] hover:bg-[#058a7a] rounded-lg font-medium transition-colors disabled:opacity-50"
                     >
                         {isSubmitting
                             ? (isEditing ? 'Updating Assignment...' : 'Adding Assignment...')

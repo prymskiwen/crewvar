@@ -1,9 +1,13 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { OnboardingForm, CalendarView, AssignmentForm } from "../../components/common";
 import { ICruiseAssignment } from "../../types/calendar";
+import { useAuth } from "../../context/AuthContextFirebase";
 import logo from "../../assets/images/Home/logo.png";
 
 export const Onboarding = () => {
+    const { currentUser } = useAuth();
+    const queryClient = useQueryClient();
     const [showAssignmentForm, setShowAssignmentForm] = useState(false);
     const [editingAssignment, setEditingAssignment] = useState<ICruiseAssignment | null>(null);
 
@@ -17,7 +21,10 @@ export const Onboarding = () => {
         setShowAssignmentForm(true);
     };
 
-    const handleCloseAssignmentForm = () => {
+    const handleAssignmentSuccess = () => {
+        // Refresh assignments when one is added/updated
+        queryClient.invalidateQueries({ queryKey: ['userAssignments', currentUser?.uid] });
+        console.log('📅 Assignment saved successfully - refreshing list');
         setShowAssignmentForm(false);
         setEditingAssignment(null);
     };
@@ -63,11 +70,11 @@ export const Onboarding = () => {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
                         <AssignmentForm
-                            onClose={handleCloseAssignmentForm}
-                            onSuccess={() => {
+                            onClose={() => {
                                 setShowAssignmentForm(false);
                                 setEditingAssignment(null);
                             }}
+                            onSuccess={handleAssignmentSuccess}
                             editingAssignment={editingAssignment}
                         />
                     </div>

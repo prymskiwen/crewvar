@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContextFirebase';
-import { getNotifications, getReceivedConnectionRequests, getUnreadMessageCount, subscribeToLiveNotifications, LiveNotification, testLiveNotification } from '../firebase/firestore';
+import { getNotifications, getReceivedConnectionRequests, getUnreadMessageCount, subscribeToLiveNotifications, LiveNotification } from '../firebase/firestore';
 import { LiveNotifications } from '../components/notifications/LiveNotifications';
 import {
     HiBell,
@@ -79,16 +79,6 @@ const AppBar = ({
     const unreadLegacyNotifications = notifications.filter((n: any) => !n.isRead);
     const unreadNotifications = unreadLiveNotifications.length + unreadLegacyNotifications.length;
 
-    // Test function for live notifications
-    const testNotification = async () => {
-        if (!currentUser) return;
-        try {
-            await testLiveNotification(currentUser.uid);
-            toast.success('Test notification sent!');
-        } catch (error) {
-            toast.error('Failed to send test notification');
-        }
-    };
 
     // Check if user is admin
     const isAdmin = !!currentUser && (
@@ -225,14 +215,6 @@ const AppBar = ({
 
                     {/* Right side - User actions */}
                     <div className="flex items-center space-x-3">
-                        {/* Test Button (temporary for debugging) */}
-                        <button
-                            onClick={testNotification}
-                            className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-xs bg-blue-100 text-blue-600"
-                            title="Test Live Notification"
-                        >
-                            Test
-                        </button>
 
                         {/* Notifications */}
                         <div className="relative" ref={notificationsRef}>

@@ -15,7 +15,8 @@
     "deploy:windows": "scripts\\deploy.bat",
     "firebase:init": "firebase init",
     "firebase:login": "firebase login",
-    "firebase:serve": "firebase serve --only hosting"
+    "firebase:serve": "firebase serve --only hosting",
+    "import:csv": "node scripts/import-csv-data.js"
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",

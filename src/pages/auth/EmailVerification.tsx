@@ -3,11 +3,14 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../context/AuthContextFirebase";
+import { applyActionCode, sendEmailVerification } from "firebase/auth";
+import { auth } from "../../firebase/config";
 
 export const EmailVerificationPage = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const token = searchParams.get('token');
+    const oobCode = searchParams.get('oobCode'); // Firebase action code
+    const mode = searchParams.get('mode'); // Firebase action mode
     const email = searchParams.get('email');
     const queryClient = useQueryClient();
     const { currentUser } = useAuth();
@@ -17,18 +20,16 @@ export const EmailVerificationPage = () => {
     const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'error'>('pending');
     const [errorMessage, setErrorMessage] = useState('');
 
-    // TODO: Implement Firebase email verification
-
-    // Auto-verify if token is present
+    // Auto-verify if oobCode is present and mode is verifyEmail
     useEffect(() => {
-        if (token) {
+        if (oobCode && mode === 'verifyEmail') {
             handleVerifyEmail();
         }
-    }, [token]);
+    }, [oobCode, mode]);
 
     const handleVerifyEmail = async () => {
-        if (!token) {
-            setErrorMessage('No verification token provided');
+        if (!oobCode) {
+            setErrorMessage('No verification code provided');
             setVerificationStatus('error');
             return;
         }
@@ -37,7 +38,9 @@ export const EmailVerificationPage = () => {
         setErrorMessage('');
 
         try {
-            // TODO: Implement Firebase email verification
+            // Apply the email verification code
+            await applyActionCode(auth, oobCode);
+            
             setVerificationStatus('success');
             toast.success('Email verified successfully!');
 
@@ -45,28 +48,28 @@ export const EmailVerificationPage = () => {
             queryClient.invalidateQueries({ queryKey: ['userProfile'] });
             queryClient.invalidateQueries({ queryKey: ['user'] });
 
-            // If user is already logged in, redirect to onboarding
-            // If not logged in, redirect to login
+            // Always redirect to onboarding after email verification
             setTimeout(() => {
-                if (currentUser) {
-                    // User is logged in, redirect to onboarding
-                    navigate('/onboarding', {
-                        state: {
-                            message: 'Email verified successfully! Please complete your profile.'
-                        }
-                    });
-                } else {
-                    // User is not logged in, redirect to login
-                    navigate('/auth/login', {
-                        state: {
-                            message: 'Email verified successfully! You can now sign in.'
-                        }
-                    });
-                }
+                navigate('/onboarding', {
+                    state: {
+                        message: 'Email verified successfully! Please complete your profile.'
+                    }
+                });
             }, 2000);
 
         } catch (error: any) {
-            setErrorMessage(error.response?.data?.error || 'Verification failed. Please try again.');
+            console.error('Email verification error:', error);
+            let errorMsg = 'Verification failed. Please try again.';
+            
+            if (error.code === 'auth/invalid-action-code') {
+                errorMsg = 'Invalid or expired verification link.';
+            } else if (error.code === 'auth/user-disabled') {
+                errorMsg = 'This account has been disabled.';
+            } else if (error.code === 'auth/user-not-found') {
+                errorMsg = 'No account found with this email.';
+            }
+            
+            setErrorMessage(errorMsg);
             setVerificationStatus('error');
             toast.error('Email verification failed');
         } finally {
@@ -75,17 +78,18 @@ export const EmailVerificationPage = () => {
     };
 
     const handleResendVerification = async () => {
-        if (!email) {
-            toast.error('Email address not found');
+        if (!currentUser) {
+            toast.error('Please sign in first to resend verification email');
             return;
         }
 
         setIsResending(true);
 
         try {
-            // TODO: Implement Firebase email verification resend
+            await sendEmailVerification(currentUser);
             toast.success('Verification email sent! Check your inbox.');
         } catch (error: any) {
+            console.error('Resend verification error:', error);
             toast.error('Failed to resend verification email');
         } finally {
             setIsResending(false);
@@ -127,7 +131,7 @@ export const EmailVerificationPage = () => {
                         </div>
 
                         {/* Content */}
-                        {verificationStatus === 'pending' && !token && (
+                        {verificationStatus === 'pending' && !oobCode && (
                             <div className="space-y-6">
                                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                                     <div className="flex items-start space-x-3">

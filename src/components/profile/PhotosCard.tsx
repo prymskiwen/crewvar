@@ -1,3 +1,4 @@
+import React from 'react';
 import { AdditionalPhotoUpload } from '../users/AdditionalPhotoUpload';
 
 interface PhotosCardProps {
@@ -50,3 +51,5 @@ export const PhotosCard = ({
         </div>
     );
 };
+
+export default React.memo(PhotosCard);

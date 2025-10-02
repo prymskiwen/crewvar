@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import React from 'react';
 import { Button, Textarea } from '../ui';
 
 interface BioCardProps {
@@ -93,3 +94,5 @@ export const BioCard = ({
         </div>
     );
 };
+
+export default React.memo(BioCard);

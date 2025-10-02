@@ -41,18 +41,18 @@ export const MyProfile = () => {
     const { data: allRoles = [], isLoading: rolesLoading } = useQuery({
         queryKey: ['roles'],
         queryFn: async () => {
-            const allRolesData = [];
-            for (const dept of departments) {
+            // Only fetch roles for user's department to improve performance
+            if (userProfile?.departmentId) {
                 try {
-                    const roles = await getRolesByDepartment(dept.id);
-                    allRolesData.push(...roles);
+                    return await getRolesByDepartment(userProfile.departmentId);
                 } catch (error) {
-                    console.error(`Error fetching roles for department ${dept.id}:`, error);
+                    console.error(`Error fetching roles for department ${userProfile.departmentId}:`, error);
+                    return [];
                 }
             }
-            return allRolesData;
+            return [];
         },
-        enabled: departments.length > 0
+        enabled: !!userProfile?.departmentId
     });
 
     const updateUserProfileMutation = useMutation({
@@ -314,18 +314,8 @@ export const MyProfile = () => {
     };
 
 
-    if (shipsLoading || cruiseLinesLoading || departmentsLoading || rolesLoading) {
-        return (
-            <div className="container">
-                <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#B9F3DF' }}>
-                    <div className="text-center">
-                        <div className="w-8 h-8 border-4 border-[#069B93] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-gray-600">Loading profile...</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    // Show loading skeleton instead of blocking the entire page
+    const isLoading = shipsLoading || cruiseLinesLoading || departmentsLoading || rolesLoading;
 
     return (
         <DashboardLayout>
@@ -391,31 +381,47 @@ export const MyProfile = () => {
                             {/* Left Column - Main Info */}
                             <div className="lg:col-span-2 space-y-6">
                                 {/* Current Assignment Card */}
-                                <AssignmentCard
-                                    profile={profile}
-                                    setProfile={setProfile}
-                                    isEditing={isEditingAssignment}
-                                    setIsEditing={setIsEditingAssignment}
-                                    cruiseLines={cruiseLines}
-                                    allShips={allShips}
-                                    getCruiseLineFromShip={getCruiseLineFromShip}
-                                    getShipName={getShipName}
-                                    updateUserProfileFunc={updateUserProfileFunc}
-                                    shipsLoading={shipsLoading}
-                                    cruiseLinesLoading={cruiseLinesLoading}
-                                />
+                                {isLoading ? (
+                                    <div className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
+                                        <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+                                        <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                                        <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                                    </div>
+                                ) : (
+                                    <AssignmentCard
+                                        profile={profile}
+                                        setProfile={setProfile}
+                                        isEditing={isEditingAssignment}
+                                        setIsEditing={setIsEditingAssignment}
+                                        cruiseLines={cruiseLines}
+                                        allShips={allShips}
+                                        getCruiseLineFromShip={getCruiseLineFromShip}
+                                        getShipName={getShipName}
+                                        updateUserProfileFunc={updateUserProfileFunc}
+                                        shipsLoading={shipsLoading}
+                                        cruiseLinesLoading={cruiseLinesLoading}
+                                    />
+                                )}
 
                                 {/* Job Information Card */}
-                                <JobInformationCard
-                                    profile={profile}
-                                    isEditing={isEditingProfile}
-                                    setIsEditing={setIsEditingProfile}
-                                    departments={departments}
-                                    allRoles={allRoles}
-                                    getDepartmentName={getDepartmentName}
-                                    getRoleName={getRoleName}
-                                    handleProfileEditSave={handleProfileEditSave}
-                                />
+                                {isLoading ? (
+                                    <div className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
+                                        <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+                                        <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                                        <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                                    </div>
+                                ) : (
+                                    <JobInformationCard
+                                        profile={profile}
+                                        isEditing={isEditingProfile}
+                                        setIsEditing={setIsEditingProfile}
+                                        departments={departments}
+                                        allRoles={allRoles}
+                                        getDepartmentName={getDepartmentName}
+                                        getRoleName={getRoleName}
+                                        handleProfileEditSave={handleProfileEditSave}
+                                    />
+                                )}
 
                                 {/* Bio Card */}
                                 <BioCard

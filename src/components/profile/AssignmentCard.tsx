@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button, Autocomplete } from '../ui';
 
 interface AssignmentCardProps {
@@ -164,3 +165,5 @@ export const AssignmentCard = ({
         </div>
     );
 };
+
+export default React.memo(AssignmentCard);

@@ -12,7 +12,6 @@ import {
     startTyping,
     stopTyping,
     cleanupPresence,
-    testDatabaseConnection,
     TypingIndicator,
     PresenceStatus,
     LiveNotification
@@ -37,13 +36,6 @@ export const useRealtimeFeatures = (roomId?: string) => {
 
         const initializePresence = async () => {
             try {
-                // Test database connection first
-                const isConnected = await testDatabaseConnection();
-                if (!isConnected) {
-                    console.warn('⚠️ Database connection test failed, real-time features may not work');
-                    return;
-                }
-
                 const displayName = userProfile?.displayName || currentUser.displayName || 'Unknown User';
                 await setUserPresence(currentUser.uid, displayName, 'online');
                 setIsOnline(true);

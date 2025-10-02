@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import React from 'react';
 import { Button, Input } from '../ui';
 
 interface ContactCardProps {
@@ -132,3 +133,5 @@ export const ContactCard = ({
         </div>
     );
 };
+
+export default React.memo(ContactCard);

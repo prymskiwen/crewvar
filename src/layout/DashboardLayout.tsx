@@ -55,7 +55,6 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 // Mark that we've shown it today
                 localStorage.setItem('lastQuickCheckInDate', today);
             } else {
-                console.log('Already shown quick check-in today, skipping');
                 setShowCheckInDialog(false);
             }
         } else {

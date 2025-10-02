@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContextFirebase';
-import { subscribeToConnectionRequests, respondToConnectionRequest } from '../../firebase/firestore';
+import { getReceivedConnectionRequests, respondToConnectionRequest } from '../../firebase/firestore';
 
 interface ConnectionPendingCardProps {
     className?: string;
@@ -12,36 +12,12 @@ export const ConnectionPendingCard: React.FC<ConnectionPendingCardProps> = () =>
     const { currentUser } = useAuth();
     const queryClient = useQueryClient();
     const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
-    const [pendingRequests, setPendingRequests] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<any>(null);
-
-    // Real-time subscription for connection requests
-    useEffect(() => {
-        if (!currentUser?.uid) {
-            setIsLoading(false);
-            return;
-        }
-
-        console.log('🔗 ConnectionPendingCard: Setting up real-time subscription for user:', currentUser.uid);
-        setIsLoading(true);
-        setError(null);
-
-        const unsubscribe = subscribeToConnectionRequests(currentUser.uid, (requests) => {
-            console.log('🔗 ConnectionPendingCard: Received connection requests:', requests.length, 'requests');
-            setPendingRequests(requests);
-            setIsLoading(false);
-            setError(null); // Clear any previous errors
-        });
-
-        return () => {
-            console.log('🔗 ConnectionPendingCard: Cleaning up subscription');
-            unsubscribe();
-        };
-    }, [currentUser?.uid]);
-
-    console.log('ConnectionPendingCard - pendingRequests:', pendingRequests);
-
+    // Fetch received connection requests
+    const { data: pendingRequests = [], isLoading, error } = useQuery({
+        queryKey: ['receivedConnectionRequests', currentUser?.uid],
+        queryFn: () => getReceivedConnectionRequests(currentUser!.uid),
+        enabled: !!currentUser?.uid
+    });
     // Respond to connection request mutation
     const respondMutation = useMutation(
         async (requestData: { requestId: string; action: 'accept' | 'decline' }) => {

@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button } from '../ui';
 import { ProfileEdit } from '../users/ProfileEdit';
 
@@ -92,3 +93,5 @@ export const JobInformationCard = ({
         </div>
     );
 };
+
+export default React.memo(JobInformationCard);

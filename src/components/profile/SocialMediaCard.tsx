@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '../ui';
 import { SocialMediaLinks, SocialMediaDisplay } from '../common';
 
@@ -99,3 +99,5 @@ export const SocialMediaCard = ({
         </div>
     );
 };
+
+export default React.memo(SocialMediaCard);

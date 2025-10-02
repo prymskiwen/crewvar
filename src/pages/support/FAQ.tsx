@@ -221,7 +221,7 @@ const FAQ = () => {
                                 Email Support
                             </a>
                             <button
-                                onClick={() => window.location.href = '/support'}
+                                onClick={() => navigate('/support')}
                                 className="px-4 sm:px-6 py-2 sm:py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors text-sm sm:text-base"
                             >
                                 Submit Support Ticket

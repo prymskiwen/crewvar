@@ -101,15 +101,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         isBanned: profile.isBanned ?? false,
                         banReason: profile.banReason,
                         banExpiresAt: profile.banExpiresAt,
+                        isDeleted: profile.isDeleted ?? false,
+                        deleteReason: profile.deleteReason,
+                        deletedAt: profile.deletedAt,
                         createdAt: profile.createdAt || profile.created_at,
                         updatedAt: profile.updatedAt || profile.updated_at
                     };
                     setUserProfile(fullProfile);
 
-                    // Check if user is banned or deactivated
-                    if (fullProfile && (fullProfile.isBanned || !fullProfile.isActive)) {
+                    // Check if user is banned, deactivated, or deleted
+                    if (fullProfile && (fullProfile.isBanned || !fullProfile.isActive || fullProfile.isDeleted)) {
                         setIsBanned(true);
-                        if (fullProfile.isBanned) {
+                        if (fullProfile.isDeleted) {
+                            setBanInfo({
+                                reason: 'Account deleted',
+                                message: fullProfile.deleteReason || 'Your account has been deleted by an administrator.',
+                                banExpiresAt: fullProfile.deletedAt
+                            });
+                            // Automatically sign out deleted users
+                            console.log('🚪 User account deleted, signing out...');
+                            await logout();
+                            return;
+                        } else if (fullProfile.isBanned) {
                             setBanInfo({
                                 reason: fullProfile.banReason || 'Account banned',
                                 message: 'Your account has been banned. Please contact support for more information.',

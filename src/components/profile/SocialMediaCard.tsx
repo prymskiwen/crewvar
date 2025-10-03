@@ -22,27 +22,6 @@ export const SocialMediaCard = ({
     updateProfileDetails
 }: SocialMediaCardProps) => {
     const [isEditing, setIsEditing] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-
-    const handleSave = async () => {
-        if (isSaving) return;
-        setIsSaving(true);
-        try {
-            await updateProfileDetails({
-                instagram: profile.socialMedia.instagram,
-                twitter: profile.socialMedia.twitter,
-                facebook: profile.socialMedia.facebook,
-                snapchat: profile.socialMedia.snapchat,
-                website: profile.socialMedia.website
-            });
-            setIsEditing(false);
-        } catch (error) {
-            console.error('Error updating social media:', error);
-            alert('Failed to save social media links. Please try again.');
-        } finally {
-            setIsSaving(false);
-        }
-    };
 
     return (
         <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -65,36 +44,36 @@ export const SocialMediaCard = ({
             {isEditing ? (
                 <SocialMediaLinks
                     initialData={profile.socialMedia}
-                    onSave={(data) => {
+                    onSave={async (data) => {
+                        // Update local state
                         setProfile((prev: any) => ({
                             ...prev,
                             socialMedia: data
                         }));
+                        
+                        // Ensure all social media fields exist with empty strings if undefined
+                        const socialMediaData = {
+                            instagram: data.instagram || '',
+                            twitter: data.twitter || '',
+                            facebook: data.facebook || '',
+                            snapchat: data.snapchat || '',
+                            website: data.website || ''
+                        };
+                        
+                        // Save to database immediately
+                        try {
+                            await updateProfileDetails(socialMediaData);
+                            setIsEditing(false);
+                        } catch (error) {
+                            console.error('Error updating social media:', error);
+                            alert('Failed to save social media links. Please try again.');
+                        }
                     }}
                     onCancel={() => setIsEditing(false)}
-                    showButtons={false}
+                    showButtons={true}
                 />
             ) : (
                 <SocialMediaDisplay socialMedia={profile.socialMedia} />
-            )}
-
-            {isEditing && (
-                <div className="flex space-x-3 pt-4 border-t border-gray-200">
-                    <Button
-                        onClick={() => setIsEditing(false)}
-                        variant="outline"
-                        size="sm"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        size="sm"
-                    >
-                        {isSaving ? 'Updating...' : 'Update'}
-                    </Button>
-                </div>
             )}
         </div>
     );

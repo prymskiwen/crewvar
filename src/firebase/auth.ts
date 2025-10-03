@@ -52,6 +52,9 @@ export interface UserProfile {
     isBanned?: boolean;
     banReason?: string;
     banExpiresAt?: Date;
+    isDeleted?: boolean;
+    deleteReason?: string;
+    deletedAt?: Date;
     createdAt: Date | string;
     updatedAt: Date | string;
 }

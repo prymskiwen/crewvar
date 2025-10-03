@@ -22,11 +22,14 @@ export const AdminGuard = ({ children }: AdminGuardProps) => {
         // If user is not authenticated, let AuthGuard handle it
         if (!currentUser) return;
 
-        // If user is admin, ensure they're on admin routes
+        // If user is admin, ensure they're on admin routes or allowed non-admin routes
         if (isAdmin) {
             const isAdminRoute = location.pathname.startsWith('/admin');
+            const isAllowedNonAdminRoute = 
+                location.pathname.startsWith('/crew/') ||  // Allow viewing user profiles
+                location.pathname.startsWith('/chat/');    // Allow chatting with users
 
-            if (!isAdminRoute) {
+            if (!isAdminRoute && !isAllowedNonAdminRoute) {
                 console.log('AdminGuard: Redirecting admin user from', location.pathname, 'to /admin');
                 navigate('/admin', {
                     replace: true,
@@ -39,8 +42,9 @@ export const AdminGuard = ({ children }: AdminGuardProps) => {
         }
     }, [currentUser, isAdmin, loading, location.pathname, navigate]);
 
-    // If admin user and not on admin route, show loading while redirecting
-    if (currentUser && isAdmin && !location.pathname.startsWith('/admin')) {
+    // If admin user and not on admin route or allowed non-admin route, show loading while redirecting
+    if (currentUser && isAdmin && !location.pathname.startsWith('/admin') && 
+        !location.pathname.startsWith('/crew/') && !location.pathname.startsWith('/chat/')) {
         return <LoadingPage message="Redirecting to admin..." showLogo={true} />;
     }
 

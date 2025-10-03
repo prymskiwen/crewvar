@@ -10,16 +10,6 @@ interface AddShipModalProps {
 export const AddShipModal: React.FC<AddShipModalProps> = ({ isOpen, onClose }) => {
   const [name, setName] = useState('');
   const [cruiseLineId, setCruiseLineId] = useState('');
-  const [shipCode, setShipCode] = useState('');
-  const [lengthMeters, setLengthMeters] = useState('');
-  const [widthMeters, setWidthMeters] = useState('');
-  const [grossTonnage, setGrossTonnage] = useState('');
-  const [yearBuilt, setYearBuilt] = useState('');
-  const [refurbishedYear, setRefurbishedYear] = useState('');
-  const [homePort, setHomePort] = useState('');
-  const [shipType, setShipType] = useState('');
-  const [company, setCompany] = useState('');
-  const [capacity, setCapacity] = useState('');
   const [cruiseLines, setCruiseLines] = useState<CruiseLine[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingCruiseLines, setIsLoadingCruiseLines] = useState(false);
@@ -48,16 +38,6 @@ export const AddShipModal: React.FC<AddShipModalProps> = ({ isOpen, onClose }) =
     mutateAsync: async (shipData: {
       name: string;
       cruiseLineId: string;
-      shipCode?: string;
-      lengthMeters?: number;
-      widthMeters?: number;
-      grossTonnage?: number;
-      yearBuilt?: number;
-      refurbishedYear?: number;
-      homePort?: string;
-      shipType?: string;
-      company?: string;
-      capacity?: number;
     }) => {
       setIsLoading(true);
       try {
@@ -82,30 +62,10 @@ export const AddShipModal: React.FC<AddShipModalProps> = ({ isOpen, onClose }) =
     try {
       await addShipMutation.mutateAsync({
         name: name.trim(),
-        cruiseLineId,
-        shipCode: shipCode.trim() || undefined,
-        lengthMeters: lengthMeters ? parseFloat(lengthMeters) : undefined,
-        widthMeters: widthMeters ? parseFloat(widthMeters) : undefined,
-        grossTonnage: grossTonnage ? parseInt(grossTonnage) : undefined,
-        yearBuilt: yearBuilt ? parseInt(yearBuilt) : undefined,
-        refurbishedYear: refurbishedYear ? parseInt(refurbishedYear) : undefined,
-        homePort: homePort.trim() || undefined,
-        shipType: shipType.trim() || undefined,
-        company: company.trim() || undefined,
-        capacity: capacity ? parseInt(capacity) : undefined
+        cruiseLineId
       });
       setName('');
       setCruiseLineId('');
-      setShipCode('');
-      setLengthMeters('');
-      setWidthMeters('');
-      setGrossTonnage('');
-      setYearBuilt('');
-      setRefurbishedYear('');
-      setHomePort('');
-      setShipType('');
-      setCompany('');
-      setCapacity('');
       onClose();
     } catch (error) {
       // Error handled by mutation
@@ -116,12 +76,12 @@ export const AddShipModal: React.FC<AddShipModalProps> = ({ isOpen, onClose }) =
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-bold text-gray-900">Add Ship</h2>
-              <p className="text-sm text-gray-600">Complete ship information</p>
+              <p className="text-sm text-gray-600">Add a new ship to the system</p>
             </div>
             <button
               onClick={onClose}
@@ -175,160 +135,6 @@ export const AddShipModal: React.FC<AddShipModalProps> = ({ isOpen, onClose }) =
                   ))}
                 </select>
               )}
-            </div>
-
-            <div>
-              <label htmlFor="shipCode" className="block text-sm font-medium text-gray-700 mb-1">
-                Ship Code
-              </label>
-              <input
-                type="text"
-                id="shipCode"
-                value={shipCode}
-                onChange={(e) => setShipCode(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., OTS"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="lengthMeters" className="block text-sm font-medium text-gray-700 mb-1">
-                  Length (meters)
-                </label>
-                <input
-                  type="number"
-                  id="lengthMeters"
-                  value={lengthMeters}
-                  onChange={(e) => setLengthMeters(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., 362.0"
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-              <div>
-                <label htmlFor="widthMeters" className="block text-sm font-medium text-gray-700 mb-1">
-                  Width (meters)
-                </label>
-                <input
-                  type="number"
-                  id="widthMeters"
-                  value={widthMeters}
-                  onChange={(e) => setWidthMeters(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., 47.0"
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="grossTonnage" className="block text-sm font-medium text-gray-700 mb-1">
-                  Gross Tonnage
-                </label>
-                <input
-                  type="number"
-                  id="grossTonnage"
-                  value={grossTonnage}
-                  onChange={(e) => setGrossTonnage(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., 225282"
-                  min="0"
-                />
-              </div>
-              <div>
-                <label htmlFor="capacity" className="block text-sm font-medium text-gray-700 mb-1">
-                  Passenger Capacity
-                </label>
-                <input
-                  type="number"
-                  id="capacity"
-                  value={capacity}
-                  onChange={(e) => setCapacity(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., 6680"
-                  min="0"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="yearBuilt" className="block text-sm font-medium text-gray-700 mb-1">
-                  Year Built
-                </label>
-                <input
-                  type="number"
-                  id="yearBuilt"
-                  value={yearBuilt}
-                  onChange={(e) => setYearBuilt(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., 2018"
-                  min="1800"
-                  max="2024"
-                />
-              </div>
-              <div>
-                <label htmlFor="refurbishedYear" className="block text-sm font-medium text-gray-700 mb-1">
-                  Refurbished Year
-                </label>
-                <input
-                  type="number"
-                  id="refurbishedYear"
-                  value={refurbishedYear}
-                  onChange={(e) => setRefurbishedYear(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., 2022"
-                  min="1800"
-                  max="2024"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="homePort" className="block text-sm font-medium text-gray-700 mb-1">
-                Home Port
-              </label>
-              <input
-                type="text"
-                id="homePort"
-                value={homePort}
-                onChange={(e) => setHomePort(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., Miami, Florida"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="shipType" className="block text-sm font-medium text-gray-700 mb-1">
-                  Ship Type
-                </label>
-                <input
-                  type="text"
-                  id="shipType"
-                  value={shipType}
-                  onChange={(e) => setShipType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., Oasis Class"
-                />
-              </div>
-              <div>
-                <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
-                  Company
-                </label>
-                <input
-                  type="text"
-                  id="company"
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., Royal Caribbean"
-                />
-              </div>
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">

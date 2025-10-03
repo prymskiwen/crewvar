@@ -3,7 +3,7 @@
  */
 
 // Admin Components
-export type AdminTabType = 'overview' | 'users' | 'reports' | 'flagged-messages' | 'role-requests' | 'data-management' | 'support' | 'settings';
+export type AdminTabType = 'overview' | 'users' | 'reports' | 'data-management' | 'support' | 'settings';
 
 export interface AdminAppBarProps {
     currentUser: any;

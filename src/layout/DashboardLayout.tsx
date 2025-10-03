@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import AppBar from './AppBar';
 import DashboardSidebar from './DashboardSidebar';
 import Footer from './Footer';
@@ -30,6 +30,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         queryKey: ['ships'],
         queryFn: getShips
     });
+
+    // Memoize ships to prevent unnecessary re-renders
+    const memoizedShips = useMemo(() => ships, [ships.length, ships.map(ship => ship.id).join(',')]);
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
@@ -63,8 +66,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         }
 
         // Load current ship assignment from Firebase or localStorage
-        if (userProfile.currentShipId && ships.length > 0) {
-            const currentShipData = ships.find(ship => ship.id === userProfile.currentShipId);
+        if (userProfile.currentShipId && memoizedShips.length > 0) {
+            const currentShipData = memoizedShips.find(ship => ship.id === userProfile.currentShipId);
             if (currentShipData) {
                 const today = new Date().toISOString().split('T')[0];
                 setCurrentShip({
@@ -82,7 +85,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 setCurrentShip(JSON.parse(savedShip));
             }
         }
-    }, [userProfile, ships]);
+    }, [userProfile?.id, userProfile?.currentShipId, memoizedShips]);
 
     // TODO: Implement Firebase ship assignment update function when needed
     // This will be used for confirming ship assignments in the future

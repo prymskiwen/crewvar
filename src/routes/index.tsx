@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { AuthRoutes, EmailVerification, VerificationPending } from "../pages/auth";
-import { Onboarding, Home, ExploreShips, MyProfile, Favorites, Privacy, Moderation, PortConnections, ShipAssignment, Chat, Dashboard, TermsOfService, PrivacyPolicy, Support, Contact, FAQ, AdminDashboard, AdminUserDetail, AdminSupport } from "../pages";
+import { Onboarding, Home, ExploreShips, MyProfile, Favorites, Privacy, Moderation, PortConnections, ShipAssignment, Chat, Dashboard, TermsOfService, PrivacyPolicy, Support, FAQ, AdminDashboard, AdminUserDetail } from "../pages";
 import { ChatRoom } from "../pages/chat";
 import { WhosInPort } from "../pages/port";
 import { TodayOnBoard, CrewMemberProfile } from "../pages/crew";
@@ -37,7 +37,6 @@ export const AppRoutes = () => {
             <Route path="terms-of-service" element={<TermsOfService />} />
             <Route path="faq" element={<FAQ />} />
             <Route path="support" element={<Support />} />
-            <Route path="contact" element={<Contact />} />
             <Route path="moderation" element={<Moderation />} />
             <Route path="port-connections" element={<PortConnections />} />
             <Route path="ship-assignment" element={<ShipAssignment />} />
@@ -48,7 +47,6 @@ export const AppRoutes = () => {
             <Route path="notifications/settings" element={<NotificationSettings />} />
             <Route path="admin" element={<AdminDashboard />} />
             <Route path="admin/users/:userId" element={<AdminUserDetail />} />
-            <Route path="admin/support" element={<AdminSupport />} />
         </Routes>
     );
 };

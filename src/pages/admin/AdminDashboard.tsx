@@ -9,8 +9,6 @@ import {
   OverviewTab,
   UsersTab,
   ReportsTab,
-  FlaggedMessagesTab,
-  RoleRequestsTab,
   DataManagementTab,
   SupportTab,
   SettingsTab
@@ -19,7 +17,7 @@ import {
 export const AdminDashboard = () => {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'reports' | 'flagged-messages' | 'role-requests' | 'data-management' | 'support' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'reports' | 'data-management' | 'support' | 'settings'>('overview');
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [supportStats, setSupportStats] = useState<SupportStats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -103,7 +101,7 @@ export const AdminDashboard = () => {
     }
   };
 
-  const handleTabChange = (tab: 'overview' | 'users' | 'reports' | 'flagged-messages' | 'role-requests' | 'data-management' | 'support' | 'settings') => {
+  const handleTabChange = (tab: 'overview' | 'users' | 'reports' | 'data-management' | 'support' | 'settings') => {
     setActiveTab(tab);
   };
 
@@ -171,14 +169,6 @@ export const AdminDashboard = () => {
 
             {activeTab === 'reports' && (
               <ReportsTab />
-            )}
-
-            {activeTab === 'flagged-messages' && (
-              <FlaggedMessagesTab />
-            )}
-
-            {activeTab === 'role-requests' && (
-              <RoleRequestsTab />
             )}
 
             {activeTab === 'data-management' && (

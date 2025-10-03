@@ -98,18 +98,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         isEmailVerified: profile.isEmailVerified ?? user.emailVerified ?? false,
                         isActive: profile.isActive ?? true,
                         isAdmin: profile.isAdmin ?? false,
+                        isBanned: profile.isBanned ?? false,
+                        banReason: profile.banReason,
+                        banExpiresAt: profile.banExpiresAt,
                         createdAt: profile.createdAt || profile.created_at,
                         updatedAt: profile.updatedAt || profile.updated_at
                     };
                     setUserProfile(fullProfile);
 
-                    // Check if user is banned
-                    if (fullProfile && !fullProfile.isActive) {
+                    // Check if user is banned or deactivated
+                    if (fullProfile && (fullProfile.isBanned || !fullProfile.isActive)) {
                         setIsBanned(true);
-                        setBanInfo({
-                            reason: 'Account deactivated',
-                            message: 'Your account has been deactivated. Please contact support.'
-                        });
+                        if (fullProfile.isBanned) {
+                            setBanInfo({
+                                reason: fullProfile.banReason || 'Account banned',
+                                message: 'Your account has been banned. Please contact support for more information.',
+                                banExpiresAt: fullProfile.banExpiresAt
+                            });
+                        } else {
+                            setBanInfo({
+                                reason: 'Account deactivated',
+                                message: 'Your account has been deactivated. Please contact support.'
+                            });
+                        }
                     } else {
                         setIsBanned(false);
                         setBanInfo(null);

@@ -1,6 +1,7 @@
 import { useAuth } from '../context/AuthContextFirebase';
 import { AdminGuard } from './AdminGuard';
 import { OnboardingGuard } from './OnboardingGuard';
+import { BanGuard } from './BanGuard';
 import { LoadingPage } from '../components/ui';
 
 export const ConditionalGuards = ({ children }: { children: React.ReactNode }) => {
@@ -23,15 +24,19 @@ export const ConditionalGuards = ({ children }: { children: React.ReactNode }) =
 
     if (isAdmin) {
         return (
-            <AdminGuard>
-                {children}
-            </AdminGuard>
+            <BanGuard>
+                <AdminGuard>
+                    {children}
+                </AdminGuard>
+            </BanGuard>
         );
     }
 
     return (
-        <OnboardingGuard>
-            {children}
-        </OnboardingGuard>
+        <BanGuard>
+            <OnboardingGuard>
+                {children}
+            </OnboardingGuard>
+        </BanGuard>
     );
 };

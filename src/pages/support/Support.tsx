@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { HiMail, HiChat, HiClock, HiCheckCircle } from 'react-icons/hi';
 import SupportDropdown from '../../components/support/SupportDropdown';
+import { createSupportTicket } from '../../firebase/support';
+import { useAuth } from '../../context/AuthContextFirebase';
 import logo from '../../assets/images/Home/logo.png';
 
 const SupportPage = () => {
     const navigate = useNavigate();
+    const { currentUser, userProfile } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [ticketSubmitted, setTicketSubmitted] = useState(false);
     const [formData, setFormData] = useState({
@@ -37,15 +40,30 @@ const SupportPage = () => {
         setIsSubmitting(true);
 
         try {
-            // TODO: Implement Firebase support ticket creation
-            const response = { success: true, ticketId: 'placeholder' };
-            console.log('Support ticket submitted:', response);
+            if (!currentUser || !userProfile) {
+                toast.error('Please log in to submit a support ticket');
+                return;
+            }
+
+            console.log('🚀 Creating support ticket:', formData);
+            
+            const ticketId = await createSupportTicket({
+                userId: currentUser.uid,
+                userName: userProfile.displayName || 'Unknown User',
+                userEmail: userProfile.email || currentUser.email || 'unknown@example.com',
+                subject: formData.subject,
+                description: formData.description,
+                category: formData.category,
+                priority: formData.priority
+            });
+
+            console.log('✅ Support ticket created with ID:', ticketId);
             setTicketSubmitted(true);
-            toast.success('Support ticket submitted successfully!');
+            toast.success('Support ticket submitted successfully! We\'ll get back to you soon.');
 
         } catch (error: any) {
-            console.error('Failed to submit support ticket:', error);
-            toast.error(error.response?.data?.error || 'Failed to submit support ticket. Please try again.');
+            console.error('❌ Failed to submit support ticket:', error);
+            toast.error(error.message || 'Failed to submit support ticket. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -167,7 +185,7 @@ const SupportPage = () => {
                                         <p className="text-xs sm:text-sm text-gray-600">Find answers to common questions</p>
                                     </button>
                                     <button
-                                        onClick={() => navigate('/contact')}
+                                        onClick={() => navigate('/support')}
                                         className="w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                                     >
                                         <p className="font-medium text-gray-900 text-sm sm:text-base">Contact Us</p>

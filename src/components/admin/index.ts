@@ -5,8 +5,6 @@ export { AdminAppBar } from './layout/AdminAppBar';
 export { OverviewTab } from './tabs/OverviewTab';
 export { UsersTab } from './tabs/UsersTab';
 export { ReportsTab } from './tabs/ReportsTab';
-export { FlaggedMessagesTab } from './tabs/FlaggedMessagesTab';
-export { RoleRequestsTab } from './tabs/RoleRequestsTab';
 export { DataManagementTab } from './tabs/DataManagementTab';
 export { SupportTab } from './tabs/SupportTab';
 export { SettingsTab } from './tabs/SettingsTab';

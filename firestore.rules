@@ -160,6 +160,14 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
+    // Support Tickets - TEMPORARY: allow all authenticated users to read (for debugging)
+    match /supportTickets/{ticketId} {
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow read: if request.auth != null; // TEMPORARY - allows all authenticated users
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
     // Admin collections - only admins can access
     match /admin/{document=**} {
       allow read, write: if request.auth != null && 

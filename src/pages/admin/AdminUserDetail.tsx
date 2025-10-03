@@ -3,53 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 import { useAuth } from '../../context/AuthContextFirebase';
-// Removed old API import - now using Firebase
 import { getProfilePhotoUrl } from '../../utils/images';
-
-// Placeholder Firebase functions - to be implemented
-const getUserDetails = async (userId: string): Promise<UserDetails> => {
-  // TODO: Implement with Firebase Firestore
-  console.log('Get user details for:', userId);
-  return {
-    id: userId,
-    email: '',
-    display_name: '',
-    profile_photo: '',
-    bio: '',
-    phone: '',
-    instagram: '',
-    twitter: '',
-    facebook: '',
-    snapchat: '',
-    website: '',
-    department_name: '',
-    role_name: '',
-    ship_name: '',
-    is_admin: false,
-    is_super_admin: false,
-    is_email_verified: false,
-    is_active: true,
-    is_banned: false,
-    ban_reason: '',
-    created_at: '',
-    updated_at: ''
-  };
-};
-
-const banUser = async (userId: string, reason: string): Promise<void> => {
-  // TODO: Implement with Firebase Firestore
-  console.log('Ban user:', userId, 'Reason:', reason);
-};
-
-const unbanUser = async (userId: string): Promise<void> => {
-  // TODO: Implement with Firebase Firestore
-  console.log('Unban user:', userId);
-};
-
-const deleteUser = async (userId: string, reason: string): Promise<void> => {
-  // TODO: Implement with Firebase Firestore
-  console.log('Delete user:', userId, 'Reason:', reason);
-};
+import { getUserProfile, banUser, unbanUser, getRoles, getDepartments, getShips } from '../../firebase/firestore';
+import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
 interface UserDetails {
   id: string;
@@ -79,6 +36,90 @@ interface UserDetails {
   delete_reason?: string;
   last_login?: string;
 }
+
+// Implement proper Firebase functions
+const getUserDetails = async (userId: string): Promise<UserDetails> => {
+  try {
+    const userProfile = await getUserProfile(userId) as any;
+    if (!userProfile) {
+      throw new Error('User not found');
+    }
+
+    // Get related data
+    const [roles, departments, ships] = await Promise.all([
+      getRoles(),
+      getDepartments(), 
+      getShips()
+    ]);
+
+    const role = roles.find(r => r.id === userProfile.roleId);
+    const department = departments.find(d => d.id === userProfile.departmentId);
+    const ship = ships.find(s => s.id === userProfile.currentShipId);
+
+    return {
+      id: userProfile.id,
+      email: userProfile.email || '',
+      display_name: userProfile.displayName || '',
+      profile_photo: userProfile.profilePhoto || '',
+      bio: userProfile.bio || '',
+      phone: userProfile.phone || '',
+      instagram: userProfile.instagram || '',
+      twitter: userProfile.twitter || '',
+      facebook: userProfile.facebook || '',
+      snapchat: userProfile.snapchat || '',
+      website: userProfile.website || '',
+      department_name: department?.name || 'Not specified',
+      role_name: role?.name || 'Not specified',
+      ship_name: ship?.name || 'Not specified',
+      is_admin: userProfile.isAdmin || false,
+      is_super_admin: false, // Not implemented yet
+      is_email_verified: userProfile.isEmailVerified || false,
+      is_active: userProfile.isActive !== false,
+      is_banned: userProfile.isBanned || false,
+      ban_reason: userProfile.banReason || '',
+      ban_expires_at: userProfile.banExpiresAt?.toDate?.()?.toISOString() || '',
+      created_at: userProfile.createdAt?.toDate?.()?.toISOString() || '',
+      updated_at: userProfile.updatedAt?.toDate?.()?.toISOString() || '',
+      deleted_at: userProfile.deletedAt?.toDate?.()?.toISOString() || '',
+      delete_reason: userProfile.deleteReason || '',
+      last_login: userProfile.lastLogin?.toDate?.()?.toISOString() || ''
+    };
+  } catch (error) {
+    console.error('Error getting user details:', error);
+    throw error;
+  }
+};
+
+const deleteUser = async (userId: string, reason: string): Promise<void> => {
+  try {
+    console.log('🗑️ Starting user deletion process for:', userId);
+    const userRef = doc(db, 'users', userId);
+    
+    // First, mark the user as deleted with reason for audit trail
+    console.log('📝 Marking user as deleted with reason:', reason);
+    await updateDoc(userRef, {
+      isActive: false,
+      deleteReason: reason,
+      deletedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    console.log('✅ User marked as deleted successfully');
+    
+    // Then actually delete the user document
+    console.log('🗑️ Attempting to delete user document...');
+    await deleteDoc(userRef);
+    console.log('✅ User document deleted successfully:', userId);
+    
+  } catch (error: any) {
+    console.error('❌ Error deleting user:', error);
+    console.error('Error details:', {
+      code: error?.code || 'unknown',
+      message: error?.message || 'Unknown error',
+      userId: userId
+    });
+    throw error;
+  }
+};
 
 export const AdminUserDetail = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -173,12 +214,20 @@ export const AdminUserDetail = () => {
     }
     setActionLoading(true);
     try {
+      console.log('🚀 Admin attempting to delete user:', userId);
       await deleteUser(userId, reason);
 
       toast.success('User deleted successfully');
       navigate('/admin');
     } catch (err: any) {
-      toast.error('Failed to delete user: ' + err.message);
+      console.error('❌ Delete user error:', err);
+      const errorMessage = err.message || 'Unknown error occurred';
+      const errorCode = err.code || 'unknown';
+      
+      toast.error(`Failed to delete user: ${errorMessage} (Code: ${errorCode})`);
+      
+      // Show additional details in console for debugging
+      console.error('Full error object:', err);
     } finally {
       setActionLoading(false);
     }

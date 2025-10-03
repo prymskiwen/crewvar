@@ -105,7 +105,7 @@ export const TermsOfService = () => {
                             If you have any questions about these Terms of Service, please don't hesitate to contact us.
                         </p>
                         <button
-                            onClick={() => navigate('/contact')}
+                            onClick={() => navigate('/support')}
                             className="inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 bg-white text-[#069B93] rounded-xl hover:bg-gray-100 transition-colors font-semibold text-sm sm:text-base"
                         >
                             <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

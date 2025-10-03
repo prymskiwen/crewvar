@@ -4,11 +4,9 @@ import { useAuth } from '../../context/AuthContextFirebase';
 
 interface BanNotificationProps {
   banInfo: {
-    isBanned: boolean;
-    isPermanent: boolean;
-    expiresAt?: string;
+    reason: string;
     message: string;
-    reason?: string;
+    banExpiresAt?: Date;
   };
 }
 
@@ -46,9 +44,9 @@ export const BanNotification: React.FC<BanNotificationProps> = ({ banInfo }) => 
             </div>
           )}
 
-          {!banInfo.isPermanent && banInfo.expiresAt && (
+          {banInfo.banExpiresAt && (
             <p className="text-sm text-gray-500 mb-4">
-              Suspension expires: {new Date(banInfo.expiresAt).toLocaleDateString()}
+              Suspension expires: {banInfo.banExpiresAt.toLocaleDateString()}
             </p>
           )}
         </div>

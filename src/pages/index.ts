@@ -5,10 +5,10 @@ export { Dashboard, CrewMemberCard, TodayOnBoardCard, WhosInPortCard, Connection
 export { Onboarding, MyProfile, Favorites, Privacy, Moderation } from './profile';
 
 // Admin pages
-export { AdminDashboard, AdminSupport, AdminUserDetail } from './admin';
+export { AdminDashboard, AdminUserDetail } from './admin';
 
 // Support pages
-export { Support, Contact, FAQ } from './support';
+export { Support, FAQ } from './support';
 
 // Legal pages
 export { PrivacyPolicy, TermsOfService } from './legal';

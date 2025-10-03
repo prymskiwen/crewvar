@@ -1,9 +1,14 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { HiMail, HiShieldCheck } from 'react-icons/hi';
 import logo from '../assets/images/Home/logo.png';
 
 const Footer = () => {
     const currentYear = new Date().getFullYear();
+    const navigate = useNavigate();
+
+    const handleSupportClick = () => {
+        navigate('/support');
+    };
 
     return (
         <footer className="bg-gradient-to-br from-[#069B93] to-[#058a7a] text-white">
@@ -45,21 +50,21 @@ const Footer = () => {
                                 </Link>
                             </li>
                             <li>
-                                <Link
-                                    to="/contact"
+                                <button
+                                    onClick={handleSupportClick}
                                     className="text-white/80 hover:text-white transition-colors text-sm flex items-center"
                                 >
                                     Contact Us
-                                </Link>
+                                </button>
                             </li>
                             <li>
-                                <a
-                                    href="/contact"
+                                <button
+                                    onClick={handleSupportClick}
                                     className="text-white/80 hover:text-white transition-colors text-sm flex items-center"
                                 >
                                     <HiMail className="w-4 h-4 mr-2" />
                                     support@crewvar.com
-                                </a>
+                                </button>
                             </li>
                         </ul>
                     </div>
@@ -163,12 +168,12 @@ const Footer = () => {
                             >
                                 Support
                             </Link>
-                            <a
-                                href="mailto:support@crewvar.com"
+                            <button
+                                onClick={handleSupportClick}
                                 className="text-white/80 hover:text-white transition-colors"
                             >
                                 Contact
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -35,6 +35,9 @@ export interface UserProfile {
     isEmailVerified: boolean;
     isActive: boolean;
     isAdmin: boolean;
+    isBanned?: boolean;
+    banReason?: string;
+    banExpiresAt?: Date;
     createdAt: Date | string;
     updatedAt: Date | string;
 }

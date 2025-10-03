@@ -1864,11 +1864,67 @@ export interface SupportStats {
 // Get support statistics
 export const getSupportStats = async (): Promise<SupportStats> => {
     try {
-        // Get support tickets from a support collection
-        // For now, we'll use a placeholder implementation
-        // In a real app, you'd have a support/tickets collection
-
-        // This is a placeholder - you would implement based on your support system
+        // Get all support tickets from the supportTickets collection
+        const ticketsRef = collection(db, 'supportTickets');
+        const querySnapshot = await getDocs(ticketsRef);
+        
+        let openTickets = 0;
+        let inProgressTickets = 0;
+        let resolvedTickets = 0;
+        let closedTickets = 0;
+        let resolvedToday = 0;
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const status = data.status;
+            const updatedAt = data.updatedAt?.toDate() || new Date();
+            
+            // Count tickets by status
+            switch (status) {
+                case 'open':
+                    openTickets++;
+                    break;
+                case 'in_progress':
+                    inProgressTickets++;
+                    break;
+                case 'resolved':
+                    resolvedTickets++;
+                    // Check if resolved today
+                    if (updatedAt >= today) {
+                        resolvedToday++;
+                    }
+                    break;
+                case 'closed':
+                    closedTickets++;
+                    break;
+            }
+        });
+        
+        const totalTickets = openTickets + inProgressTickets + resolvedTickets + closedTickets;
+        
+        console.log('📊 Support stats calculated:', {
+            openTickets,
+            inProgressTickets,
+            resolvedTickets,
+            closedTickets,
+            totalTickets,
+            resolvedToday
+        });
+        
+        return {
+            openTickets,
+            inProgressTickets,
+            resolvedTickets,
+            closedTickets,
+            totalTickets,
+            resolvedToday
+        };
+    } catch (error) {
+        console.error('❌ Error getting support statistics:', error);
+        // Return zeros if there's an error
         return {
             openTickets: 0,
             inProgressTickets: 0,
@@ -1877,9 +1933,6 @@ export const getSupportStats = async (): Promise<SupportStats> => {
             totalTickets: 0,
             resolvedToday: 0
         };
-    } catch (error) {
-        console.error('Error fetching support stats:', error);
-        throw error;
     }
 };
 
@@ -2838,3 +2891,4 @@ export const cleanupExpiredPortLinks = async (): Promise<void> => {
         console.error('Error cleaning up expired port links:', error);
     }
 };
+

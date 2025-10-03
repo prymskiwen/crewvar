@@ -45,8 +45,6 @@ export const AdminAppBar: React.FC<AdminAppBarProps> = ({
         { id: 'overview', label: 'Overview', icon: '📊', shortLabel: 'Overview' },
         { id: 'users', label: 'Users', icon: '👥', shortLabel: 'Users' },
         { id: 'reports', label: 'Reports', icon: '🚨', shortLabel: 'Reports' },
-        { id: 'flagged-messages', label: 'Flagged', icon: '⚠️', shortLabel: 'Flagged' },
-        { id: 'role-requests', label: 'Roles', icon: '🔐', shortLabel: 'Roles' },
         { id: 'data-management', label: 'Data', icon: '📊', shortLabel: 'Data' },
         { id: 'support', label: 'Support', icon: '🎧', shortLabel: 'Support' },
         { id: 'settings', label: 'Settings', icon: '⚙️', shortLabel: 'Settings' }

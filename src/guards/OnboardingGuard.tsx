@@ -75,8 +75,19 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
             return;
         }
 
+        // Special case: If user just verified email, go to onboarding
+        const emailJustVerified = localStorage.getItem('emailJustVerified') === 'true';
+        if (emailJustVerified) {
+            localStorage.removeItem('emailJustVerified'); // Clear the flag
+            if (needsOnboarding && location.pathname !== '/onboarding') {
+                navigate('/onboarding', {
+                    replace: true,
+                    state: { from: location.pathname }
+                });
+            }
+        }
         // If user needs email verification, redirect to verification pending page
-        if (needsEmailVerification && location.pathname !== '/auth/verification-pending') {
+        else if (needsEmailVerification && location.pathname !== '/auth/verification-pending') {
             navigate('/auth/verification-pending', {
                 replace: true,
                 state: { from: location.pathname }

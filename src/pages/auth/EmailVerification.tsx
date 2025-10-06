@@ -54,15 +54,18 @@ export const EmailVerificationPage = () => {
             queryClient.invalidateQueries({ queryKey: ['userProfile'] });
             queryClient.invalidateQueries({ queryKey: ['user'] });
 
-            // Wait a bit longer to ensure state is updated before redirect
+            // Set a flag to bypass email verification check temporarily
+            localStorage.setItem('emailJustVerified', 'true');
+            
+            // Wait longer to ensure state is fully updated before redirect
             setTimeout(() => {
-                console.log('Email verification: Redirecting to dashboard');
-                navigate('/dashboard', {
+                console.log('Email verification: Redirecting to onboarding');
+                navigate('/onboarding', {
                     state: {
-                        message: 'Email verified successfully!'
+                        message: 'Email verified successfully! Please complete your profile.'
                     }
                 });
-            }, 3000);
+            }, 5000);
 
         } catch (error: any) {
             console.error('Email verification error:', error);

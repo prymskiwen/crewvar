@@ -85,6 +85,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         email: profile.email || user.email || '',
                         displayName: profile.displayName || profile.display_name || user.displayName || '',
                         profilePhoto: profile.profilePhoto || profile.profile_photo,
+                        photos: profile.photos || [],
                         bio: profile.bio,
                         phone: profile.phone,
                         instagram: profile.instagram,

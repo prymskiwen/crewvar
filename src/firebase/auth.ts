@@ -36,6 +36,7 @@ export interface UserProfile {
     email: string;
     displayName: string;
     profilePhoto?: string;
+    photos?: string[];
     bio?: string;
     phone?: string;
     instagram?: string;

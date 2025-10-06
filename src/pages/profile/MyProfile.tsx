@@ -238,7 +238,7 @@ export const MyProfile = () => {
                 displayName: userProfile.displayName || currentUser?.displayName || '',
                 avatar: avatarValue,
                 bio: userProfile.bio || '',
-                photos: ['', '', ''],
+                photos: (userProfile as any).photos || ['', '', ''],
                 contacts: {
                     email: userProfile.email || currentUser?.email || '',
                     phone: userProfile.phone || '',
@@ -341,8 +341,26 @@ export const MyProfile = () => {
                                     <div className="relative flex-shrink-0">
                                         <ProfilePhotoUpload
                                             currentPhoto={profile.avatar}
-                                            onPhotoChange={(photoUrl) => {
+                                            onPhotoChange={async (photoUrl) => {
+                                                // Update local state immediately for UI responsiveness
                                                 setProfile(prev => ({ ...prev, avatar: photoUrl }));
+                                                
+                                                // Save to Firestore
+                                                try {
+                                                    await updateUserProfileFunc({
+                                                        displayName: profile.displayName,
+                                                        profilePhoto: photoUrl,
+                                                        departmentId: profile.departmentId,
+                                                        roleId: profile.roleId,
+                                                        currentShipId: profile.currentShipId
+                                                    });
+                                                    toast.success('Profile photo updated successfully!');
+                                                } catch (error: any) {
+                                                    console.error('Failed to update profile photo:', error);
+                                                    toast.error('Failed to save profile photo. Please try again.');
+                                                    // Revert local state on error
+                                                    setProfile(prev => ({ ...prev, avatar: profile.avatar }));
+                                                }
                                             }}
                                             size="large"
                                             className="w-24 h-24 lg:w-32 lg:h-32 rounded-full shadow-2xl border-4 border-teal-500"
@@ -437,6 +455,7 @@ export const MyProfile = () => {
                                     profile={profile}
                                     setProfile={setProfile}
                                     isEditing={true}
+                                    updateProfileFunc={updateUserProfileFunc}
                                 />
                             </div>
 

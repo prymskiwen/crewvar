@@ -143,10 +143,10 @@ export const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
             );
         };
 
-        const renderUploadArea = () => {
+        const renderUploadArea = (inputId: string) => {
             if (variant === 'button') {
                 return (
-                    <label className="cursor-pointer inline-flex items-center px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors">
+                    <label htmlFor={inputId} className="cursor-pointer inline-flex items-center px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors">
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
@@ -157,22 +157,33 @@ export const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
 
             if (variant === 'avatar') {
                 return (
-                    <label className="cursor-pointer block w-32 h-32 rounded-full overflow-hidden border-4 border-[#069B93] hover:border-[#058a7a] transition-all duration-200 hover:shadow-lg mx-auto">
-                        {selectedFiles ? (
-                            <img
-                                src={previewUrls[0]}
-                                alt="Preview"
-                                className="w-full h-full object-cover"
-                            />
-                        ) : (
-                            <div className="w-full h-full bg-gray-200 flex flex-col items-center justify-center hover:bg-gray-300 transition-colors">
-                                <svg className="w-12 h-12 text-gray-400 mb-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                                </svg>
-                                <span className="text-xs text-gray-500 font-medium">Click to upload</span>
-                            </div>
+                    <div className="flex flex-col items-center">
+                        <label htmlFor={inputId} className="cursor-pointer block w-32 h-32 rounded-full overflow-hidden border-4 border-[#069B93] hover:border-[#058a7a] transition-all duration-200 hover:shadow-lg mx-auto">
+                            {selectedFiles ? (
+                                <img
+                                    src={previewUrls[0]}
+                                    alt="Preview"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <div className="w-full h-full bg-gray-200 flex flex-col items-center justify-center hover:bg-gray-300 transition-colors">
+                                    <svg className="w-12 h-12 text-gray-400 mb-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                    </svg>
+                                    <span className="text-xs text-gray-500 font-medium">Click to upload</span>
+                                </div>
+                            )}
+                        </label>
+                        {selectedFiles && selectedFiles.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={handleRemove}
+                                className="mt-2 text-sm text-red-600 hover:text-red-800"
+                            >
+                                {removeText}
+                            </button>
                         )}
-                    </label>
+                    </div>
                 );
             }
 
@@ -188,7 +199,7 @@ export const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
             `;
 
             return (
-                <label className={dragDropClasses}>
+                <label htmlFor={inputId} className={dragDropClasses}>
                     <div className="flex flex-col items-center justify-center py-8">
                         <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -202,6 +213,8 @@ export const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
                 </label>
             );
         };
+
+        const inputId = `file-upload-${Math.random().toString(36).substr(2, 9)}`;
 
         return (
             <div className={`${fullWidth ? 'w-full' : ''}`}>
@@ -219,6 +232,7 @@ export const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
                 >
                     <input
                         ref={ref}
+                        id={inputId}
                         type="file"
                         accept={accept}
                         multiple={multiple}
@@ -227,10 +241,10 @@ export const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
                         {...props}
                     />
 
-                    {renderUploadArea()}
+                    {renderUploadArea(inputId)}
                 </div>
 
-                {selectedFiles && selectedFiles.length > 0 && (
+                {selectedFiles && selectedFiles.length > 0 && variant !== 'avatar' && (
                     <div className="mt-4">
                         <p className="text-sm text-gray-600 mb-2">
                             {selectedFiles.length} file(s) selected

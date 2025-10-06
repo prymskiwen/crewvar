@@ -26,6 +26,7 @@ const LoginForm = () => {
                 pauseOnHover: false,
                 draggable: false,
             });
+            // Navigate to dashboard, OnboardingGuard will redirect to onboarding if needed
             navigate('/dashboard');
         } catch (error: any) {
             console.error('Login error:', error);
@@ -85,18 +86,6 @@ const LoginForm = () => {
         }
     };
 
-    const handleDemoAccount = () => {
-        setEmail("test3@example.com");
-        setPassword("123123");
-        toast.info('Demo account credentials filled. Click "Sign In" to continue.', {
-            position: "top-right",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: false,
-            draggable: false,
-        });
-    };
 
     return (
         <div className="w-full max-w-md mx-auto">
@@ -135,17 +124,9 @@ const LoginForm = () => {
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full font-semibold text-sm bg-dark text-white transition hover:bg-opacity-90 rounded-xl py-3 px-4 mb-2 disabled:opacity-50"
+                    className="w-full font-semibold text-sm bg-dark text-white transition hover:bg-opacity-90 rounded-xl py-3 px-4 disabled:opacity-50"
                 >
                     {isLoading ? "Signing In..." : "Sign In"}
-                </button>
-
-                <button
-                    type="button"
-                    onClick={handleDemoAccount}
-                    className="w-full font-semibold text-sm bg-gray-100 text-dark transition-colors hover:bg-gray-200 rounded-xl py-3 px-4"
-                >
-                    Use Demo Account
                 </button>
             </form>
 

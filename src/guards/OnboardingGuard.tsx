@@ -16,9 +16,10 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     const isAdmin = userProfile?.isAdmin === true;
 
     // Check if profile is complete
+    const hasProfilePhoto = userProfile?.profilePhoto || (userProfile as any)?.profile_photo;
     const isProfileComplete = userProfile &&
         userProfile.displayName &&
-        userProfile.profilePhoto &&
+        hasProfilePhoto &&
         userProfile.departmentId &&
         userProfile.roleId &&
         userProfile.currentShipId;
@@ -28,6 +29,23 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
 
     // Check if this is a new user who needs onboarding
     const needsOnboarding = !isAdmin && (!userProfile || !isProfileComplete) && !isOnboardingComplete;
+
+    // Debug logging
+    console.log('OnboardingGuard Debug:', {
+        isAdmin,
+        userProfile: userProfile ? 'exists' : 'null',
+        displayName: userProfile?.displayName,
+        profilePhoto: userProfile?.profilePhoto,
+        profile_photo: (userProfile as any)?.profile_photo,
+        hasProfilePhoto,
+        departmentId: userProfile?.departmentId,
+        roleId: userProfile?.roleId,
+        currentShipId: userProfile?.currentShipId,
+        isProfileComplete,
+        isOnboardingComplete,
+        needsOnboarding,
+        currentPath: location.pathname
+    });
 
     useEffect(() => {
         // Don't redirect while loading

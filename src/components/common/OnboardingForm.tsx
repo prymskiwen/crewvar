@@ -8,7 +8,6 @@ import { useAuth } from "../../context/AuthContextFirebase";
 import {
     getDepartments,
     getRolesByDepartment,
-    updateUserProfile,
     Department,
     Role
 } from "../../firebase/firestore";
@@ -37,7 +36,7 @@ const createValidationSchema = (hasExistingProfile: boolean) => yup.object({
 
 const OnboardingForm = () => {
     const navigate = useNavigate();
-    const { currentUser, userProfile, loading: authLoading } = useAuth();
+    const { currentUser, userProfile, loading: authLoading, updateUserProfile } = useAuth();
 
     // State management
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -183,6 +182,7 @@ const OnboardingForm = () => {
             return;
         }
 
+
         setIsSubmitting(true);
         try {
             const updateData: any = {
@@ -194,23 +194,17 @@ const OnboardingForm = () => {
 
             // Handle profile photo upload if a file is selected
             if (data.profilePhoto && data.profilePhoto instanceof File) {
-                console.log('Uploading profile photo:', data.profilePhoto.name);
-                
                 // Show upload progress
                 toast.info('Uploading profile photo...');
                 
                 try {
                     const photoUrl = await uploadProfilePhoto(
                         data.profilePhoto, 
-                        currentUser.uid,
-                        (progress) => {
-                            console.log('Upload progress:', progress);
-                        }
+                        currentUser.uid
                     );
                     
                     // Add photo URL to update data
                     updateData.profilePhoto = photoUrl;
-                    console.log('Profile photo uploaded successfully:', photoUrl);
                     
                 } catch (uploadError) {
                     console.error('Error uploading profile photo:', uploadError);
@@ -220,7 +214,7 @@ const OnboardingForm = () => {
             }
 
             // Update user profile
-            await updateUserProfile(currentUser.uid, updateData);
+            await updateUserProfile(updateData);
 
             toast.success('Profile updated successfully!');
 
@@ -289,7 +283,6 @@ const OnboardingForm = () => {
                             className="flex justify-center"
                         >
                             <FileUpload
-                                {...register("profilePhoto")}
                                 variant="avatar"
                                 size="xl"
                                 accept="image/*"

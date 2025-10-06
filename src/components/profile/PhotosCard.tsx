@@ -1,4 +1,5 @@
 import React from 'react';
+import { toast } from 'react-toastify';
 import { AdditionalPhotoUpload } from '../users/AdditionalPhotoUpload';
 
 interface PhotosCardProps {
@@ -7,12 +8,14 @@ interface PhotosCardProps {
     };
     setProfile: React.Dispatch<React.SetStateAction<any>>;
     isEditing: boolean;
+    updateProfileFunc?: (data: any) => Promise<void>;
 }
 
 export const PhotosCard = ({
     profile,
     setProfile,
-    isEditing
+    isEditing,
+    updateProfileFunc
 }: PhotosCardProps) => {
     return (
         <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -27,15 +30,47 @@ export const PhotosCard = ({
                     <AdditionalPhotoUpload
                         key={index}
                         currentPhoto={photo}
-                        onPhotoChange={(photoUrl: string) => {
+                        onPhotoChange={async (photoUrl: string) => {
+                            // Update local state immediately
                             const newPhotos = [...profile.photos];
                             newPhotos[index] = photoUrl;
                             setProfile((prev: any) => ({ ...prev, photos: newPhotos }));
+                            
+                            // Save to Firestore if updateProfileFunc is provided
+                            if (updateProfileFunc) {
+                                try {
+                                    await updateProfileFunc({
+                                        photos: newPhotos
+                                    });
+                                    toast.success('Photo updated successfully!');
+                                } catch (error: any) {
+                                    console.error('Failed to update photos:', error);
+                                    toast.error('Failed to save photo. Please try again.');
+                                    // Revert local state on error
+                                    setProfile((prev: any) => ({ ...prev, photos: profile.photos }));
+                                }
+                            }
                         }}
-                        onPhotoDelete={() => {
+                        onPhotoDelete={async () => {
+                            // Update local state immediately
                             const newPhotos = [...profile.photos];
                             newPhotos[index] = '';
                             setProfile((prev: any) => ({ ...prev, photos: newPhotos }));
+                            
+                            // Save to Firestore if updateProfileFunc is provided
+                            if (updateProfileFunc) {
+                                try {
+                                    await updateProfileFunc({
+                                        photos: newPhotos
+                                    });
+                                    toast.success('Photo deleted successfully!');
+                                } catch (error: any) {
+                                    console.error('Failed to delete photo:', error);
+                                    toast.error('Failed to delete photo. Please try again.');
+                                    // Revert local state on error
+                                    setProfile((prev: any) => ({ ...prev, photos: profile.photos }));
+                                }
+                            }
                         }}
                         index={index}
                     />

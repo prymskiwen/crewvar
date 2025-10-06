@@ -91,6 +91,7 @@ const SignupForm = () => {
                 pauseOnHover: false,
                 draggable: false,
             });
+            // Navigate to dashboard, OnboardingGuard will redirect to onboarding if needed
             navigate('/dashboard');
         } catch (error: any) {
             console.error('Google login error:', error);

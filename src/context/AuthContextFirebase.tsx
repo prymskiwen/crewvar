@@ -15,6 +15,8 @@ interface AuthContextType {
     logout: () => Promise<void>;
     resetPassword: (email: string) => Promise<void>;
     updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
+    syncEmailVerificationStatus: () => Promise<void>;
+    forceUpdateVerification: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +39,52 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [isBanned, setIsBanned] = useState(false);
     const [banInfo, setBanInfo] = useState<any>(null);
+
+    const syncEmailVerificationStatus = async () => {
+        try {
+            if (!currentUser || !userProfile) {
+                console.log('Sync: No currentUser or userProfile available');
+                return;
+            }
+
+            console.log('Sync: Checking verification status:', {
+                authVerified: currentUser.emailVerified,
+                firestoreVerified: userProfile.isEmailVerified,
+                userId: currentUser.uid
+            });
+
+            // Check if Firebase Auth says email is verified but Firestore doesn't
+            if (currentUser.emailVerified && !userProfile.isEmailVerified) {
+                console.log('Sync: Firebase Auth verified but Firestore not - updating Firestore');
+                await updateUserProfile({ 
+                    isEmailVerified: true
+                });
+                console.log('Sync: Firestore update completed');
+            } else {
+                console.log('Sync: No sync needed - both statuses match');
+            }
+        } catch (error) {
+            console.error('Error syncing email verification status:', error);
+        }
+    };
+
+    // Force update verification status (for debugging)
+    const forceUpdateVerification = async () => {
+        try {
+            if (!currentUser) {
+                console.log('Force update: No currentUser available');
+                return;
+            }
+
+            console.log('Force update: Updating verification status for user:', currentUser.uid);
+            await updateUserProfile({ 
+                isEmailVerified: true
+            });
+            console.log('Force update: Verification status updated successfully');
+        } catch (error) {
+            console.error('Force update error:', error);
+        }
+    };
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -99,13 +147,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         isEmailVerified: (() => {
                             const firestoreVerified = profile.isEmailVerified;
                             const authVerified = user.emailVerified;
-                            const finalVerified = firestoreVerified ?? authVerified ?? false;
-                            console.log('AuthContext: Email verification status:', {
-                                firestoreVerified,
-                                authVerified,
-                                finalVerified,
-                                email: user.email
-                            });
+                            // Prioritize Firebase Auth verification status
+                            const finalVerified = authVerified || firestoreVerified || false;
+                    console.log('🔍 AuthContext: Email verification status:', {
+                        firestoreVerified,
+                        authVerified,
+                        finalVerified,
+                        email: user.email,
+                        userId: user.uid
+                    });
                             return finalVerified;
                         })(),
                         isActive: profile.isActive ?? true,
@@ -149,6 +199,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     } else {
                         setIsBanned(false);
                         setBanInfo(null);
+                    }
+
+                    // Sync email verification status after profile is loaded
+                    if (user && profile) {
+                        console.log('🔄 AuthContext: Setting up sync for user:', user.uid);
+                        // Use a longer delay to ensure all state is properly set
+                        setTimeout(() => {
+                            console.log('🔄 AuthContext: Running sync after delay');
+                            syncEmailVerificationStatus();
+                        }, 2000); // Increased delay to ensure profile is set
                     }
                 } catch (error) {
                     console.error('Error fetching user profile:', error);
@@ -233,8 +293,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         signOut,
         logout,
         resetPassword,
-        updateUserProfile
+        updateUserProfile,
+        syncEmailVerificationStatus,
+        forceUpdateVerification
     };
+
+    // Make force update available globally for debugging
+    React.useEffect(() => {
+        (window as any).forceUpdateVerification = forceUpdateVerification;
+        (window as any).syncEmailVerificationStatus = syncEmailVerificationStatus;
+    }, [forceUpdateVerification, syncEmailVerificationStatus]);
 
     return (
         <AuthContext.Provider value={value}>

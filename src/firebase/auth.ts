@@ -114,9 +114,9 @@ export const signUpWithEmail = async (
         // Update Firebase Auth profile
         await updateProfile(user, { displayName });
 
-        // Send email verification with custom action URL
+        // Send email verification with Firebase action URL
         const actionCodeSettings = {
-            url: `${window.location.origin}/auth/verify-email`,
+            url: `${window.location.origin}/__/auth/action`,
             handleCodeInApp: true,
         };
         await sendEmailVerification(user, actionCodeSettings);

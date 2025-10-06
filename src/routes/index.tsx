@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { AuthRoutes, EmailVerification, VerificationPending } from "../pages/auth";
+import { AuthRoutes, VerificationPending } from "../pages/auth";
 import { Onboarding, Home, ExploreShips, MyProfile, Favorites, Privacy, Moderation, PortConnections, ShipAssignment, Chat, Dashboard, TermsOfService, PrivacyPolicy, Support, FAQ, AdminDashboard, AdminUserDetail } from "../pages";
 import { ChatRoom } from "../pages/chat";
 import { WhosInPort } from "../pages/port";
@@ -14,7 +14,6 @@ export const AppRoutes = () => {
             <Route index element={<Home />} />
             <Route path="auth/login" element={<AuthRoutes />} />
             <Route path="auth/signup" element={<AuthRoutes />} />
-            <Route path="auth/verify-email" element={<EmailVerification />} />
             <Route path="auth/verification-pending" element={<VerificationPending />} />
             <Route path="explore-ships" element={<ExploreShips />} />
             <Route path="onboarding" element={<Onboarding />} />

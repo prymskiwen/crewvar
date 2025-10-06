@@ -1,18 +1,109 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContextFirebase";
 import { toast } from "react-toastify";
-import { sendEmailVerification } from "firebase/auth";
-import { auth } from "../../firebase/config";
+import { sendEmailVerification, applyActionCode, checkActionCode } from "firebase/auth";
+import { auth, db } from "../../firebase/config";
+import { doc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 
 export const VerificationPendingPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { signOut } = useAuth();
+    const [searchParams] = useSearchParams();
+    const { signOut, syncEmailVerificationStatus, forceUpdateVerification } = useAuth();
     const [isResending, setIsResending] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [isForceUpdating, setIsForceUpdating] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
 
     // Get email from location state or use placeholder
     const email = location.state?.email || 'your email address';
+    
+    // Check if we have verification parameters from email link
+    const oobCode = searchParams.get('oobCode');
+    const mode = searchParams.get('mode');
+
+    // Debug: Log all search parameters
+    useEffect(() => {
+        console.log('🔍 VerificationPending - All search params:', Object.fromEntries(searchParams.entries()));
+        console.log('🔍 VerificationPending - oobCode:', oobCode);
+        console.log('🔍 VerificationPending - mode:', mode);
+    }, [searchParams, oobCode, mode]);
+
+    // Auto-verify if we have the parameters from email link
+    useEffect(() => {
+        if (oobCode && mode === 'verifyEmail') {
+            console.log('🔍 VerificationPending - Starting auto-verification');
+            handleEmailVerification();
+        }
+    }, [oobCode, mode]);
+
+    const handleEmailVerification = async () => {
+        if (!oobCode || mode !== 'verifyEmail') {
+            return;
+        }
+
+        setIsVerifying(true);
+        try {
+            console.log('🔍 VerificationPending - Starting email verification');
+            console.log('🔍 VerificationPending - oobCode:', oobCode);
+            console.log('🔍 VerificationPending - mode:', mode);
+
+            // Get the email from the verification code
+            const actionCodeInfo = await checkActionCode(auth, oobCode);
+            const emailFromCode = actionCodeInfo.data.email;
+            console.log('📧 Email from verification code:', emailFromCode);
+
+            if (!emailFromCode) {
+                console.error('❌ Could not get email from verification code');
+                toast.error('Invalid verification link');
+                return;
+            }
+
+            // Apply the email verification code
+            await applyActionCode(auth, oobCode);
+            console.log('✅ Email verification applied successfully');
+
+            // Find user in Firestore by email
+            const usersRef = collection(db, 'users');
+            const q = query(usersRef, where('email', '==', emailFromCode));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                console.error('❌ No user found with email:', emailFromCode);
+                toast.error('User not found. Please sign up again.');
+                return;
+            }
+
+            // Get the user document
+            const userDoc = querySnapshot.docs[0];
+            const userId = userDoc.id;
+            console.log('👤 Found user ID:', userId);
+
+            // Update Firestore with isEmailVerified: true
+            const userRef = doc(db, 'users', userId);
+            await updateDoc(userRef, {
+                isEmailVerified: true,
+                updatedAt: new Date()
+            });
+            console.log('✅ Firestore updated successfully - isEmailVerified set to true');
+
+            toast.success('Email verified successfully!');
+            
+            // Redirect to onboarding
+            navigate('/onboarding', {
+                state: {
+                    message: 'Email verified successfully! Please complete your profile.'
+                }
+            });
+
+        } catch (error: any) {
+            console.error('❌ Email verification failed:', error);
+            toast.error('Email verification failed. Please try again.');
+        } finally {
+            setIsVerifying(false);
+        }
+    };
 
     const handleResendVerification = async () => {
         setIsResending(true);
@@ -20,7 +111,7 @@ export const VerificationPendingPage = () => {
         try {
             if (auth.currentUser) {
                 const actionCodeSettings = {
-                    url: `${window.location.origin}/auth/verify-email`,
+                    url: `${window.location.origin}/__/auth/action`,
                     handleCodeInApp: true,
                 };
                 await sendEmailVerification(auth.currentUser, actionCodeSettings);
@@ -41,6 +132,44 @@ export const VerificationPendingPage = () => {
         signOut();
         navigate('/auth/login');
     };
+
+    const handleSyncVerification = async () => {
+        setIsSyncing(true);
+        try {
+            await syncEmailVerificationStatus();
+            toast.success('Verification status synced! Please refresh the page.');
+        } catch (error) {
+            console.error('Sync error:', error);
+            toast.error('Failed to sync verification status. Please try again.');
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
+    const handleForceUpdate = async () => {
+        setIsForceUpdating(true);
+        try {
+            await forceUpdateVerification();
+            toast.success('Verification status force updated! Please refresh the page.');
+        } catch (error) {
+            console.error('Force update error:', error);
+            toast.error('Failed to force update verification status. Please try again.');
+        } finally {
+            setIsForceUpdating(false);
+        }
+    };
+
+    // Show loading state if verifying
+    if (isVerifying) {
+        return (
+            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#B9F3DF' }}>
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#069B93] mx-auto mb-4"></div>
+                    <p className="text-gray-600">Verifying your email...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen" style={{ backgroundColor: '#B9F3DF' }}>
@@ -100,6 +229,22 @@ export const VerificationPendingPage = () => {
                                     className="w-full px-6 py-3 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors font-medium disabled:opacity-50"
                                 >
                                     {isResending ? 'Sending...' : 'Resend Verification Email'}
+                                </button>
+                                
+                                <button
+                                    onClick={handleSyncVerification}
+                                    disabled={isSyncing}
+                                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
+                                >
+                                    {isSyncing ? 'Syncing...' : 'Sync Verification Status'}
+                                </button>
+                                
+                                <button
+                                    onClick={handleForceUpdate}
+                                    disabled={isForceUpdating}
+                                    className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
+                                >
+                                    {isForceUpdating ? 'Force Updating...' : 'Force Update Verification'}
                                 </button>
 
                                 <button

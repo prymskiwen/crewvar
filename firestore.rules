@@ -6,6 +6,10 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
       // Allow authenticated users to read other users' profiles for crew discovery
       allow read: if request.auth != null;
+      // Allow email verification updates (when user is not authenticated)
+      allow write: if request.auth == null && 
+        request.resource.data.keys().hasAll(['isEmailVerified', 'updatedAt']) &&
+        request.resource.data.isEmailVerified == true;
       // Admins can read and write all user documents
       allow read, write: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;

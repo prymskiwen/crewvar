@@ -13,7 +13,7 @@ export const EmailVerificationPage = () => {
     const mode = searchParams.get('mode'); // Firebase action mode
     const email = searchParams.get('email');
     const queryClient = useQueryClient();
-    const { currentUser } = useAuth();
+    const { currentUser, updateUserProfile } = useAuth();
 
     const [isVerifying, setIsVerifying] = useState(false);
     const [isResending, setIsResending] = useState(false);
@@ -41,6 +41,12 @@ export const EmailVerificationPage = () => {
             // Apply the email verification code
             await applyActionCode(auth, oobCode);
             
+            // Update Firestore to mark email as verified
+            if (currentUser?.uid) {
+                await updateUserProfile({ isEmailVerified: true });
+                console.log('Email verification: Updated Firestore with isEmailVerified: true');
+            }
+            
             setVerificationStatus('success');
             toast.success('Email verified successfully!');
 
@@ -48,14 +54,15 @@ export const EmailVerificationPage = () => {
             queryClient.invalidateQueries({ queryKey: ['userProfile'] });
             queryClient.invalidateQueries({ queryKey: ['user'] });
 
-            // Always redirect to onboarding after email verification
+            // Wait a bit longer to ensure state is updated before redirect
             setTimeout(() => {
-                navigate('/onboarding', {
+                console.log('Email verification: Redirecting to dashboard');
+                navigate('/dashboard', {
                     state: {
-                        message: 'Email verified successfully! Please complete your profile.'
+                        message: 'Email verified successfully!'
                     }
                 });
-            }, 2000);
+            }, 3000);
 
         } catch (error: any) {
             console.error('Email verification error:', error);

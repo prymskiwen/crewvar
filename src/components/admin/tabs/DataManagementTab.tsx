@@ -30,6 +30,7 @@ export const DataManagementTab: React.FC = () => {
         </div>
       </div>
 
+
       {/* Management Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Departments Section */}

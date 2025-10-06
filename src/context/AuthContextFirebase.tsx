@@ -96,7 +96,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         departmentId: profile.departmentId || profile.department_id,
                         roleId: profile.roleId || profile.role_id,
                         currentShipId: profile.currentShipId || profile.current_ship_id,
-                        isEmailVerified: profile.isEmailVerified ?? user.emailVerified ?? false,
+                        isEmailVerified: (() => {
+                            const firestoreVerified = profile.isEmailVerified;
+                            const authVerified = user.emailVerified;
+                            const finalVerified = firestoreVerified ?? authVerified ?? false;
+                            console.log('AuthContext: Email verification status:', {
+                                firestoreVerified,
+                                authVerified,
+                                finalVerified,
+                                email: user.email
+                            });
+                            return finalVerified;
+                        })(),
                         isActive: profile.isActive ?? true,
                         isAdmin: profile.isAdmin ?? false,
                         isBanned: profile.isBanned ?? false,

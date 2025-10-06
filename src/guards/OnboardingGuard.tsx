@@ -27,8 +27,14 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
     // Check if onboarding is marked as complete
     const isOnboardingComplete = localStorage.getItem('onboardingComplete') === 'true';
 
+    // Check if email is verified
+    const isEmailVerified = userProfile?.isEmailVerified ?? false;
+    
     // Check if this is a new user who needs onboarding
     const needsOnboarding = !isAdmin && (!userProfile || !isProfileComplete) && !isOnboardingComplete;
+    
+    // Check if user needs email verification
+    const needsEmailVerification = !isAdmin && userProfile && !isEmailVerified;
 
     // Debug logging
     console.log('OnboardingGuard Debug:', {
@@ -43,8 +49,11 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
         currentShipId: userProfile?.currentShipId,
         isProfileComplete,
         isOnboardingComplete,
+        isEmailVerified,
         needsOnboarding,
-        currentPath: location.pathname
+        needsEmailVerification,
+        currentPath: location.pathname,
+        timestamp: new Date().toISOString()
     });
 
     useEffect(() => {
@@ -66,14 +75,21 @@ export const OnboardingGuard = ({ children }: OnboardingGuardProps) => {
             return;
         }
 
-        // If user needs onboarding and not already on onboarding page
-        if (needsOnboarding && location.pathname !== '/onboarding') {
+        // If user needs email verification, redirect to verification pending page
+        if (needsEmailVerification && location.pathname !== '/auth/verification-pending') {
+            navigate('/auth/verification-pending', {
+                replace: true,
+                state: { from: location.pathname }
+            });
+        }
+        // If user needs onboarding and not already on onboarding page (only if email is verified)
+        else if (needsOnboarding && isEmailVerified && location.pathname !== '/onboarding') {
             navigate('/onboarding', {
                 replace: true,
                 state: { from: location.pathname }
             });
         }
-    }, [currentUser, isAdmin, needsOnboarding, loading, location.pathname, navigate]);
+    }, [currentUser, isAdmin, needsOnboarding, needsEmailVerification, isEmailVerified, loading, location.pathname, navigate]);
 
     // Show loading while checking authentication
     if (loading) {

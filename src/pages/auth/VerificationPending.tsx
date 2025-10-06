@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContextFirebase";
 import { toast } from "react-toastify";
+import { sendEmailVerification } from "firebase/auth";
+import { auth } from "../../firebase/config";
 
 export const VerificationPendingPage = () => {
     const navigate = useNavigate();
@@ -16,10 +18,20 @@ export const VerificationPendingPage = () => {
         setIsResending(true);
 
         try {
-            // TODO: Implement Firebase email verification resend
-            toast.success('Verification email sent! Check your inbox.');
+            if (auth.currentUser) {
+                const actionCodeSettings = {
+                    url: `${window.location.origin}/auth/verify-email`,
+                    handleCodeInApp: true,
+                };
+                await sendEmailVerification(auth.currentUser, actionCodeSettings);
+                toast.success('Verification email sent! Check your inbox.');
+            } else {
+                toast.error('No user logged in. Please sign in again.');
+                navigate('/auth/login');
+            }
         } catch (error: any) {
-            toast.error('Failed to resend verification email');
+            console.error('Resend verification error:', error);
+            toast.error('Failed to resend verification email. Please try again.');
         } finally {
             setIsResending(false);
         }

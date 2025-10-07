@@ -114,12 +114,17 @@ export const signUpWithEmail = async (
         // Update Firebase Auth profile
         await updateProfile(user, { displayName });
 
-        // Send email verification with Firebase action URL
+        // Send email verification with custom action URL
         const actionCodeSettings = {
-            url: `${window.location.origin}/__/auth/action`,
-            handleCodeInApp: true,
+            url: `${window.location.origin}/auth/verification-pending`,
+            handleCodeInApp: false,
         };
+        
+        console.log('🔍 Sending email verification with settings:', actionCodeSettings);
+        console.log('🔍 Current origin:', window.location.origin);
+        
         await sendEmailVerification(user, actionCodeSettings);
+        console.log('✅ Email verification sent successfully');
 
         // Create user document in Firestore
         const userData: Partial<UserProfile> = {

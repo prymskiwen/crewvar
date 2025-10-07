@@ -10,10 +10,8 @@ export const VerificationPendingPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
-    const { signOut, syncEmailVerificationStatus, forceUpdateVerification } = useAuth();
+    const { signOut } = useAuth();
     const [isResending, setIsResending] = useState(false);
-    const [isSyncing, setIsSyncing] = useState(false);
-    const [isForceUpdating, setIsForceUpdating] = useState(false);
     const [isVerifying, setIsVerifying] = useState(false);
 
     // Get email from location state or use placeholder
@@ -28,6 +26,7 @@ export const VerificationPendingPage = () => {
         console.log('🔍 VerificationPending - All search params:', Object.fromEntries(searchParams.entries()));
         console.log('🔍 VerificationPending - oobCode:', oobCode);
         console.log('🔍 VerificationPending - mode:', mode);
+        console.log('🔍 VerificationPending - Current URL:', window.location.href);
     }, [searchParams, oobCode, mode]);
 
     // Auto-verify if we have the parameters from email link
@@ -35,8 +34,47 @@ export const VerificationPendingPage = () => {
         if (oobCode && mode === 'verifyEmail') {
             console.log('🔍 VerificationPending - Starting auto-verification');
             handleEmailVerification();
+        } else if (!oobCode && !mode) {
+            // If no verification parameters, check if user is already verified
+            console.log('🔍 VerificationPending - No verification params, checking if user is already verified');
+            checkIfAlreadyVerified();
         }
     }, [oobCode, mode]);
+
+    const checkIfAlreadyVerified = async () => {
+        try {
+            if (auth.currentUser && auth.currentUser.emailVerified) {
+                console.log('🔍 VerificationPending - User email is already verified, updating Firestore');
+                // User is already verified in Firebase Auth, update Firestore
+                const usersRef = collection(db, 'users');
+                const q = query(usersRef, where('email', '==', auth.currentUser.email));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    const userDoc = querySnapshot.docs[0];
+                    const userId = userDoc.id;
+                    
+                    const userRef = doc(db, 'users', userId);
+                    await updateDoc(userRef, {
+                        isEmailVerified: true,
+                        updatedAt: new Date()
+                    });
+                    
+                    console.log('✅ Firestore updated - user is verified');
+                    toast.success('Email verified successfully!');
+                    
+                    // Redirect to onboarding
+                    navigate('/onboarding', {
+                        state: {
+                            message: 'Email verified successfully! Please complete your profile.'
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error checking verification status:', error);
+        }
+    };
 
     const handleEmailVerification = async () => {
         if (!oobCode || mode !== 'verifyEmail') {
@@ -111,8 +149,8 @@ export const VerificationPendingPage = () => {
         try {
             if (auth.currentUser) {
                 const actionCodeSettings = {
-                    url: `${window.location.origin}/__/auth/action`,
-                    handleCodeInApp: true,
+                    url: `${window.location.origin}/auth/verification-pending`,
+                    handleCodeInApp: false,
                 };
                 await sendEmailVerification(auth.currentUser, actionCodeSettings);
                 toast.success('Verification email sent! Check your inbox.');
@@ -133,31 +171,6 @@ export const VerificationPendingPage = () => {
         navigate('/auth/login');
     };
 
-    const handleSyncVerification = async () => {
-        setIsSyncing(true);
-        try {
-            await syncEmailVerificationStatus();
-            toast.success('Verification status synced! Please refresh the page.');
-        } catch (error) {
-            console.error('Sync error:', error);
-            toast.error('Failed to sync verification status. Please try again.');
-        } finally {
-            setIsSyncing(false);
-        }
-    };
-
-    const handleForceUpdate = async () => {
-        setIsForceUpdating(true);
-        try {
-            await forceUpdateVerification();
-            toast.success('Verification status force updated! Please refresh the page.');
-        } catch (error) {
-            console.error('Force update error:', error);
-            toast.error('Failed to force update verification status. Please try again.');
-        } finally {
-            setIsForceUpdating(false);
-        }
-    };
 
     // Show loading state if verifying
     if (isVerifying) {
@@ -231,21 +244,6 @@ export const VerificationPendingPage = () => {
                                     {isResending ? 'Sending...' : 'Resend Verification Email'}
                                 </button>
                                 
-                                <button
-                                    onClick={handleSyncVerification}
-                                    disabled={isSyncing}
-                                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50"
-                                >
-                                    {isSyncing ? 'Syncing...' : 'Sync Verification Status'}
-                                </button>
-                                
-                                <button
-                                    onClick={handleForceUpdate}
-                                    disabled={isForceUpdating}
-                                    className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
-                                >
-                                    {isForceUpdating ? 'Force Updating...' : 'Force Update Verification'}
-                                </button>
 
                                 <button
                                     onClick={handleSignOut}
@@ -258,8 +256,19 @@ export const VerificationPendingPage = () => {
 
                         {/* Footer */}
                         <div className="mt-8 text-center">
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                                <div className="flex items-center justify-center mb-2">
+                                    <svg className="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                    <p className="text-sm font-medium text-yellow-800">Important: Check Your Spam Folder!</p>
+                                </div>
+                                <p className="text-sm text-yellow-700">
+                                    Gmail often sends Firebase verification emails to spam. Please check your spam/junk folder and mark the email as "Not Spam" to receive future emails.
+                                </p>
+                            </div>
                             <p className="text-sm text-gray-500">
-                                Didn't receive the email? Check your spam folder or contact support.
+                                Still having trouble? Contact support for assistance.
                             </p>
                         </div>
                     </div>

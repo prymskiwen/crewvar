@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -83,6 +85,16 @@ jobs:
             exit 1
           fi
 
+          # Write service account JSON to file safely using Python
+          python3 -c "
+          import json
+          service_account = '''${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'''
+          with open('service-account.json', 'w') as f:
+              json.dump(json.loads(service_account), f, indent=2)
+          "
+
+          # Set environment variable for Firebase CLI
+          export GOOGLE_APPLICATION_CREDENTIALS=service-account.json
 
           # Deploy using service account
           npx firebase-tools@latest deploy --only hosting --project ${{ secrets.FIREBASE_PROJECT_ID }}

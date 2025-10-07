@@ -19,6 +19,8 @@
     "import:csv": "node scripts/import-csv-data.js"
   },
   "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@hookform/resolvers": "^3.1.1",
@@ -40,6 +42,7 @@
     "yup": "^1.2.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
     "@types/lodash.debounce": "^4.0.7",
     "@types/react": "^18.0.37",
     "@types/react-dom": "^18.0.11",

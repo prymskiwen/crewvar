@@ -71,11 +71,6 @@ jobs:
 
           echo "✅ Build verification successful"
 
-      - name: Configure Node.js for deployment
-        run: |
-          echo "🔧 Configuring Node.js to prevent memory leaks..."
-          echo "NODE_OPTIONS=--max-old-space-size=4096 --max-listeners=20" >> $GITHUB_ENV
-
       - name: Deploy to Firebase Hosting
         run: |
           echo "🚀 Deploying to Firebase Hosting..."
@@ -88,8 +83,10 @@ jobs:
             exit 1
           fi
 
-          # Write service account JSON to file
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > service-account.json
+          # Write service account JSON to file safely
+          cat > service-account.json << 'EOF'
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          EOF
 
           # Set environment variable for Firebase CLI
           export GOOGLE_APPLICATION_CREDENTIALS=service-account.json

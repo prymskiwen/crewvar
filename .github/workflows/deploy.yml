@@ -85,13 +85,10 @@ jobs:
             exit 1
           fi
 
-          # Write service account JSON to file safely using Python
-          python3 -c "
-          import json
-          service_account = '''${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'''
-          with open('service-account.json', 'w') as f:
-              json.dump(json.loads(service_account), f, indent=2)
-          "
+          # Write service account JSON to file safely
+          cat > service-account.json << 'SERVICE_ACCOUNT_EOF'
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          SERVICE_ACCOUNT_EOF
 
           # Set environment variable for Firebase CLI
           export GOOGLE_APPLICATION_CREDENTIALS=service-account.json

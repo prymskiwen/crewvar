@@ -79,6 +79,20 @@ jobs:
       - name: Deploy to Firebase Hosting
         run: |
           echo "🚀 Deploying to Firebase Hosting..."
-          npx firebase-tools@latest deploy --only hosting --project ${{ secrets.FIREBASE_PROJECT_ID }} --token ${{ secrets.FIREBASE_TOKEN }}
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          echo "Project ID: ${{ secrets.FIREBASE_PROJECT_ID }}"
+
+          if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" ]; then
+            echo "❌ FIREBASE_SERVICE_ACCOUNT secret is not set!"
+            echo "Please add FIREBASE_SERVICE_ACCOUNT to your repository secrets."
+            echo "Get it from Firebase Console → Project Settings → Service Accounts"
+            exit 1
+          fi
+
+          # Write service account JSON to file
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > service-account.json
+
+          # Set environment variable for Firebase CLI
+          export GOOGLE_APPLICATION_CREDENTIALS=service-account.json
+
+          # Deploy using service account
+          npx firebase-tools@latest deploy --only hosting --project ${{ secrets.FIREBASE_PROJECT_ID }}

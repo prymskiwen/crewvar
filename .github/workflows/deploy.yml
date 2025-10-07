@@ -84,6 +84,11 @@ jobs:
     - name: Deploy to Firebase Hosting
       run: |
         echo "🚀 Deploying to Firebase Hosting..."
-        firebase deploy --only hosting --project crewvar-75c6f --token ${{ secrets.FIREBASE_TOKEN }}
+        if [ -z "$FIREBASE_TOKEN" ]; then
+          echo "❌ FIREBASE_TOKEN secret is not set"
+          echo "Please add FIREBASE_TOKEN to your GitHub repository secrets"
+          exit 1
+        fi
+        firebase deploy --only hosting --project crewvar-75c6f --token "$FIREBASE_TOKEN"
       env:
         FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { HiCalendar } from "react-icons/hi";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../context/AuthContextFirebase";
 import { ProfilePhotoUpload } from "../../components/users";
@@ -364,18 +362,6 @@ export const MyProfile = () => {
                             </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row items-center justify-end space-y-3 sm:space-y-0 sm:space-x-4 mb-6">
-                            <div className="flex items-center space-x-3">
-                                <Link
-                                    to="/calendar"
-                                    className="flex items-center justify-center space-x-2 px-4 py-2 bg-white text-[#069B93] rounded-xl font-semibold transition-all duration-200 hover:bg-[#069B93] hover:text-white shadow-md hover:shadow-lg"
-                                >
-                                    <HiCalendar className="w-4 h-4" />
-                                    <span>My Calendar</span>
-                                </Link>
-                            </div>
-                        </div>
 
                         {/* Main Content Grid */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

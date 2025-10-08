@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import Footer from '../../layout/Footer';
 import logo from '../../assets/images/Home/logo.png';
 
 export const TermsOfService = () => {
@@ -116,6 +117,7 @@ export const TermsOfService = () => {
                     </div>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 };

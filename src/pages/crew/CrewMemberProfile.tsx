@@ -587,23 +587,6 @@ export const CrewMemberProfile = () => {
                                             </div>
                                         )}
 
-                                        {/* Today's Assignment - Mobile Optimized */}
-                                        <div>
-                                            <h2 className="text-lg font-semibold text-gray-900 mb-3">Today's Assignment</h2>
-                                            <div className="bg-blue-50 rounded-lg p-3 sm:p-4 border-l-4 border-blue-400">
-                                                <div className="flex items-start space-x-3">
-                                                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                                        </svg>
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="text-blue-800 font-medium text-sm sm:text-base">Morning: Guest Entertainment Setup</p>
-                                                        <p className="text-blue-600 text-xs sm:text-sm">Deck 5 - Main Theater • 9:00 AM - 12:00 PM</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
                                 )}
                             </div>

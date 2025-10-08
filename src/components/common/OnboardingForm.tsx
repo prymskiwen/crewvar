@@ -16,6 +16,7 @@ import { Spinner } from "../Elements/Spinner";
 import { ShipSelection } from "./ShipSelection";
 import { AssignmentForm } from "./AssignmentForm";
 import { MissingShipFeedback } from "./MissingShipFeedback";
+import { MissingReportModal } from "./MissingReportModal";
 import { Autocomplete, Input, Button, FileUpload, FormGroup } from "../ui";
 import { ICruiseAssignment } from "../../types/calendar";
 
@@ -44,6 +45,7 @@ const OnboardingForm = () => {
     const [showAssignmentForm, setShowAssignmentForm] = useState(false);
     const [editingAssignment, setEditingAssignment] = useState<ICruiseAssignment | null>(null);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [showMissingReportModal, setShowMissingReportModal] = useState(false);
 
     // Data loading states
     const [departments, setDepartments] = useState<Department[]>([]);
@@ -340,6 +342,15 @@ const OnboardingForm = () => {
                                 onShipChange={handleShipChange}
                                 placeholder="Select your ship"
                             />
+                            <div className="mt-2 text-right">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowMissingReportModal(true)}
+                                    className="text-sm text-[#069B93] hover:text-[#058a7a] underline"
+                                >
+                                    What's missing?
+                                </button>
+                            </div>
                         </FormGroup>
 
                         {/* Submit Button */}
@@ -383,6 +394,12 @@ const OnboardingForm = () => {
                     <MissingShipFeedback
                         isOpen={showFeedbackModal}
                         onClose={() => setShowFeedbackModal(false)}
+                    />
+
+                    {/* Missing Report Modal */}
+                    <MissingReportModal
+                        isOpen={showMissingReportModal}
+                        onClose={() => setShowMissingReportModal(false)}
                     />
                 </div>
             </div>

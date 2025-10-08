@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { HiChevronDown, HiChevronUp, HiSearch } from 'react-icons/hi';
 import { SupportDropdown } from '../../components/support';
+import Footer from '../../layout/Footer';
 import logo from '../../assets/images/Home/logo.png';
 
 interface FAQItem {
@@ -123,11 +124,13 @@ const FAQ = () => {
             <div className="bg-teal-600 text-white p-3 sm:p-4 sticky top-0 z-10">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2 sm:space-x-3">
-                        <img
-                            src={logo}
-                            alt="Crewvar Logo"
-                            className="h-6 sm:h-8 w-auto"
-                        />
+                        <Link to="/dashboard" className="hover:opacity-90 transition-opacity">
+                            <img
+                                src={logo}
+                                alt="Crewvar Logo"
+                                className="h-6 sm:h-8 w-auto"
+                            />
+                        </Link>
                         <h1 className="text-lg sm:text-xl font-bold">Help Center</h1>
                     </div>
                     <button
@@ -230,6 +233,7 @@ const FAQ = () => {
                     </div>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 };

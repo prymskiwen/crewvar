@@ -75,7 +75,7 @@ export const CalendarView = ({
     // Cast assignments to proper type and sort by start date (upcoming first, then current, then completed)
     const typedAssignments = assignments as ICruiseAssignment[];
     const sortedAssignments = [...typedAssignments].sort((a, b) => {
-        // Current assignments first
+        // Ship assignments first
         if (a.status === 'current' && b.status !== 'current') return -1;
         if (b.status === 'current' && a.status !== 'current') return 1;
 

@@ -1,4 +1,5 @@
 import Showcase from "../../components/common/Showcase";
+import Footer from "../../layout/Footer";
 import newArrivals from "../../assets/images/Home/yourhomeatsea.png";
 import createProfile from "../../assets/images/Home/createprofile.png";
 import findAround from "../../assets/images/Home/findaround.png";
@@ -102,6 +103,7 @@ export const Home = () => {
                     </div>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 };

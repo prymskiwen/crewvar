@@ -495,7 +495,7 @@ export const ExploreShips = () => {
                                 </svg>
                             </button>
                             <div>
-                                <h1 className="text-base sm:text-lg font-bold">Explore Ships</h1>
+                                <h1 className="text-base sm:text-lg font-bold">Find your friends.</h1>
                                 <p className="text-xs text-teal-100">Find friends</p>
                             </div>
                         </div>
@@ -523,11 +523,18 @@ export const ExploreShips = () => {
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="Search by name, department, role, or ship..."
+                                    placeholder="Search by name..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none text-base"
                                 />
+                            </div>
+
+                            {/* Description text */}
+                            <div className="text-center">
+                                <p className="text-sm text-gray-600">
+                                    Find friends who are on your ship or on another ship today.
+                                </p>
                             </div>
 
                             {/* Cruise Line Selection */}

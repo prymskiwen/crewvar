@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { uploadProfilePhoto } from '../../firebase/storage';
 import { shouldShowStorageWarning } from '../../utils/storageFallback';
 import { useAuth } from '../../context/AuthContextFirebase';
@@ -9,6 +9,7 @@ interface ProfilePhotoUploadProps {
     className?: string;
     size?: 'small' | 'medium' | 'large';
     showInstructions?: boolean;
+    onEditClick?: () => void;
 }
 
 export const ProfilePhotoUpload = ({
@@ -16,7 +17,8 @@ export const ProfilePhotoUpload = ({
     onPhotoChange,
     className = '',
     size = 'large',
-    showInstructions = true
+    showInstructions = true,
+    onEditClick
 }: ProfilePhotoUploadProps) => {
     const [isDragOver, setIsDragOver] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
@@ -90,6 +92,19 @@ export const ProfilePhotoUpload = ({
             handleFileSelect(file);
         }
     };
+
+    // Function to trigger file input
+    const triggerFileInput = useCallback(() => {
+        fileInputRef.current?.click();
+    }, []);
+
+    // Expose the trigger function to parent
+    React.useEffect(() => {
+        if (onEditClick) {
+            // Store the trigger function in a way the parent can access it
+            (window as any).triggerProfilePhotoUpload = triggerFileInput;
+        }
+    }, [onEditClick, triggerFileInput]);
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -194,11 +209,11 @@ export const ProfilePhotoUpload = ({
                     </div>
                 )}
 
-                {/* Edit icon */}
+                {/* Add icon (Instagram style) */}
                 {displayPhoto && !isUploading && (
-                    <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 rounded-full flex items-center justify-center transition-all duration-200">
-                        <svg className="w-6 h-6 text-white opacity-0 hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-6 h-6 bg-[#069B93] rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
                     </div>
                 )}

@@ -60,7 +60,7 @@ export const AssignmentCard = ({
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-800 flex items-center space-x-2">
                     <img src="/ship-icon.png" alt="Ship" className="w-6 h-6" />
-                    <span>Current Assignment</span>
+                    <span>My ship today.</span>
                 </h2>
                 <Button
                     onClick={() => setIsEditing(!isEditing)}

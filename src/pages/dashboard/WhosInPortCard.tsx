@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 import { CrewMemberCard } from './CrewMemberCard';
 import { getProfilePhotoUrl } from '../../utils/images';
 import { useAuth } from '../../context/AuthContextFirebase';
@@ -201,7 +202,9 @@ export const WhosInPortCard = () => {
         return (
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold text-[#069B93]">Who's in port with you today</h3>
+                    <h3 className="text-xl font-bold text-[#069B93]">
+                        Crewvar automatically detects when ships are docked together based on crew connections, have you checked who is with you today?
+                    </h3>
                     <div className="flex items-center space-x-2">
                     <span className="bg-gradient-to-r from-[#069B93] to-[#058a7a] text-white text-sm px-4 py-2 rounded-full font-semibold shadow-lg">
                         ...
@@ -221,7 +224,9 @@ export const WhosInPortCard = () => {
         return (
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 lg:p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex justify-between items-center mb-3 lg:mb-4">
-                    <h3 className="text-base lg:text-lg font-semibold text-[#069B93]">Who's in port with you today</h3>
+                    <h3 className="text-base lg:text-lg font-semibold text-[#069B93]">
+                        Crewvar automatically detects when ships are docked together based on crew connections, have you checked who is with you today?
+                    </h3>
                     <div className="flex items-center space-x-2">
                         <span className="bg-[#069B93] text-white text-xs px-2 py-1 rounded-full font-medium">0</span>
                     </div>
@@ -232,10 +237,11 @@ export const WhosInPortCard = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.314 16.5c-.77.833.192 2.5 1.732 2.5z" />
                         </svg>
                     </div>
-                    <h4 className="text-lg font-semibold text-gray-800 mb-2">Ship Assignment Required</h4>
+                    <h4 className="text-lg font-semibold text-gray-800 mb-2">Complete your profile</h4>
                     <p className="text-gray-600 text-sm mb-4 max-w-sm mx-auto">
-                        Please assign yourself to a ship first to use the port detection feature. 
-                        You can still manually link with other ships using the button above.
+                        <Link to="/profile" className="text-[#069B93] hover:text-[#058a7a] font-semibold underline">
+                            Complete your profile
+                        </Link> to tell us which ship you are on to unlock finding your friends on your ship or on another ship.
                     </p>
                 </div>
             </div>
@@ -245,34 +251,19 @@ export const WhosInPortCard = () => {
     return (
         <>
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 lg:p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-                {/* Port Link Message */}
-                {hasActivePortLinks && (
-                    <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-teal-50 border border-blue-200 rounded-lg">
-                        <div className="flex items-center space-x-2">
-                            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-sm font-medium text-blue-900">
-                                    It looks like <span className="font-semibold">
-                                        {activePortLinks.map(link => 
-                                            link.shipAId === userProfile?.currentShipId ? link.shipBName : link.shipAName
-                                        ).join(', ')}
-                                    </span> {activePortLinks.length === 1 ? 'is' : 'are'} in port with you today!
-                                </p>
-                                <p className="text-xs text-blue-700 mt-1">
-                                    Connect with crew members from {activePortLinks.length === 1 ? 'their ship' : 'these ships'} below.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 <div className="flex justify-between items-center mb-3 lg:mb-4">
                     <h3 className="text-base lg:text-lg font-semibold text-[#069B93]">
-                        {hasActivePortLinks ? 'Suggested Connections' : 'Who\'s in port with you today'}
+                        {hasActivePortLinks ? 'Suggested Connections' : (
+                            <>
+                                Crewvar automatically detects when ships are docked together based on crew connections, have you checked who is with you today?{' '}
+                                <Link 
+                                    to="/explore-ships" 
+                                    className="text-[#069B93] hover:text-[#058a7a] underline font-semibold"
+                                >
+                                    Find your friends.
+                                </Link>
+                            </>
+                        )}
                     </h3>
                     <div className="flex items-center space-x-2">
                         <span className="bg-[#069B93] text-white text-xs px-2 py-1 rounded-full font-medium">
@@ -324,12 +315,6 @@ export const WhosInPortCard = () => {
                                 Crewvar automatically detects when ships are docked together based on crew connections. 
                                 Start connecting with crew members to discover ships in your port!
                             </p>
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-w-sm mx-auto mt-4">
-                                <p className="text-xs text-blue-700">
-                                    💡 <strong>How it works:</strong> When 5+ crew members from your ship connect with crew from another ship, 
-                                    we automatically detect they're in port together!
-                                </p>
-                            </div>
                         </div>
                     )}
                 </div>

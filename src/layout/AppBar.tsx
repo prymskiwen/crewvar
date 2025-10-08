@@ -88,8 +88,8 @@ const AppBar = ({
     // Navigation items for desktop
     const navItems = [
         { name: 'Dashboard', path: '/dashboard' },
-        { name: 'Update Location', path: '/ship-location', isButton: true },
-        { name: 'Discover Crew', path: '/explore-ships' },
+        { name: 'Update where you are.', path: '/ship-location', isButton: true },
+        { name: 'Find your friends.', path: '/explore-ships' },
         { name: 'Connection Requests', path: '/connections/pending' },
         { name: 'Messages', path: '/chat' },
         { name: 'Favorites', path: '/favorites' },

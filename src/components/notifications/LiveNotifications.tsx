@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContextFirebase';
-import { subscribeToLiveNotifications, markLiveNotificationAsRead, clearAllNotifications, LiveNotification } from '../../firebase/firestore';
+import { subscribeToLiveNotifications, markLiveNotificationAsRead, clearAllNotifications, clearAllLegacyNotifications, LiveNotification, getNotifications, markNotificationAsRead } from '../../firebase/firestore';
 import { formatTimeAgo } from '../../utils/data';
 
 interface LiveNotificationsProps {
@@ -10,10 +11,28 @@ interface LiveNotificationsProps {
 
 export const LiveNotifications: React.FC<LiveNotificationsProps> = ({ isOpen, onClose }) => {
     const { currentUser } = useAuth();
-    const [notifications, setNotifications] = useState<LiveNotification[]>([]);
+    const [liveNotifications, setLiveNotifications] = useState<LiveNotification[]>([]);
+    const [legacyNotifications, setLegacyNotifications] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [clearingAll, setClearingAll] = useState(false);
 
+    // Fetch legacy notifications
+    useEffect(() => {
+        const fetchLegacyNotifications = async () => {
+            if (!currentUser) return;
+            
+            try {
+                const notifications = await getNotifications(currentUser.uid);
+                setLegacyNotifications(notifications);
+            } catch (error) {
+                console.error('Error fetching legacy notifications:', error);
+            }
+        };
+
+        fetchLegacyNotifications();
+    }, [currentUser]);
+
+    // Subscribe to live notifications
     useEffect(() => {
         if (!currentUser) {
             console.log('🔔 LiveNotifications: No current user, skipping subscription');
@@ -24,7 +43,7 @@ export const LiveNotifications: React.FC<LiveNotificationsProps> = ({ isOpen, on
         const unsubscribe = subscribeToLiveNotifications(currentUser.uid, (liveNotifications: LiveNotification[]) => {
             console.log('🔔 LiveNotifications: Received notifications:', liveNotifications.length, 'notifications');
             console.log('🔔 LiveNotifications: Notifications data:', liveNotifications);
-            setNotifications(liveNotifications);
+            setLiveNotifications(liveNotifications);
             setLoading(false);
         });
 
@@ -34,11 +53,37 @@ export const LiveNotifications: React.FC<LiveNotificationsProps> = ({ isOpen, on
         };
     }, [currentUser]);
 
-    const handleMarkAsRead = async (notificationId: string) => {
+    // Combine both notification types
+    const allNotifications = [
+        ...liveNotifications.map(n => ({
+            id: n.id,
+            type: n.type,
+            title: n.title,
+            message: n.message,
+            timestamp: n.timestamp,
+            read: n.read,
+            isLive: true
+        })),
+        ...legacyNotifications.map(n => ({
+            id: n.id,
+            type: n.type,
+            title: n.title,
+            message: n.message,
+            timestamp: n.createdAt?.toDate?.()?.getTime() || Date.now(),
+            read: n.isRead,
+            isLive: false
+        }))
+    ].sort((a, b) => b.timestamp - a.timestamp);
+
+    const handleMarkAsRead = async (notificationId: string, isLive: boolean) => {
         if (!currentUser) return;
 
         try {
-            await markLiveNotificationAsRead(notificationId);
+            if (isLive) {
+                await markLiveNotificationAsRead(notificationId);
+            } else {
+                await markNotificationAsRead(notificationId);
+            }
         } catch (error) {
             console.error('Error marking notification as read:', error);
         }
@@ -50,9 +95,18 @@ export const LiveNotifications: React.FC<LiveNotificationsProps> = ({ isOpen, on
         setClearingAll(true);
         try {
             console.log('🗑️ Clearing all notifications for user:', currentUser.uid);
-            await clearAllNotifications(currentUser.uid);
+            
+            // Clear both live and legacy notifications
+            await Promise.all([
+                clearAllNotifications(currentUser.uid),
+                clearAllLegacyNotifications(currentUser.uid)
+            ]);
+            
             console.log('✅ All notifications cleared successfully');
-            // The real-time subscription will automatically update the UI
+            
+            // Refresh both notification lists
+            setLiveNotifications([]);
+            setLegacyNotifications([]);
         } catch (error) {
             console.error('❌ Error clearing all notifications:', error);
         } finally {
@@ -108,7 +162,7 @@ export const LiveNotifications: React.FC<LiveNotificationsProps> = ({ isOpen, on
         <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
             <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900">Live Notifications</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">All Notifications</h3>
                     <button
                         onClick={onClose}
                         className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -126,7 +180,7 @@ export const LiveNotifications: React.FC<LiveNotificationsProps> = ({ isOpen, on
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
                         <p className="text-sm text-gray-500 mt-2">Loading notifications...</p>
                     </div>
-                ) : notifications.length === 0 ? (
+                ) : allNotifications.length === 0 ? (
                     <div className="p-4 text-center text-gray-500">
                         <div className="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
                             <span className="text-3xl text-gray-300">🗑️</span>
@@ -135,7 +189,7 @@ export const LiveNotifications: React.FC<LiveNotificationsProps> = ({ isOpen, on
                     </div>
                 ) : (
                     <div className="divide-y divide-gray-200">
-                        {notifications.map((notification) => (
+                        {allNotifications.map((notification) => (
                             <div
                                 key={notification.id}
                                 className={`p-4 border-l-4 ${getNotificationColor(notification.type)} ${!notification.read ? 'bg-opacity-100' : 'bg-opacity-50'
@@ -162,7 +216,7 @@ export const LiveNotifications: React.FC<LiveNotificationsProps> = ({ isOpen, on
                                         </p>
                                         {!notification.read && (
                                             <button
-                                                onClick={() => handleMarkAsRead(notification.id)}
+                                                onClick={() => handleMarkAsRead(notification.id, notification.isLive)}
                                                 className="text-xs text-blue-600 hover:text-blue-800 mt-2 transition-colors"
                                             >
                                                 Mark as read
@@ -176,7 +230,7 @@ export const LiveNotifications: React.FC<LiveNotificationsProps> = ({ isOpen, on
                 )}
             </div>
 
-            {notifications.length > 0 && (
+            {allNotifications.length > 0 && (
                 <div className="p-4 border-t border-gray-200">
                     <button
                         onClick={handleClearAll}
@@ -192,6 +246,32 @@ export const LiveNotifications: React.FC<LiveNotificationsProps> = ({ isOpen, on
                             <span>Clear all notifications</span>
                         )}
                     </button>
+                    
+                    <Link
+                        to="/all-notifications"
+                        onClick={onClose}
+                        className="w-full mt-2 text-sm text-[#069B93] hover:text-[#058a7a] transition-colors flex items-center justify-center space-x-2"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span>View All Notifications</span>
+                    </Link>
+                </div>
+            )}
+            
+            {allNotifications.length === 0 && !loading && (
+                <div className="p-4 border-t border-gray-200">
+                    <Link
+                        to="/all-notifications"
+                        onClick={onClose}
+                        className="w-full text-sm text-[#069B93] hover:text-[#058a7a] transition-colors flex items-center justify-center space-x-2"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span>View All Notifications</span>
+                    </Link>
                 </div>
             )}
         </div>

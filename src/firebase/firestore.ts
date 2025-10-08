@@ -2698,6 +2698,23 @@ export const clearAllNotifications = async (userId: string) => {
   }
 };
 
+export const clearAllLegacyNotifications = async (userId: string) => {
+  try {
+    const notificationsRef = collection(db, "notifications");
+    const q = query(notificationsRef, where("userId", "==", userId));
+    const snapshot = await getDocs(q);
+
+    const batch = writeBatch(db);
+    snapshot.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+  } catch (error) {
+    console.error("Error clearing legacy notifications:", error);
+  }
+};
+
 // Convenience functions
 export const startTyping = (
   roomId: string,

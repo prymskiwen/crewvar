@@ -858,6 +858,28 @@ export const cleanupDuplicateChatRooms = async (
   }
 };
 
+// Clean up stale presence data (users who haven't been seen for more than 10 minutes)
+export const cleanupStalePresence = async (): Promise<void> => {
+    try {
+        const presenceRef = collection(db, 'presence');
+        const snapshot = await getDocs(presenceRef);
+        const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
+        
+        const stalePresence = snapshot.docs.filter(doc => {
+            const data = doc.data();
+            return data.lastSeen && data.lastSeen < tenMinutesAgo;
+        });
+
+        for (const docSnapshot of stalePresence) {
+            await deleteDoc(docSnapshot.ref);
+            console.log(`Cleaned up stale presence for user: ${docSnapshot.id}`);
+        }
+    } catch (error) {
+        console.error('Error cleaning up stale presence:', error);
+        throw error;
+    }
+};
+
 // Get chat rooms for a user
 export const getChatRooms = async (userId: string): Promise<any[]> => {
   try {

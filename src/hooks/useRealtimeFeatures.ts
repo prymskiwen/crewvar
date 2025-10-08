@@ -30,7 +30,7 @@ export const useRealtimeFeatures = (roomId?: string) => {
     const [isTyping, setIsTyping] = useState(false);
     const [isOnline, setIsOnline] = useState(false);
 
-    // Set user presence when component mounts
+    // Set user presence when component mounts and maintain heartbeat
     useEffect(() => {
         if (!currentUser) return;
 
@@ -46,13 +46,26 @@ export const useRealtimeFeatures = (roomId?: string) => {
 
         initializePresence();
 
+        // Set up heartbeat to keep presence alive
+        const heartbeatInterval = setInterval(async () => {
+            if (currentUser && userProfile) {
+                try {
+                    const displayName = userProfile.displayName || currentUser.displayName || 'Unknown User';
+                    await setUserPresence(currentUser.uid, displayName, 'online');
+                } catch (error) {
+                    console.error('Error updating presence heartbeat:', error);
+                }
+            }
+        }, 30000); // Update every 30 seconds
+
         // Cleanup on unmount
         return () => {
+            clearInterval(heartbeatInterval);
             if (currentUser) {
                 cleanupPresence(currentUser.uid);
             }
         };
-    }, [currentUser]);
+    }, [currentUser, userProfile]);
 
     // Join room presence when roomId changes
     useEffect(() => {

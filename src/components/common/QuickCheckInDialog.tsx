@@ -23,6 +23,17 @@ export const QuickCheckInDialog: React.FC<QuickCheckInDialogProps> = ({
 }) => {
     const { currentUser } = useAuth();
 
+    // Convert YYYY-MM-DD to MM/DD/YYYY format
+    const formatDateToAmerican = (dateString: string): string => {
+        try {
+            const [year, month, day] = dateString.split('-');
+            return `${month}/${day}/${year}`;
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return dateString; // Return original if formatting fails
+        }
+    };
+
     const handleUpdateShip = async () => {
         if (!currentUser?.uid) {
             toast.error('User not authenticated', {
@@ -71,7 +82,7 @@ export const QuickCheckInDialog: React.FC<QuickCheckInDialogProps> = ({
 
                 <div className="mb-6">
                     <p className="text-gray-600 mb-4">
-                        Let us know which ship you're currently on to help other crew members find you.
+                        Let us know which ship you're currently on to help other members find you.
                     </p>
 
                     {currentShip ? (
@@ -80,10 +91,10 @@ export const QuickCheckInDialog: React.FC<QuickCheckInDialogProps> = ({
                                 <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span className="text-green-800 font-medium">Current Assignment</span>
+                                <span className="text-green-800 font-medium">My ship today.</span>
                             </div>
                             <p className="text-green-700">
-                                <strong>{currentShip.shipName}</strong> - {currentShip.date}
+                                <strong>{currentShip.shipName}</strong> - {formatDateToAmerican(currentShip.date)}
                             </p>
                         </div>
                     ) : (

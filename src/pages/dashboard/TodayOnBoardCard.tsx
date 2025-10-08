@@ -206,8 +206,9 @@ export const TodayOnBoardCard = () => {
                 </div>
                 <div className="text-center py-8">
                     <div className="w-16 h-16 bg-gradient-to-br from-[#069B93]/10 to-[#058a7a]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-[#069B93]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 8h5a2 2 0 002-2V9a2 2 0 00-2-2H9a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        <svg className="w-8 h-8 text-[#069B93]" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            <circle cx="12" cy="7" r="2" fill="white"/>
                         </svg>
                     </div>
                     <h4 className="text-lg font-semibold text-gray-800 mb-2">Complete Your Profile</h4>
@@ -259,7 +260,7 @@ export const TodayOnBoardCard = () => {
             <div className="space-y-1 lg:space-y-3 mb-3 lg:mb-4">
                 {crew.length > 0 ? (
                     <div className="grid grid-cols-1 gap-1 lg:gap-3">
-                        {crew.map((member) => (
+                        {crew.slice(0, 3).map((member) => (
                             <CrewMemberCard 
                                 key={member.id} 
                                 member={{
@@ -284,20 +285,19 @@ export const TodayOnBoardCard = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                         </div>
-                        <p className="text-gray-600 text-sm mb-2">No crew members found</p>
-                        <p className="text-gray-500 text-xs">No other crew members are currently on your ship.</p>
+                        <p className="text-gray-500 text-xs">No other active members seem to be on your ship today.</p>
                     </div>
                 )}
             </div>
 
             {/* View All Button */}
-            {crewResponse?.crew && crewResponse.crew.length > 0 && (
+            {crew.length > 3 && (
                 <div className="flex justify-center">
                     <button
                         onClick={handleViewAll}
                         className="px-4 py-2 text-sm text-[#069B93] hover:text-[#058a7a] hover:bg-[#069B93]/5 rounded-lg transition-colors font-medium"
                     >
-                        View All ({crewResponse.crew.filter((member: any) => member.id !== currentUser?.uid).length})
+                        View All ({crew.length})
                     </button>
                 </div>
             )}

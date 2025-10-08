@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { HiMail, HiChat, HiClock, HiCheckCircle } from 'react-icons/hi';
-import SupportDropdown from '../../components/support/SupportDropdown';
+import { HiMail, HiClock, HiCheckCircle } from 'react-icons/hi';
 import { createSupportTicket } from '../../firebase/support';
 import { useAuth } from '../../context/AuthContextFirebase';
+import Footer from '../../layout/Footer';
 import logo from '../../assets/images/Home/logo.png';
 
 const SupportPage = () => {
@@ -14,26 +14,9 @@ const SupportPage = () => {
     const [ticketSubmitted, setTicketSubmitted] = useState(false);
     const [formData, setFormData] = useState({
         subject: '',
-        description: '',
-        category: 'general',
-        priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent'
+        description: ''
     });
 
-    const categories = [
-        { value: 'general', label: 'General Inquiry' },
-        { value: 'technical', label: 'Technical Issue' },
-        { value: 'account', label: 'Account Problem' },
-        { value: 'billing', label: 'Billing Question' },
-        { value: 'feature', label: 'Feature Request' },
-        { value: 'bug', label: 'Bug Report' }
-    ];
-
-    const priorities = [
-        { value: 'low', label: 'Low', color: 'text-green-600' },
-        { value: 'medium', label: 'Medium', color: 'text-yellow-600' },
-        { value: 'high', label: 'High', color: 'text-orange-600' },
-        { value: 'urgent', label: 'Urgent', color: 'text-red-600' }
-    ];
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -47,15 +30,15 @@ const SupportPage = () => {
 
             console.log('🚀 Creating support ticket:', formData);
             
-            const ticketId = await createSupportTicket({
-                userId: currentUser.uid,
-                userName: userProfile.displayName || 'Unknown User',
-                userEmail: userProfile.email || currentUser.email || 'unknown@example.com',
-                subject: formData.subject,
-                description: formData.description,
-                category: formData.category,
-                priority: formData.priority
-            });
+                const ticketId = await createSupportTicket({
+                    userId: currentUser.uid,
+                    userName: userProfile.displayName || 'Unknown User',
+                    userEmail: userProfile.email || currentUser.email || 'unknown@example.com',
+                    subject: formData.subject,
+                    description: formData.description,
+                    category: 'general',
+                    priority: 'medium'
+                });
 
             console.log('✅ Support ticket created with ID:', ticketId);
             setTicketSubmitted(true);
@@ -117,11 +100,13 @@ const SupportPage = () => {
             <div className="bg-teal-600 text-white p-3 sm:p-4 sticky top-0 z-10">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2 sm:space-x-3">
-                        <img
-                            src={logo}
-                            alt="Crewvar Logo"
-                            className="h-6 sm:h-8 w-auto"
-                        />
+                        <Link to="/dashboard" className="hover:opacity-90 transition-opacity">
+                            <img
+                                src={logo}
+                                alt="Crewvar Logo"
+                                className="h-6 sm:h-8 w-auto"
+                            />
+                        </Link>
                         <h1 className="text-lg sm:text-xl font-bold">Support Center</h1>
                     </div>
                     <button
@@ -164,13 +149,6 @@ const SupportPage = () => {
                                             <p className="text-sm text-gray-600">Within 24 hours</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center space-x-3">
-                                        <HiChat className="w-5 h-5 text-[#069B93]" />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="text-sm font-medium text-gray-900">Live Chat</p>
-                                            <p className="text-sm text-gray-600">Available 9 AM - 6 PM EST</p>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
@@ -183,13 +161,6 @@ const SupportPage = () => {
                                     >
                                         <p className="font-medium text-gray-900 text-sm sm:text-base">Frequently Asked Questions</p>
                                         <p className="text-xs sm:text-sm text-gray-600">Find answers to common questions</p>
-                                    </button>
-                                    <button
-                                        onClick={() => navigate('/support')}
-                                        className="w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                                    >
-                                        <p className="font-medium text-gray-900 text-sm sm:text-base">Contact Us</p>
-                                        <p className="text-xs sm:text-sm text-gray-600">Get in touch with our team</p>
                                     </button>
                                 </div>
                             </div>
@@ -217,29 +188,9 @@ const SupportPage = () => {
                                         />
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                                        <SupportDropdown
-                                            label="Category"
-                                            value={formData.category}
-                                            onChange={(value: any) => setFormData(prev => ({ ...prev, category: value }))}
-                                            options={categories}
-                                            placeholder="Select category"
-                                            required
-                                        />
-
-                                        <SupportDropdown
-                                            label="Priority"
-                                            value={formData.priority}
-                                            onChange={(value: any) => setFormData(prev => ({ ...prev, priority: value as 'low' | 'medium' | 'high' | 'urgent' }))}
-                                            options={priorities}
-                                            placeholder="Select priority"
-                                            required
-                                        />
-                                    </div>
-
                                     <div>
                                         <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                                            Description *
+                                            Message *
                                         </label>
                                         <textarea
                                             id="description"
@@ -275,6 +226,7 @@ const SupportPage = () => {
                     </div>
                 </div>
             </div>
+            <Footer />
         </div>
     );
 };

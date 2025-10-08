@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { IUserProfile } from "../../types/connections";
 import { FavoriteButton } from "../common/FavoriteButton";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "../../firebase/config";
 
 interface ProfileViewProps {
     profile: IUserProfile;
@@ -23,6 +25,24 @@ export const ProfileView = ({
     const navigate = useNavigate();
     const [showRequestForm, setShowRequestForm] = useState(false);
     const [message, setMessage] = useState("");
+    const [isOnline, setIsOnline] = useState(false);
+
+    // Listen to real-time presence data
+    useEffect(() => {
+        if (!profile.id) return;
+
+        const presenceRef = doc(db, 'presence', profile.id);
+        const unsubscribe = onSnapshot(presenceRef, (doc) => {
+            if (doc.exists()) {
+                const presenceData = doc.data();
+                setIsOnline(presenceData.status === 'online');
+            } else {
+                setIsOnline(false);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [profile.id]);
 
     const handleSendRequest = () => {
         if (message.trim() && onSendRequest) {
@@ -74,18 +94,17 @@ export const ProfileView = ({
                             alt={profile.displayName}
                             className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
                         />
-                        {profile.isOnline && (
+                        {isOnline && (
                             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-3 border-white rounded-full"></div>
                         )}
                     </div>
                     <div className="flex-1">
                         <h1 className="text-2xl font-bold">{profile.displayName}</h1>
                         <p className="text-[#B9F3DF] text-lg">{profile.role}</p>
-                        <p className="text-[#B9F3DF] text-sm">{profile.department} • {profile.subcategory}</p>
                         <div className="flex items-center space-x-2 mt-2">
-                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-400' : 'bg-gray-400'}`}></div>
                             <span className="text-sm text-[#B9F3DF]">
-                                {profile.isOnline ? 'Online now' : `Last seen ${profile.lastSeen}`}
+                                {isOnline ? 'Online now' : 'Offline'}
                             </span>
                         </div>
                     </div>
@@ -96,15 +115,15 @@ export const ProfileView = ({
             <div className="p-6">
                 {/* Level 1 - Basic Info (Always Visible) */}
                 <div className="mb-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Current Assignment</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">My ship today.</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-gray-50 rounded-lg p-4">
                             <h3 className="font-medium text-gray-900 mb-1">Ship</h3>
                             <p className="text-gray-600">{profile.shipName}</p>
                         </div>
                         <div className="bg-gray-50 rounded-lg p-4">
-                            <h3 className="font-medium text-gray-900 mb-1">Port</h3>
-                            <p className="text-gray-600">{profile.port}</p>
+                            <h3 className="font-medium text-gray-900 mb-1">Role</h3>
+                            <p className="text-gray-600">{profile.role}</p>
                         </div>
                     </div>
                 </div>

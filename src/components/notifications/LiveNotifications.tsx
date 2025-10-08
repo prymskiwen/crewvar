@@ -128,9 +128,9 @@ export const LiveNotifications: React.FC<LiveNotificationsProps> = ({ isOpen, on
                     </div>
                 ) : notifications.length === 0 ? (
                     <div className="p-4 text-center text-gray-500">
-                        <svg className="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 00-15 0v5h5l-5 5-5-5h5v-5a7.5 7.5 0 0115 0v5z" />
-                        </svg>
+                        <div className="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+                            <span className="text-3xl text-gray-300">🗑️</span>
+                        </div>
                         <p className="text-sm">No notifications yet</p>
                     </div>
                 ) : (

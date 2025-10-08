@@ -196,25 +196,13 @@ export const MyProfile = () => {
         return profile.roleId ? getRoleName(profile.roleId) : 'Crew Member';
     };
 
-    const getUserDepartmentName = () => {
-        return profile.departmentId ? getDepartmentName(profile.departmentId) : 'Crew Member';
-    };
 
-    const getUserStatus = () => {
-        return { status: userProfile?.isActive ? 'Online' : 'Offline', color: !userProfile?.isActive ? 'bg-red-400' : 'bg-green-400' };
-
-    };
 
     const getUserJobTitle = () => {
         const roleName = getUserRoleName();
-        const departmentName = getUserDepartmentName();
-
-        if (roleName !== 'Crew Member' && departmentName !== 'Crew Member') {
-            return `${roleName} • ${departmentName}`;
-        } else if (roleName !== 'Crew Member') {
+        
+        if (roleName !== 'Crew Member') {
             return roleName;
-        } else if (departmentName !== 'Crew Member') {
-            return departmentName;
         }
         return 'Crew Member';
     };
@@ -277,6 +265,7 @@ export const MyProfile = () => {
     const [isEditingContact, setIsEditingContact] = useState(false);
     const [isEditingAboutMe, setIsEditingAboutMe] = useState(false);
     const [isEditingAssignment, setIsEditingAssignment] = useState(false);
+    const [isEditingPhotos, setIsEditingPhotos] = useState(true);
 
     const handleProfileEditSave = async (profileData: any) => {
         try {
@@ -370,12 +359,6 @@ export const MyProfile = () => {
                                     <div className="flex-1 text-center lg:text-left">
                                         <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">{profile.displayName || 'Crew Member'}</h1>
                                         <p className="text-teal-600 text-lg lg:text-xl mb-3 font-medium">{getUserJobTitle()}</p>
-                                        <div className="flex items-center justify-center lg:justify-start space-x-3">
-                                            <div className="flex items-center space-x-2 bg-teal-50 border border-teal-200 rounded-full px-4 py-2">
-                                                <div className={`w-3 h-3 ${getUserStatus().color} rounded-full`}></div>
-                                                <span className="text-sm text-teal-700 font-semibold">{getUserStatus().status}</span>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -398,7 +381,7 @@ export const MyProfile = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Left Column - Main Info */}
                             <div className="lg:col-span-2 space-y-6">
-                                {/* Current Assignment Card */}
+                                {/* My ship today. Card */}
                                 {isLoading ? (
                                     <div className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
                                         <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
@@ -454,7 +437,8 @@ export const MyProfile = () => {
                                 <PhotosCard
                                     profile={profile}
                                     setProfile={setProfile}
-                                    isEditing={true}
+                                    isEditing={isEditingPhotos}
+                                    setIsEditing={setIsEditingPhotos}
                                     updateProfileFunc={updateUserProfileFunc}
                                 />
                             </div>

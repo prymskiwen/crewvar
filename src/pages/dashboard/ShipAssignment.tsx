@@ -131,7 +131,7 @@ export const ShipAssignment = () => {
 
                 {/* Content */}
                 <div className="p-4 sm:p-6">
-                    {/* Current Assignment Info */}
+                    {/* My ship today. Info */}
                     {userProfile?.currentShipId && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                             <div className="flex items-start space-x-3">
@@ -139,7 +139,7 @@ export const ShipAssignment = () => {
                                     <span className="text-white text-xs">ℹ</span>
                                 </div>
                                 <div>
-                                    <h4 className="font-medium text-blue-900">Current Assignment</h4>
+                                    <h4 className="font-medium text-blue-900">My ship today.</h4>
                                     <p className="text-sm text-blue-700 mt-1">
                                         {(() => {
                                             const currentShip = allShips?.find(ship => ship.id === userProfile.currentShipId);
@@ -175,7 +175,7 @@ export const ShipAssignment = () => {
                                 <h4 className="font-medium text-blue-900">Privacy Notice</h4>
                                 <p className="text-sm text-blue-700 mt-1">
                                     Your new ship assignment will be visible to other crew members immediately.
-                                    This helps them find and connect with you on the same ship.
+                                    This helps them find and connect with you.
                                 </p>
                             </div>
                         </div>
@@ -197,6 +197,36 @@ export const ShipAssignment = () => {
                         >
                             {isLoading || updateShipAssignmentMutation.isLoading ? 'Updating...' : 'Update Ship'}
                         </button>
+                    </div>
+
+                    {/* My Calendar Section */}
+                    <div className="mt-8">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">My calendar</h3>
+                            <button
+                                onClick={() => window.location.href = '/calendar'}
+                                className="text-sm text-[#069B93] hover:text-[#058a7a] font-medium"
+                            >
+                                View full calendar
+                            </button>
+                        </div>
+                        
+                        <div className="bg-gray-50 rounded-lg p-4">
+                            <div className="text-center py-8">
+                                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <p className="text-gray-500 text-sm mb-4">No assignments scheduled</p>
+                                <button
+                                    onClick={() => window.location.href = '/calendar'}
+                                    className="px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors text-sm font-medium"
+                                >
+                                    Add Assignment
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

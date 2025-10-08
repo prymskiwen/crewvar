@@ -42,8 +42,8 @@ const DashboardSidebar = ({ isOpen, onToggle, setShowCheckInDialog }: {
 
     const menuItems = [
         { name: 'Dashboard', icon: HiHome, path: '/dashboard' },
-        { name: 'Update Location', icon: HiLocationMarker, path: '/ship-location' },
-        { name: 'Discover Crew', icon: HiSearch, path: '/explore-ships' },
+        { name: 'Update where you are.', icon: HiLocationMarker, path: '/ship-location' },
+        { name: 'Find your friends.', icon: HiSearch, path: '/explore-ships' },
         { name: 'Connection Requests', icon: HiUserAdd, path: '/connections/pending' },
         { name: 'Messages', icon: HiChat, path: '/chat' },
         { name: 'Notifications', icon: HiBell, path: '/all-notifications' },

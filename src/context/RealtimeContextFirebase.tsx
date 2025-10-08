@@ -44,6 +44,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     const [onlineUsers, setOnlineUsers] = useState<PresenceStatus[]>([]);
     const [typingUsers, setTypingUsers] = useState<{ [roomId: string]: TypingIndicator[] }>({});
     const [roomParticipants, setRoomParticipants] = useState<{ [roomId: string]: { [userId: string]: { userName: string; joinedAt: any } } }>({});
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     // Unsubscribe functions - use ref to avoid dependency issues
     const unsubscribeFunctionsRef = useRef<(() => void)[]>([]);
@@ -51,6 +52,9 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
     useEffect(() => {
         // Only connect to realtime services after auth is fully loaded
         if (currentUser && userProfile && !loading) {
+            // Track current user ID
+            setCurrentUserId(currentUser.uid);
+            
             // Set user online
             setUserPresence(currentUser.uid, userProfile.displayName, 'online')
                 .then(() => {
@@ -71,10 +75,23 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
         } else if (!currentUser && !loading) {
             // User signed out - cleanup all connections
             console.log('User signed out, cleaning up realtime connections...');
+            
+            // Set user offline before cleaning up
+            if (currentUserId) {
+                setUserPresence(currentUserId, 'Unknown User', 'offline')
+                    .then(() => {
+                        console.log('User presence set to offline');
+                    })
+                    .catch((error: any) => {
+                        console.error('Error setting user offline:', error);
+                    });
+            }
+            
             setIsConnected(false);
             setOnlineUsers([]);
             setTypingUsers({});
             setRoomParticipants({});
+            setCurrentUserId(null);
 
             // Clean up all subscriptions
             unsubscribeFunctionsRef.current.forEach(unsubscribe => {
@@ -86,7 +103,7 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children }) 
             });
             unsubscribeFunctionsRef.current = [];
         }
-    }, [currentUser, userProfile, loading]);
+    }, [currentUser, userProfile, loading, currentUserId]);
 
     const setUserStatus = async (status: 'online' | 'away' | 'offline') => {
         if (currentUser && userProfile) {

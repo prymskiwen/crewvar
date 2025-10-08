@@ -5,6 +5,7 @@ import { HiPlus, HiArrowLeft } from 'react-icons/hi';
 import { CalendarView, AssignmentForm } from '../../components/common';
 import { ICruiseAssignment } from '../../types/calendar';
 import { useAuth } from '../../context/AuthContextFirebase';
+import logo from '../../assets/images/Home/logo.png';
 
 export const CalendarPage = () => {
     const { currentUser } = useAuth();
@@ -40,6 +41,16 @@ export const CalendarPage = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center space-x-4">
+                            <Link
+                                to="/dashboard"
+                                className="hover:opacity-90 transition-opacity"
+                            >
+                                <img
+                                    src={logo}
+                                    alt="Crewvar Logo"
+                                    className="h-8 w-auto"
+                                />
+                            </Link>
                             <Link
                                 to="/profile"
                                 className="p-2 rounded-lg hover:bg-gray-100 transition-colors"

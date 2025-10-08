@@ -365,6 +365,30 @@ export const createNotification = async (notificationData: {
     }
 };
 
+// Create a missing item report
+export const createMissingReport = async (reportData: {
+    type: string;
+    name: string;
+    description: string;
+}): Promise<string> => {
+    try {
+        const reportRef = await addDoc(collection(db, 'reports'), {
+            type: 'missing_item',
+            category: reportData.type,
+            name: reportData.name,
+            description: reportData.description,
+            status: 'pending',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+        });
+
+        return reportRef.id;
+    } catch (error) {
+        console.error('Error creating missing report:', error);
+        throw error;
+    }
+};
+
 export const respondToConnectionRequest = async (
     requestId: string,
     status: 'accepted' | 'declined'
@@ -726,6 +750,55 @@ export const createOrGetChatRoom = async (userId1: string, userId2: string): Pro
     }
 };
 
+// Clean up duplicate chat rooms for a user
+export const cleanupDuplicateChatRooms = async (userId: string): Promise<void> => {
+    try {
+        const chatRoomsRef = collection(db, 'chatRooms');
+        const q = query(
+            chatRoomsRef,
+            where('participants', 'array-contains', userId)
+        );
+
+        const snapshot = await getDocs(q);
+        const rooms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        // Group rooms by participant pairs
+        const roomGroups = new Map<string, any[]>();
+        
+        rooms.forEach(room => {
+            const participants = room.participants.sort();
+            const key = participants.join('_');
+            
+            if (!roomGroups.has(key)) {
+                roomGroups.set(key, []);
+            }
+            roomGroups.get(key)!.push(room);
+        });
+
+        // Remove duplicates, keeping the oldest room
+        for (const [key, roomList] of roomGroups) {
+            if (roomList.length > 1) {
+                // Sort by creation date, keep the oldest
+                roomList.sort((a, b) => {
+                    const aTime = a.createdAt?.toDate?.() || new Date(0);
+                    const bTime = b.createdAt?.toDate?.() || new Date(0);
+                    return aTime.getTime() - bTime.getTime();
+                });
+
+                // Delete all but the first (oldest) room
+                const roomsToDelete = roomList.slice(1);
+                for (const room of roomsToDelete) {
+                    await deleteDoc(doc(db, 'chatRooms', room.id));
+                    console.log(`Deleted duplicate chat room: ${room.id}`);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error cleaning up duplicate chat rooms:', error);
+        throw error;
+    }
+};
+
 // Get chat rooms for a user
 export const getChatRooms = async (userId: string): Promise<any[]> => {
     try {
@@ -819,16 +892,22 @@ export const sendMessage = async (
             updatedAt: serverTimestamp()
         });
 
-        // Increment unread count for other participants
+        // Increment unread count for other participants who are not currently in the room
         const roomDoc = await getDoc(roomRef);
         if (roomDoc.exists()) {
             const roomData = roomDoc.data();
             const otherParticipants = roomData.participants.filter((id: string) => id !== senderId);
 
             const unreadUpdates: any = {};
-            otherParticipants.forEach((participantId: string) => {
-                unreadUpdates[`unreadCount.${participantId}`] = increment(1);
-            });
+            
+            // Check each participant's chat page presence before incrementing unread count
+            for (const participantId of otherParticipants) {
+                const isInChatPage = await isUserInChatPage(participantId);
+                if (!isInChatPage) {
+                    // Only increment unread count if user is not currently on any chat page
+                    unreadUpdates[`unreadCount.${participantId}`] = increment(1);
+                }
+            }
 
             if (Object.keys(unreadUpdates).length > 0) {
                 await updateDoc(roomRef, unreadUpdates);
@@ -865,8 +944,10 @@ export const getMessages = async (roomId: string, messageLimit: number = 50): Pr
 };
 
 // Mark messages as read
-export const markMessagesAsRead = async (roomId: string, userId: string): Promise<void> => {
+export const markMessagesAsRead = async (roomId: string, userId: string): Promise<boolean> => {
     try {
+        console.log('🔍 markMessagesAsRead called:', { roomId, userId });
+        
         // Get all messages in the room and filter in memory to avoid index issues
         const messagesRef = collection(db, 'chatMessages');
         const q = query(
@@ -875,21 +956,38 @@ export const markMessagesAsRead = async (roomId: string, userId: string): Promis
         );
 
         const snapshot = await getDocs(q);
+        console.log('🔍 Found', snapshot.docs.length, 'messages in room', roomId);
+        
         const batch = writeBatch(db);
         let hasUpdates = false;
+        let messagesToMark = 0;
 
         // Filter messages that need to be marked as read
         snapshot.docs.forEach(doc => {
             const messageData = doc.data();
+            console.log('🔍 Checking message:', { 
+                id: doc.id, 
+                senderId: messageData.senderId, 
+                userId, 
+                isRead: messageData.isRead,
+                shouldMark: messageData.senderId !== userId && messageData.isRead === false
+            });
+            
             if (messageData.senderId !== userId && messageData.isRead === false) {
                 batch.update(doc.ref, { isRead: true });
                 hasUpdates = true;
+                messagesToMark++;
             }
         });
+
+        console.log('🔍 Messages to mark as read:', messagesToMark);
 
         // Only commit if there are updates
         if (hasUpdates) {
             await batch.commit();
+            console.log('✅ Marked', messagesToMark, 'messages as read');
+        } else {
+            console.log('ℹ️ No messages needed to be marked as read');
         }
 
         // Reset unread count for the user
@@ -897,8 +995,11 @@ export const markMessagesAsRead = async (roomId: string, userId: string): Promis
         await updateDoc(roomRef, {
             [`unreadCount.${userId}`]: 0
         });
+        console.log('✅ Reset unread count for user', userId);
+
+        return hasUpdates;
     } catch (error) {
-        console.error('Error marking messages as read:', error);
+        console.error('❌ Error marking messages as read:', error);
         throw error;
     }
 };
@@ -2188,6 +2289,32 @@ export const leaveRoomPresence = async (roomId: string, userId: string) => {
         await deleteDoc(roomPresenceRef);
     } catch (error) {
         console.error('Error leaving room presence:', error);
+    }
+};
+
+// Check if a user is currently in a room
+export const isUserInRoom = async (roomId: string, userId: string): Promise<boolean> => {
+    try {
+        const roomPresenceRef = doc(db, 'roomPresence', `${roomId}_${userId}`);
+        const presenceDoc = await getDoc(roomPresenceRef);
+        return presenceDoc.exists();
+    } catch (error) {
+        console.error('Error checking room presence:', error);
+        return false;
+    }
+};
+
+// Check if a user is currently viewing any chat-related page
+export const isUserInChatPage = async (userId: string): Promise<boolean> => {
+    try {
+        // Check if user is in any room presence (indicating they're on a chat page)
+        const roomPresenceRef = collection(db, 'roomPresence');
+        const q = query(roomPresenceRef, where('userId', '==', userId));
+        const snapshot = await getDocs(q);
+        return !snapshot.empty;
+    } catch (error) {
+        console.error('Error checking chat page presence:', error);
+        return false;
     }
 };
 

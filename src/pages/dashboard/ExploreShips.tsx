@@ -384,7 +384,7 @@ export const ExploreShips = () => {
     // Get the ship ID from the selected ship name
     const selectedShipId = availableShips?.find(ship => ship.name === selectedShip)?.id || '';
 
-    // Fetch crew members with infinite scroll
+    // Fetch crew members with infinite scroll - only when user has applied search or filters
     const {
         data: crewData,
         isLoading: crewLoading,
@@ -392,7 +392,7 @@ export const ExploreShips = () => {
         hasNextPage,
         fetchNextPage
     } = useInfiniteQuery({
-        queryKey: ['crewMembers', selectedShipId], // Use ship ID instead of ship name
+        queryKey: ['crewMembers', selectedShipId, searchQuery], // Include searchQuery in key
         queryFn: ({ pageParam = 0 }) => getCrewMembers({
             shipId: selectedShipId,
             page: pageParam,
@@ -400,7 +400,7 @@ export const ExploreShips = () => {
             currentUserId: currentUser?.uid
         }),
         getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.nextPage : undefined,
-        enabled: !!currentUser
+        enabled: !!currentUser && (!!searchQuery || !!selectedShipId || !!selectedCruiseLine)
     });
 
     // Flatten all crew data from all pages
@@ -495,7 +495,7 @@ export const ExploreShips = () => {
                                 </svg>
                             </button>
                             <div>
-                                <h1 className="text-base sm:text-lg font-bold">Explore Ships</h1>
+                                <h1 className="text-base sm:text-lg font-bold">Find your friends.</h1>
                                 <p className="text-xs text-teal-100">Find friends</p>
                             </div>
                         </div>
@@ -523,11 +523,18 @@ export const ExploreShips = () => {
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="Search by name, department, role, or ship..."
+                                    placeholder="Search by name..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none text-base"
                                 />
+                            </div>
+
+                            {/* Description text */}
+                            <div className="text-center">
+                                <p className="text-sm text-gray-600">
+                                    Find friends who are on your ship or on another ship today.
+                                </p>
                             </div>
 
                             {/* Cruise Line Selection */}
@@ -584,11 +591,15 @@ export const ExploreShips = () => {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                         </svg>
                                     </div>
-                                    <p className="text-gray-500 text-base">No matching results found</p>
+                                    <p className="text-gray-500 text-base">
+                                        {searchQuery || selectedCruiseLine || selectedShip
+                                            ? "No matching results found"
+                                            : "Start searching to find your friends"}
+                                    </p>
                                     <p className="text-gray-400 text-sm mt-1">
                                         {searchQuery || selectedCruiseLine || selectedShip
                                             ? "Try adjusting your search or filters"
-                                            : "No friends data available"}
+                                            : "Use the search bar or filters above to discover crew members"}
                                     </p>
                                 </div>
                             ) : (

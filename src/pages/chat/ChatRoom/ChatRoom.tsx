@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, memo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContextFirebase";
-import { sendMessage, getMessages, markMessagesAsRead, getChatRooms, getRoles } from "../../../firebase/firestore";
+import { sendMessage, getMessages, markMessagesAsRead, getChatRooms, getRoles, isUserInChatPage } from "../../../firebase/firestore";
 import { EmojiPicker } from '../../../components/ui/EmojiPicker';
 import { ReportUserModal } from './ReportUserModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -86,13 +86,23 @@ export const ChatRoom = memo(() => {
     // Mark messages as read when component mounts or room changes
     useEffect(() => {
         if (roomId && currentUser) {
-            markMessagesAsRead(roomId, currentUser.uid);
+            console.log('🔍 ChatRoom: Marking messages as read for room:', roomId, 'user:', currentUser.uid);
+            markMessagesAsRead(roomId, currentUser.uid).then((hasUpdates) => {
+                console.log('🔍 ChatRoom: markMessagesAsRead result:', hasUpdates);
+                // Only invalidate the unread message count query if messages were actually marked as read
+                if (hasUpdates) {
+                    queryClient.invalidateQueries({
+                        queryKey: ['unreadMessageCount', currentUser.uid]
+                    });
+                    console.log('🔍 ChatRoom: Invalidated unread message count query');
+                }
+            });
         }
         // Reset auto-scroll state when room changes
         setShouldAutoScroll(true);
         setLastMessageCount(0);
         setLastMessageId(null);
-    }, [roomId, currentUser]);
+    }, [roomId, currentUser, queryClient]);
 
     // Auto-scroll to bottom only when new messages arrive (not on initial load or refetch)
     useEffect(() => {
@@ -137,16 +147,22 @@ export const ChatRoom = memo(() => {
             setLastMessageCount(0);
             setLastMessageId(null);
 
-            // Send live notification to other user
+            // Send live notification to other user only if they're not currently in the room
             if (chatRoom?.otherUserId) {
                 try {
-                    await sendNotification(
-                        chatRoom.otherUserId,
-                        'message',
-                        'New Message',
-                        `You have a new message from ${currentUser?.displayName || 'Unknown User'}`,
-                        roomId
-                    );
+                    // Check if the other user is currently on any chat page
+                    const isOtherUserInChatPage = await isUserInChatPage(chatRoom.otherUserId);
+                    
+                    if (!isOtherUserInChatPage) {
+                        // Only send notification if the other user is not currently on any chat page
+                        await sendNotification(
+                            chatRoom.otherUserId,
+                            'message',
+                            'New Message',
+                            `You have a new message from ${currentUser?.displayName || 'Unknown User'}`,
+                            roomId
+                        );
+                    }
                 } catch (error) {
                     console.error('Error sending live notification:', error);
                 }
@@ -319,12 +335,35 @@ export const ChatRoom = memo(() => {
                                             }`}
                                     >
                                         <p className="text-sm break-words chat-message">{message.message}</p>
-                                        <p className={`text-xs mt-1 ${message.senderId === currentUser?.uid
+                                        <div className={`flex items-center justify-between mt-1 ${message.senderId === currentUser?.uid
                                             ? 'text-blue-100'
                                             : 'text-gray-500'
                                             }`}>
-                                            {formatTimeAgo(message.createdAt)}
-                                        </p>
+                                            <p className="text-xs">
+                                                {formatTimeAgo(message.createdAt)}
+                                            </p>
+                                            {/* Read receipt for sent messages */}
+                                            {message.senderId === currentUser?.uid && (
+                                                <div className="flex items-center ml-2">
+                                                    {message.isRead ? (
+                                                        <div className="flex items-center">
+                                                            <svg className="w-3 h-3 text-blue-200" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                            </svg>
+                                                            <svg className="w-3 h-3 text-blue-200 -ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                            </svg>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center">
+                                                            <svg className="w-3 h-3 text-blue-200" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                            </svg>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             ))

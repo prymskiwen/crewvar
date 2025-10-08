@@ -835,7 +835,7 @@ export const cleanupDuplicateChatRooms = async (
     });
 
     // Remove duplicates, keeping the oldest room
-    for (const [key, roomList] of roomGroups) {
+    for (const [_key, roomList] of roomGroups) {
       if (roomList.length > 1) {
         // Sort by creation date, keep the oldest
         roomList.sort((a, b) => {

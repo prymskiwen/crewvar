@@ -4,7 +4,6 @@
  * Common utility functions used throughout the CrewVar application
  */
 
-import { boolean } from "yup";
 
 // Browser utilities
 export * from "./browser";

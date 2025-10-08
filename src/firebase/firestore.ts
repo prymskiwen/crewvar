@@ -760,7 +760,7 @@ export const cleanupDuplicateChatRooms = async (userId: string): Promise<void> =
         );
 
         const snapshot = await getDocs(q);
-        const rooms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const rooms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
         
         // Group rooms by participant pairs
         const roomGroups = new Map<string, any[]>();
@@ -776,7 +776,7 @@ export const cleanupDuplicateChatRooms = async (userId: string): Promise<void> =
         });
 
         // Remove duplicates, keeping the oldest room
-        for (const [key, roomList] of roomGroups) {
+        for (const [, roomList] of roomGroups) {
             if (roomList.length > 1) {
                 // Sort by creation date, keep the oldest
                 roomList.sort((a, b) => {
@@ -795,6 +795,28 @@ export const cleanupDuplicateChatRooms = async (userId: string): Promise<void> =
         }
     } catch (error) {
         console.error('Error cleaning up duplicate chat rooms:', error);
+        throw error;
+    }
+};
+
+// Clean up stale presence data (users who haven't been seen for more than 10 minutes)
+export const cleanupStalePresence = async (): Promise<void> => {
+    try {
+        const presenceRef = collection(db, 'presence');
+        const snapshot = await getDocs(presenceRef);
+        const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
+        
+        const stalePresence = snapshot.docs.filter(doc => {
+            const data = doc.data();
+            return data.lastSeen && data.lastSeen < tenMinutesAgo;
+        });
+
+        for (const docSnapshot of stalePresence) {
+            await deleteDoc(docSnapshot.ref);
+            console.log(`Cleaned up stale presence for user: ${docSnapshot.id}`);
+        }
+    } catch (error) {
+        console.error('Error cleaning up stale presence:', error);
         throw error;
     }
 };
@@ -2196,7 +2218,8 @@ export const setUserPresence = async (userId: string, userName: string, status: 
             status,
             lastSeen: Date.now(),
             userId,
-            userName
+            userName,
+            updatedAt: Date.now()
         };
 
         await setDoc(presenceRef, presenceData, { merge: true });

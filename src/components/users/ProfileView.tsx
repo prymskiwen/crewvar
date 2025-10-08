@@ -35,7 +35,17 @@ export const ProfileView = ({
         const unsubscribe = onSnapshot(presenceRef, (doc) => {
             if (doc.exists()) {
                 const presenceData = doc.data();
-                setIsOnline(presenceData.status === 'online');
+                const status = presenceData.status;
+                const lastSeen = presenceData.lastSeen;
+                
+                // Check if user is actually online based on status and last seen time
+                if (status === 'online') {
+                    // Consider user offline if last seen was more than 5 minutes ago
+                    const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
+                    setIsOnline(lastSeen && lastSeen > fiveMinutesAgo);
+                } else {
+                    setIsOnline(false);
+                }
             } else {
                 setIsOnline(false);
             }

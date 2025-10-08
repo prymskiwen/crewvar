@@ -135,6 +135,7 @@ export const AdminUserDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [messageLoading, setMessageLoading] = useState(false);
 
   useEffect(() => {
     if (!currentUser) {
@@ -203,6 +204,22 @@ export const AdminUserDetail = () => {
       toast.error('Failed to unban user: ' + err.message);
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!user || messageLoading) return;
+    
+    setMessageLoading(true);
+    try {
+      // Navigate to chat with the specific user
+      navigate(`/chat/${user.id}`);
+      toast.success('Opening chat...');
+    } catch (error: any) {
+      console.error('Error opening chat:', error);
+      toast.error('Failed to open chat. Please try again.');
+    } finally {
+      setMessageLoading(false);
     }
   };
 
@@ -454,10 +471,11 @@ export const AdminUserDetail = () => {
                 </button>
 
                 <button
-                  onClick={() => navigate(`/chat/${user.id}`)}
-                  className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+                  onClick={handleSendMessage}
+                  disabled={messageLoading}
+                  className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Send Message
+                  {messageLoading ? 'Opening...' : 'Send Message'}
                 </button>
               </div>
             </div>

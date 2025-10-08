@@ -101,7 +101,6 @@ export const ProfileView = ({
                     <div className="flex-1">
                         <h1 className="text-2xl font-bold">{profile.displayName}</h1>
                         <p className="text-[#B9F3DF] text-lg">{profile.role}</p>
-                        <p className="text-[#B9F3DF] text-sm">{profile.department} • {profile.subcategory}</p>
                         <div className="flex items-center space-x-2 mt-2">
                             <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-400' : 'bg-gray-400'}`}></div>
                             <span className="text-sm text-[#B9F3DF]">

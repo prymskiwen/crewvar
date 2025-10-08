@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContextFirebase';
@@ -17,6 +17,7 @@ export const Chat: React.FC = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [roomCreationTimeout, setRoomCreationTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,9 +50,36 @@ export const Chat: React.FC = () => {
     queryFn: getRoles
   });
 
+  // Debounced chat room creation
+  const createChatRoomDebounced = useCallback((userId: string) => {
+    // Clear any existing timeout
+    if (roomCreationTimeout) {
+      clearTimeout(roomCreationTimeout);
+    }
+
+    // Set a new timeout
+    const timeout = setTimeout(async () => {
+      if (!currentUser?.uid || isCreatingRoom) return;
+
+      setIsCreatingRoom(true);
+      try {
+        const roomId = await createOrGetChatRoom(currentUser.uid, userId);
+        console.log('Created chat room with ID:', roomId);
+        navigate(`/chat/room/${roomId}`);
+        await queryClient.invalidateQueries({ queryKey: ['chatRooms', currentUser.uid] });
+      } catch (error) {
+        console.error('Error creating chat room:', error);
+      } finally {
+        setIsCreatingRoom(false);
+      }
+    }, 500); // 500ms debounce
+
+    setRoomCreationTimeout(timeout);
+  }, [currentUser, isCreatingRoom, queryClient, navigate, roomCreationTimeout]);
+
   // Handle specific user ID from URL
   useEffect(() => {
-    if (userId && currentUser) {
+    if (userId && currentUser && !isLoading && !isCreatingRoom) {
       // First, try to find existing room
       const existingRoom = chatRooms.find(room => room.otherUserId === userId);
       if (existingRoom) {
@@ -59,23 +87,21 @@ export const Chat: React.FC = () => {
         return;
       }
 
-      // If no existing room and we have chat rooms loaded, create a new one
+      // Only create a new room if we have finished loading chat rooms and no existing room found
       if (chatRooms.length >= 0) {
-        setIsCreatingRoom(true);
-        createOrGetChatRoom(currentUser.uid, userId).then(async (roomId) => {
-          console.log('Created chat room with ID:', roomId);
-          // Navigate to the new room
-          navigate(`/chat/room/${roomId}`);
-          setIsCreatingRoom(false);
-          // Invalidate and refetch chat rooms to get the new room
-          await queryClient.invalidateQueries({ queryKey: ['chatRooms', currentUser.uid] });
-        }).catch(error => {
-          console.error('Error creating chat room:', error);
-          setIsCreatingRoom(false);
-        });
+        createChatRoomDebounced(userId);
       }
     }
-  }, [userId, chatRooms, currentUser, queryClient, navigate]);
+  }, [userId, chatRooms, currentUser, navigate, isLoading, isCreatingRoom, createChatRoomDebounced]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (roomCreationTimeout) {
+        clearTimeout(roomCreationTimeout);
+      }
+    };
+  }, [roomCreationTimeout]);
 
   // Get all available options for filters from database
   const uniqueShips = useMemo(() => {
@@ -256,3 +282,4 @@ export const Chat: React.FC = () => {
     </DashboardLayout>
   );
 };
+

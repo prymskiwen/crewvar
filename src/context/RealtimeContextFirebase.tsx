@@ -6,7 +6,6 @@ import {
     joinRoomPresence,
     leaveRoomPresence,
     subscribeToTypingIndicators,
-    cleanupPresence,
     PresenceStatus,
     TypingIndicator
 } from '../firebase/firestore';

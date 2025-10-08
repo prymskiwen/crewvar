@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { getProfilePhotoUrl } from "../../utils/images";
-import { getUserProfile, getRoles, getDepartments, getShips, getCruiseLines, sendConnectionRequest, getUserConnections, getPendingConnectionRequests, createOrGetChatRoom } from "../../firebase/firestore";
+import { getUserProfile, getRoles, getShips, sendConnectionRequest, getUserConnections, getPendingConnectionRequests, createOrGetChatRoom } from "../../firebase/firestore";
 import { useAuth } from "../../context/AuthContextFirebase";
 import logo from "../../assets/images/Home/logo.png";
 
@@ -31,23 +31,9 @@ export const CrewMemberProfile = () => {
         staleTime: 10 * 60 * 1000, // 10 minutes
     });
 
-    const { data: departments = [], isLoading: departmentsLoading } = useQuery({
-        queryKey: ['departments'],
-        queryFn: getDepartments,
-        enabled: !!crewProfile, // Only fetch after profile is loaded
-        staleTime: 10 * 60 * 1000, // 10 minutes
-    });
-
     const { data: allShips = [], isLoading: shipsLoading } = useQuery({
         queryKey: ['ships'],
         queryFn: getShips,
-        enabled: !!crewProfile, // Only fetch after profile is loaded
-        staleTime: 10 * 60 * 1000, // 10 minutes
-    });
-
-    const { data: cruiseLines = [], isLoading: cruiseLinesLoading } = useQuery({
-        queryKey: ['cruiseLines'],
-        queryFn: getCruiseLines,
         enabled: !!crewProfile, // Only fetch after profile is loaded
         staleTime: 10 * 60 * 1000, // 10 minutes
     });
@@ -75,23 +61,11 @@ export const CrewMemberProfile = () => {
         return role ? role.name : 'Crew Member';
     }, [allRoles]);
 
-    const getDepartmentName = useMemo(() => (departmentId: string) => {
-        if (!departmentId) return 'No Department';
-        const department = departments.find(d => d.id === departmentId);
-        return department ? department.name : 'No Department';
-    }, [departments]);
-
     const getShipName = useMemo(() => (shipId: string) => {
         if (!shipId) return 'No Ship';
         const ship = allShips.find(s => s.id === shipId);
         return ship ? ship.name : 'No Ship';
     }, [allShips]);
-
-    const getCruiseLineName = useMemo(() => (cruiseLineId: string) => {
-        if (!cruiseLineId) return 'No Cruise Line';
-        const cruiseLine = cruiseLines.find(c => c.id === cruiseLineId);
-        return cruiseLine ? cruiseLine.name : 'No Cruise Line';
-    }, [cruiseLines]);
 
     // Check connection status for this user
     const getConnectionStatus = () => {
@@ -157,7 +131,7 @@ export const CrewMemberProfile = () => {
     }
 
     // Show loading state for reference data (after profile is loaded)
-    const isReferenceDataLoading = rolesLoading || departmentsLoading || shipsLoading || cruiseLinesLoading;
+    const isReferenceDataLoading = rolesLoading || shipsLoading;
 
     // Show error state
     if (error || !crewProfile) {
@@ -407,24 +381,8 @@ export const CrewMemberProfile = () => {
                                                 <p className="text-gray-600 text-sm sm:text-base">{getRoleName(profile.roleId || '')}</p>
                                             </div>
                                             <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                                                <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Department</h3>
-                                                <p className="text-gray-600 text-sm sm:text-base">{getDepartmentName(profile.departmentId || '')}</p>
-                                            </div>
-                                            <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                                                 <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Ship</h3>
                                                 <p className="text-gray-600 text-sm sm:text-base">{getShipName(profile.currentShipId || '')}</p>
-                                            </div>
-                                            <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                                                <h3 className="font-medium text-gray-900 mb-1 text-sm sm:text-base">Cruise Line</h3>
-                                                <p className="text-gray-600 text-sm sm:text-base">
-                                                    {profile.currentShipId ? 
-                                                        (() => {
-                                                            const ship = allShips.find(s => s.id === profile.currentShipId);
-                                                            return ship ? getCruiseLineName(ship.cruiseLineId) : 'Not specified';
-                                                        })() 
-                                                        : 'Not specified'
-                                                    }
-                                                </p>
                                             </div>
                                         </div>
                                     )}

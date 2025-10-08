@@ -196,21 +196,13 @@ export const MyProfile = () => {
         return profile.roleId ? getRoleName(profile.roleId) : 'Crew Member';
     };
 
-    const getUserDepartmentName = () => {
-        return profile.departmentId ? getDepartmentName(profile.departmentId) : 'Crew Member';
-    };
 
 
     const getUserJobTitle = () => {
         const roleName = getUserRoleName();
-        const departmentName = getUserDepartmentName();
-
-        if (roleName !== 'Crew Member' && departmentName !== 'Crew Member') {
-            return `${roleName} • ${departmentName}`;
-        } else if (roleName !== 'Crew Member') {
+        
+        if (roleName !== 'Crew Member') {
             return roleName;
-        } else if (departmentName !== 'Crew Member') {
-            return departmentName;
         }
         return 'Crew Member';
     };

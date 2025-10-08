@@ -750,6 +750,55 @@ export const createOrGetChatRoom = async (userId1: string, userId2: string): Pro
     }
 };
 
+// Clean up duplicate chat rooms for a user
+export const cleanupDuplicateChatRooms = async (userId: string): Promise<void> => {
+    try {
+        const chatRoomsRef = collection(db, 'chatRooms');
+        const q = query(
+            chatRoomsRef,
+            where('participants', 'array-contains', userId)
+        );
+
+        const snapshot = await getDocs(q);
+        const rooms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        // Group rooms by participant pairs
+        const roomGroups = new Map<string, any[]>();
+        
+        rooms.forEach(room => {
+            const participants = room.participants.sort();
+            const key = participants.join('_');
+            
+            if (!roomGroups.has(key)) {
+                roomGroups.set(key, []);
+            }
+            roomGroups.get(key)!.push(room);
+        });
+
+        // Remove duplicates, keeping the oldest room
+        for (const [key, roomList] of roomGroups) {
+            if (roomList.length > 1) {
+                // Sort by creation date, keep the oldest
+                roomList.sort((a, b) => {
+                    const aTime = a.createdAt?.toDate?.() || new Date(0);
+                    const bTime = b.createdAt?.toDate?.() || new Date(0);
+                    return aTime.getTime() - bTime.getTime();
+                });
+
+                // Delete all but the first (oldest) room
+                const roomsToDelete = roomList.slice(1);
+                for (const room of roomsToDelete) {
+                    await deleteDoc(doc(db, 'chatRooms', room.id));
+                    console.log(`Deleted duplicate chat room: ${room.id}`);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error cleaning up duplicate chat rooms:', error);
+        throw error;
+    }
+};
+
 // Get chat rooms for a user
 export const getChatRooms = async (userId: string): Promise<any[]> => {
     try {

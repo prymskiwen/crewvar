@@ -253,17 +253,7 @@ export const WhosInPortCard = () => {
             <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 lg:p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
                 <div className="flex justify-between items-center mb-3 lg:mb-4">
                     <h3 className="text-base lg:text-lg font-semibold text-[#069B93]">
-                        {hasActivePortLinks ? 'Suggested Connections' : (
-                            <>
-                                Crewvar automatically detects when ships are docked together based on crew connections, have you checked who is with you today?{' '}
-                                <Link 
-                                    to="/explore-ships" 
-                                    className="text-[#069B93] hover:text-[#058a7a] underline font-semibold"
-                                >
-                                    Find your friends.
-                                </Link>
-                            </>
-                        )}
+                        Who's in port with you today?
                     </h3>
                     <div className="flex items-center space-x-2">
                         <span className="bg-[#069B93] text-white text-xs px-2 py-1 rounded-full font-medium">
@@ -311,10 +301,6 @@ export const WhosInPortCard = () => {
                                 </svg>
                             </div>
                             <h4 className="text-lg font-semibold text-gray-800 mb-2">No ships detected in port</h4>
-                            <p className="text-gray-600 text-sm mb-4 max-w-sm mx-auto">
-                                Crewvar automatically detects when ships are docked together based on crew connections. 
-                                Start connecting with crew members to discover ships in your port!
-                            </p>
                         </div>
                     )}
                 </div>
@@ -330,6 +316,19 @@ export const WhosInPortCard = () => {
                         </button>
                     </div>
                 )}
+
+                {/* Description text at bottom */}
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                    <p className="text-sm text-gray-600 text-center">
+                        Crewvar automatically detects when ships are docked together based on crew connections, have you checked who is with you today?{' '}
+                        <Link 
+                            to="/explore-ships" 
+                            className="text-[#069B93] hover:text-[#058a7a] underline font-semibold"
+                        >
+                            Find your friends.
+                        </Link>
+                    </p>
+                </div>
 
             </div>
 

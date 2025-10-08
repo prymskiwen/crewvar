@@ -1523,10 +1523,17 @@ export const deleteRole = async (roleId: string): Promise<void> => {
 // User Management Functions
 
 // Get all users
-export const getUsers = async (limitCount: number = 50): Promise<User[]> => {
+export const getUsers = async (limitCount: number = 50, offset: number = 0): Promise<{ users: User[], total: number }> => {
   try {
     const usersRef = collection(db, "users");
-    const q = query(usersRef, orderBy("createdAt", "desc"), limit(limitCount));
+    
+    // Get total count first
+    const countSnapshot = await getDocs(usersRef);
+    const total = countSnapshot.size;
+    
+    // Get all users and then slice for pagination
+    // Note: This is not optimal for large datasets, but works for now
+    const q = query(usersRef, orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
 
     const users: User[] = [];
@@ -1593,7 +1600,7 @@ export const getUsers = async (limitCount: number = 50): Promise<User[]> => {
       });
     });
 
-    return users;
+    return { users: users.slice(offset, offset + limitCount), total };
   } catch (error) {
     console.error("Error fetching users:", error);
     throw error;

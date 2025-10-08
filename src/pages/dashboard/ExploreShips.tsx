@@ -188,8 +188,10 @@ export const ExploreShips = () => {
     const [selectedCruiseLine, setSelectedCruiseLine] = useState<string>("");
     const [selectedShip, setSelectedShip] = useState<string>("");
     const [searchQuery, setSearchQuery] = useState<string>("");
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>("");
     const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
     const observerRef = useRef<HTMLDivElement>(null);
+    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Fetch cruise lines
     const { data: cruiseLines = [], isLoading: cruiseLinesLoading } = useQuery({
@@ -384,6 +386,23 @@ export const ExploreShips = () => {
     // Get the ship ID from the selected ship name
     const selectedShipId = availableShips?.find(ship => ship.name === selectedShip)?.id || '';
 
+    // Debounced search effect
+    useEffect(() => {
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+
+        searchTimeoutRef.current = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 500); // 500ms delay
+
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+            }
+        };
+    }, [searchQuery]);
+
     // Fetch crew members with infinite scroll - only when user has applied search or filters
     const {
         data: crewData,
@@ -392,15 +411,17 @@ export const ExploreShips = () => {
         hasNextPage,
         fetchNextPage
     } = useInfiniteQuery({
-        queryKey: ['crewMembers', selectedShipId, searchQuery], // Include searchQuery in key
+        queryKey: ['crewMembers', selectedShipId, debouncedSearchQuery, selectedCruiseLine], // Use debounced search
         queryFn: ({ pageParam = 0 }) => getCrewMembers({
             shipId: selectedShipId,
             page: pageParam,
-            limit: 20,
+            limit: 15, // Reduced from 20 to 15 for faster initial load
             currentUserId: currentUser?.uid
         }),
         getNextPageParam: (lastPage) => lastPage.hasNextPage ? lastPage.nextPage : undefined,
-        enabled: !!currentUser && (!!searchQuery || !!selectedShipId || !!selectedCruiseLine)
+        enabled: !!currentUser && (!!debouncedSearchQuery || !!selectedShipId || !!selectedCruiseLine),
+        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+        cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     });
 
     // Flatten all crew data from all pages
@@ -424,14 +445,14 @@ export const ExploreShips = () => {
             }
 
             const matchesShip = !selectedShipId || member.currentShipId === selectedShipId;
-            const matchesSearch = !searchQuery ||
-                member.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                member.departmentId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                member.roleId?.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSearch = !debouncedSearchQuery ||
+                member.displayName?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                member.departmentId?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                member.roleId?.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
 
             return matchesCruiseLine && matchesShip && matchesSearch;
         });
-    }, [allCrew, selectedCruiseLine, selectedShipId, searchQuery, allShips, cruiseLines]);
+    }, [allCrew, selectedCruiseLine, selectedShipId, debouncedSearchQuery, allShips, cruiseLines]);
 
     // Infinite scroll observer
     useEffect(() => {
@@ -561,8 +582,8 @@ export const ExploreShips = () => {
                         </div>
                     </div>
 
-                    {/* Loading State */}
-                    {(cruiseLinesLoading || shipsLoading || crewLoading) && (
+                    {/* Loading State - Only show when actually loading crew data AND filters are applied */}
+                    {crewLoading && (debouncedSearchQuery || selectedShipId || selectedCruiseLine) && (
                         <div className="bg-white rounded-lg shadow-sm border p-4">
                             <div className="flex items-center justify-center py-8">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
@@ -571,9 +592,34 @@ export const ExploreShips = () => {
                         </div>
                     )}
 
+                    {/* Search Loading Indicator */}
+                    {searchQuery && searchQuery !== debouncedSearchQuery && (
+                        <div className="bg-white rounded-lg shadow-sm border p-4">
+                            <div className="flex items-center justify-center py-4">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600"></div>
+                                <span className="ml-3 text-gray-600 text-sm">Searching...</span>
+                            </div>
+                        </div>
+                    )}
 
-                    {/* Crew Results */}
-                    {!crewLoading && (
+                    {/* No Filters Applied Message */}
+                    {!debouncedSearchQuery && !selectedShipId && !selectedCruiseLine && (
+                        <div className="bg-white rounded-lg shadow-sm border p-4">
+                            <div className="text-center py-8">
+                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">Ready to find your friends?</h3>
+                                <p className="text-gray-500 text-base mb-1">Start by searching for a name or selecting a filter above</p>
+                                <p className="text-gray-400 text-sm">Use the search bar, cruise line, or ship dropdown to discover crew members</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Crew Results - Only show when we have filters applied and not loading */}
+                    {!crewLoading && (debouncedSearchQuery || selectedShipId || selectedCruiseLine) && (
                         <div className="bg-white rounded-lg shadow-sm border p-4">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-lg font-semibold text-teal-600">
@@ -592,12 +638,12 @@ export const ExploreShips = () => {
                                         </svg>
                                     </div>
                                     <p className="text-gray-500 text-base">
-                                        {searchQuery || selectedCruiseLine || selectedShip
+                                        {debouncedSearchQuery || selectedCruiseLine || selectedShip
                                             ? "No matching results found"
                                             : "Start searching to find your friends"}
                                     </p>
                                     <p className="text-gray-400 text-sm mt-1">
-                                        {searchQuery || selectedCruiseLine || selectedShip
+                                        {debouncedSearchQuery || selectedCruiseLine || selectedShip
                                             ? "Try adjusting your search or filters"
                                             : "Use the search bar or filters above to discover crew members"}
                                     </p>

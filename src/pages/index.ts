@@ -2,7 +2,7 @@
 export { Dashboard, CrewMemberCard, TodayOnBoardCard, WhosInPortCard, ConnectionPendingCard, Home, ExploreShips, PortConnections, ShipAssignment } from './dashboard';
 
 // Profile pages  
-export { Onboarding, MyProfile, Favorites, Privacy, Moderation } from './profile';
+export { Onboarding, MyProfile, Privacy, Moderation } from './profile';
 
 // Admin pages
 export { AdminDashboard, AdminUserDetail } from './admin';

@@ -101,8 +101,6 @@ export type {
     OnboardingFormProps,
     OnboardingProgressProps,
     FavoriteButtonProps,
-    FavoritesListProps,
-    FavoritesAlertsProps,
     // Removed unused component types
     PopupProps,
     PreviewImageProps,

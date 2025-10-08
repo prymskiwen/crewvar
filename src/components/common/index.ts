@@ -10,7 +10,6 @@ export { PrivacySettings } from './PrivacySettings';
 export { SocialMediaDisplay } from './SocialMediaDisplay';
 export { SocialMediaLinks } from './SocialMediaLinks';
 export { FavoriteButton } from './FavoriteButton';
-export { FavoritesList } from './FavoritesList';
 export { default as Showcase } from './Showcase';
 export { CaterogyBox } from './CaterogyBox';
 export { ImageUpload } from './ImageUpload';

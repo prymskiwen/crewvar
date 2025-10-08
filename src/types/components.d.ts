@@ -337,17 +337,6 @@ export interface FavoriteButtonProps {
     className?: string;
 }
 
-export interface FavoritesListProps {
-    favorites: any[];
-    onRemoveFavorite: (favoriteId: string) => void;
-    onViewProfile: (userId: string) => void;
-}
-
-export interface FavoritesAlertsProps {
-    alerts: any[];
-    onDismissAlert: (alertId: string) => void;
-}
-
 // Crew Components
 // Removed unused crew component types
 

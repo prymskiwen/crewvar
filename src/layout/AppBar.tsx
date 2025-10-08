@@ -92,7 +92,6 @@ const AppBar = ({
         { name: 'Find your friends.', path: '/explore-ships' },
         { name: 'Connection Requests', path: '/connections/pending' },
         { name: 'Messages', path: '/chat' },
-        { name: 'Favorites', path: '/favorites' },
         // Admin link (only visible to admins)
         ...(isAdmin ? [{ name: 'Admin Panel', path: '/admin' }] : []),
     ];

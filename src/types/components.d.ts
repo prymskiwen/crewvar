@@ -18,6 +18,11 @@ export interface UsersTabProps {
     onSearchChange: (term: string) => void;
     onBanUser: (userId: string, reason: string) => Promise<void>;
     onUnbanUser: (userId: string) => Promise<void>;
+    currentPage: number;
+    totalUsers: number;
+    usersPerPage: number;
+    onPageChange: (page: number) => void;
+    usersLoading: boolean;
 }
 
 export interface OverviewTabProps {
@@ -330,17 +335,6 @@ export interface FavoriteButtonProps {
     onToggle: () => void;
     isLoading?: boolean;
     className?: string;
-}
-
-export interface FavoritesListProps {
-    favorites: any[];
-    onRemoveFavorite: (favoriteId: string) => void;
-    onViewProfile: (userId: string) => void;
-}
-
-export interface FavoritesAlertsProps {
-    alerts: any[];
-    onDismissAlert: (alertId: string) => void;
 }
 
 // Crew Components

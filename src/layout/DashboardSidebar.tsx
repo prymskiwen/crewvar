@@ -9,7 +9,6 @@ import {
     HiX,
     HiShieldCheck,
     HiHome,
-    HiHeart,
     HiSearch,
     HiUserAdd,
 } from 'react-icons/hi';
@@ -47,7 +46,6 @@ const DashboardSidebar = ({ isOpen, onToggle, setShowCheckInDialog }: {
         { name: 'Connection Requests', icon: HiUserAdd, path: '/connections/pending' },
         { name: 'Messages', icon: HiChat, path: '/chat' },
         { name: 'Notifications', icon: HiBell, path: '/all-notifications' },
-        { name: 'Favorites', icon: HiHeart, path: '/favorites' },
         // Admin link (only visible to admins)
         ...(isAdmin ? [{ name: 'Admin Panel', icon: HiShieldCheck, path: '/admin' }] : []),
     ];

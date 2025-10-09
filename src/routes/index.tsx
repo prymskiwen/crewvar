@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { AuthRoutes, VerificationPending } from "../pages/auth";
-import { Onboarding, Home, ExploreShips, MyProfile, Favorites, Privacy, Moderation, PortConnections, ShipAssignment, Chat, Dashboard, TermsOfService, PrivacyPolicy, Support, FAQ, AdminDashboard, AdminUserDetail } from "../pages";
+import { Onboarding, Home, ExploreShips, MyProfile, Privacy, Moderation, PortConnections, ShipAssignment, Chat, Dashboard, TermsOfService, PrivacyPolicy, Support, FAQ, AdminDashboard, AdminUserDetail } from "../pages";
 import { ChatRoom } from "../pages/chat";
 import { WhosInPort } from "../pages/port";
 import { TodayOnBoard, CrewMemberProfile } from "../pages/crew";
@@ -21,7 +21,6 @@ export const AppRoutes = () => {
             <Route path="ship-location" element={<PortConnections />} />
             <Route path="discover" element={<TodayOnBoard />} />
             <Route path="profile" element={<MyProfile />} />
-            <Route path="favorites" element={<Favorites />} />
             <Route path="notifications" element={<NotificationSettings />} />
             <Route path="all-notifications" element={<AllNotifications />} />
             <Route path="calendar" element={<Calendar />} />

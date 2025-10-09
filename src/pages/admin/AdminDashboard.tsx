@@ -26,6 +26,12 @@ export const AdminDashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showBulkMessagingModal, setShowBulkMessagingModal] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage] = useState(10);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [usersLoading, setUsersLoading] = useState(false);
 
   // Load admin data when component mounts
   useEffect(() => {
@@ -55,10 +61,8 @@ export const AdminDashboard = () => {
         setSupportStatsLoading(false);
       }
 
-      // Load users
-      const usersData = await getUsers(50);
-      console.log('Loaded users:', usersData);
-      setUsers(usersData);
+      // Load users with pagination
+      await loadUsers(1);
 
     } catch (err: any) {
       console.error('Failed to load admin data:', err);
@@ -69,12 +73,33 @@ export const AdminDashboard = () => {
     }
   };
 
+  const loadUsers = async (page: number) => {
+    setUsersLoading(true);
+    try {
+      const offset = (page - 1) * usersPerPage;
+      const usersData = await getUsers(usersPerPage, offset);
+      console.log('Loaded users:', usersData);
+      setUsers(usersData.users);
+      setTotalUsers(usersData.total);
+      setCurrentPage(page);
+    } catch (err: any) {
+      console.error('Failed to load users:', err);
+      toast.error('Failed to load users');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    loadUsers(page);
+  };
+
   const handleBanUser = async (userId: string, reason: string) => {
     try {
       await banUser(userId, reason);
 
       toast.success('User banned successfully');
-      loadAdminData(); // Refresh data
+      loadUsers(currentPage); // Refresh current page
     } catch (err: any) {
       toast.error('Failed to ban user: ' + err.message);
     }
@@ -85,7 +110,7 @@ export const AdminDashboard = () => {
       await unbanUser(userId);
 
       toast.success('User unbanned successfully');
-      loadAdminData(); // Refresh data
+      loadUsers(currentPage); // Refresh current page
     } catch (err: any) {
       toast.error('Failed to unban user: ' + err.message);
     }
@@ -164,6 +189,11 @@ export const AdminDashboard = () => {
                 onSearchChange={setSearchTerm}
                 onBanUser={handleBanUser}
                 onUnbanUser={handleUnbanUser}
+                currentPage={currentPage}
+                totalUsers={totalUsers}
+                usersPerPage={usersPerPage}
+                onPageChange={handlePageChange}
+                usersLoading={usersLoading}
               />
             )}
 

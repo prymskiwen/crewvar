@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../firebase/config';
+import { toast } from 'react-toastify';
 
 interface MissingReport {
   id: string;
@@ -10,11 +11,18 @@ interface MissingReport {
   description: string;
   status: string;
   createdAt: any;
+  adminNotes?: string;
+  resolvedAt?: any;
+  resolvedBy?: string;
 }
 
 export const ReportsTab: React.FC = () => {
   const [missingReports, setMissingReports] = useState<MissingReport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [selectedReport, setSelectedReport] = useState<MissingReport | null>(null);
+  const [showNotesModal, setShowNotesModal] = useState(false);
+  const [adminNotes, setAdminNotes] = useState('');
 
   useEffect(() => {
     const fetchMissingReports = async () => {
@@ -41,6 +49,135 @@ export const ReportsTab: React.FC = () => {
 
     fetchMissingReports();
   }, []);
+
+  const handleResolveReport = async (reportId: string) => {
+    const notes = prompt('Add admin notes (optional):');
+    if (notes === null) return; // User cancelled
+
+    setActionLoading(reportId);
+    try {
+      const reportRef = doc(db, 'reports', reportId);
+      await updateDoc(reportRef, {
+        status: 'resolved',
+        adminNotes: notes || '',
+        resolvedAt: serverTimestamp(),
+        resolvedBy: 'Admin', // You can get actual admin name from auth context
+        updatedAt: serverTimestamp()
+      });
+
+      toast.success('Report marked as resolved');
+      // Refresh the reports list
+      const reportsQuery = query(
+        collection(db, 'reports'),
+        orderBy('createdAt', 'desc')
+      );
+      const snapshot = await getDocs(reportsQuery);
+      const reports = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as MissingReport[];
+      
+      const missingItemReports = reports.filter(report => report.type === 'missing_item');
+      setMissingReports(missingItemReports);
+    } catch (error) {
+      console.error('Error resolving report:', error);
+      toast.error('Failed to resolve report');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReopenReport = async (reportId: string) => {
+    if (!confirm('Are you sure you want to reopen this report?')) return;
+
+    setActionLoading(reportId);
+    try {
+      const reportRef = doc(db, 'reports', reportId);
+      await updateDoc(reportRef, {
+        status: 'pending',
+        updatedAt: serverTimestamp()
+      });
+
+      toast.success('Report reopened');
+      // Refresh the reports list
+      const reportsQuery = query(
+        collection(db, 'reports'),
+        orderBy('createdAt', 'desc')
+      );
+      const snapshot = await getDocs(reportsQuery);
+      const reports = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as MissingReport[];
+      
+      const missingItemReports = reports.filter(report => report.type === 'missing_item');
+      setMissingReports(missingItemReports);
+    } catch (error) {
+      console.error('Error reopening report:', error);
+      toast.error('Failed to reopen report');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteReport = async (reportId: string) => {
+    if (!confirm('Are you sure you want to delete this report? This action cannot be undone.')) return;
+
+    setActionLoading(reportId);
+    try {
+      await deleteDoc(doc(db, 'reports', reportId));
+      toast.success('Report deleted');
+      
+      // Remove from local state
+      setMissingReports(prev => prev.filter(report => report.id !== reportId));
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      toast.error('Failed to delete report');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleAddNotes = (report: MissingReport) => {
+    setSelectedReport(report);
+    setAdminNotes(report.adminNotes || '');
+    setShowNotesModal(true);
+  };
+
+  const handleSaveNotes = async () => {
+    if (!selectedReport) return;
+
+    setActionLoading(selectedReport.id);
+    try {
+      const reportRef = doc(db, 'reports', selectedReport.id);
+      await updateDoc(reportRef, {
+        adminNotes: adminNotes,
+        updatedAt: serverTimestamp()
+      });
+
+      toast.success('Admin notes updated');
+      setShowNotesModal(false);
+      
+      // Refresh the reports list
+      const reportsQuery = query(
+        collection(db, 'reports'),
+        orderBy('createdAt', 'desc')
+      );
+      const snapshot = await getDocs(reportsQuery);
+      const reports = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as MissingReport[];
+      
+      const missingItemReports = reports.filter(report => report.type === 'missing_item');
+      setMissingReports(missingItemReports);
+    } catch (error) {
+      console.error('Error updating notes:', error);
+      toast.error('Failed to update notes');
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const pendingCount = missingReports.filter(report => report.status === 'pending').length;
   const resolvedCount = missingReports.filter(report => report.status === 'resolved').length;
@@ -77,10 +214,10 @@ export const ReportsTab: React.FC = () => {
             <p className="mt-2 text-sm text-gray-500">Loading reports...</p>
           </div>
         ) : missingReports.length === 0 ? (
-          <div className="px-6 py-12 text-center">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+        <div className="px-6 py-12 text-center">
+          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">No missing item reports</h3>
             <p className="mt-1 text-sm text-gray-500">No missing item reports have been submitted yet.</p>
           </div>
@@ -112,11 +249,58 @@ export const ReportsTab: React.FC = () => {
                     <p className="mt-1 text-xs text-gray-400">
                       Submitted: {report.createdAt?.toDate?.()?.toLocaleDateString() || 'Unknown date'}
                     </p>
+                    {report.adminNotes && (
+                      <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
+                        <strong>Admin Notes:</strong> {report.adminNotes}
+                      </div>
+                    )}
+                    {report.resolvedAt && (
+                      <p className="mt-1 text-xs text-green-600">
+                        Resolved: {report.resolvedAt?.toDate?.()?.toLocaleDateString() || 'Unknown date'}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex items-center space-x-2 ml-4">
+                    <button
+                      onClick={() => handleAddNotes(report)}
+                      disabled={actionLoading === report.id}
+                      className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-50"
+                    >
+                      {actionLoading === report.id ? '...' : 'Notes'}
+                    </button>
+                    
+                    {report.status === 'pending' ? (
+                      <button
+                        onClick={() => handleResolveReport(report.id)}
+                        disabled={actionLoading === report.id}
+                        className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 disabled:opacity-50"
+                      >
+                        {actionLoading === report.id ? '...' : 'Resolve'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleReopenReport(report.id)}
+                        disabled={actionLoading === report.id}
+                        className="px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 disabled:opacity-50"
+                      >
+                        {actionLoading === report.id ? '...' : 'Reopen'}
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={() => handleDeleteReport(report.id)}
+                      disabled={actionLoading === report.id}
+                      className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50"
+                    >
+                      {actionLoading === report.id ? '...' : 'Delete'}
+                    </button>
                   </div>
                 </div>
               </div>
             ))}
-          </div>
+        </div>
         )}
       </div>
 
@@ -186,6 +370,46 @@ export const ReportsTab: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Admin Notes Modal */}
+      {showNotesModal && selectedReport && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Admin Notes</h3>
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Report:</strong> {selectedReport.name}
+                </p>
+                <p className="text-sm text-gray-600 mb-4">
+                  <strong>Description:</strong> {selectedReport.description}
+                </p>
+              </div>
+              <textarea
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                placeholder="Add admin notes..."
+                className="w-full p-3 border border-gray-300 rounded-md resize-none h-24 text-sm"
+              />
+              <div className="flex justify-end space-x-3 mt-4">
+                <button
+                  onClick={() => setShowNotesModal(false)}
+                  className="px-4 py-2 text-sm bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveNotes}
+                  disabled={actionLoading === selectedReport.id}
+                  className="px-4 py-2 text-sm bg-[#069B93] text-white rounded hover:bg-[#058a7a] disabled:opacity-50"
+                >
+                  {actionLoading === selectedReport.id ? 'Saving...' : 'Save Notes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

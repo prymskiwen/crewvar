@@ -1,4 +1,6 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { HiCalendar } from 'react-icons/hi';
 import { Button, Autocomplete } from '../ui';
 
 interface AssignmentCardProps {
@@ -125,40 +127,65 @@ export const AssignmentCard = ({
                     </div>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gradient-to-r from-[#069B93]/10 to-[#00A59E]/10 rounded-xl p-4 border border-[#069B93]/20">
-                        <div className="flex items-center space-x-3 mb-2">
-                            <div className="w-10 h-10 bg-[#069B93] rounded-lg flex items-center justify-center">
-                                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                                </svg>
+                <div className="space-y-4">
+                    {/* Ship Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-gradient-to-r from-[#069B93]/10 to-[#00A59E]/10 rounded-xl p-4 border border-[#069B93]/20">
+                            <div className="flex items-center space-x-3 mb-2">
+                                <div className="w-10 h-10 bg-[#069B93] rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-800">Cruise Line</h3>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-800">Cruise Line</h3>
-                            </div>
+                            <p className="text-gray-700 font-medium">
+                                {shipsLoading || cruiseLinesLoading ? (
+                                    <span className="text-[#069B93] animate-pulse">Loading...</span>
+                                ) : profile.currentShipId ? getCruiseLineFromShip(profile.currentShipId) : 'Select Cruise Line'}
+                            </p>
                         </div>
-                        <p className="text-gray-700 font-medium">
-                            {shipsLoading || cruiseLinesLoading ? (
-                                <span className="text-[#069B93] animate-pulse">Loading...</span>
-                            ) : profile.currentShipId ? getCruiseLineFromShip(profile.currentShipId) : 'Select Cruise Line'}
-                        </p>
+                        <div className="bg-gradient-to-r from-[#069B93]/10 to-[#00A59E]/10 rounded-xl p-4 border border-[#069B93]/20">
+                            <div className="flex items-center space-x-3 mb-2">
+                                <div className="w-10 h-10 bg-[#069B93] rounded-lg flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-800">Ship</h3>
+                                </div>
+                            </div>
+                            <p className="text-gray-700 font-medium">
+                                {shipsLoading ? (
+                                    <span className="text-[#069B93] animate-pulse">Loading...</span>
+                                ) : profile.currentShipId ? getShipName(profile.currentShipId) : 'Select Ship'}
+                            </p>
+                        </div>
                     </div>
+
+                    {/* Calendar Section */}
                     <div className="bg-gradient-to-r from-[#069B93]/10 to-[#00A59E]/10 rounded-xl p-4 border border-[#069B93]/20">
-                        <div className="flex items-center space-x-3 mb-2">
-                            <div className="w-10 h-10 bg-[#069B93] rounded-lg flex items-center justify-center">
-                                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 bg-[#069B93] rounded-lg flex items-center justify-center">
+                                    <HiCalendar className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-800">My Calendar</h3>
+                                    <p className="text-sm text-gray-600">Manage your assignments and schedule</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-800">Ship</h3>
-                            </div>
+                            <Link
+                                to="/calendar"
+                                className="flex items-center space-x-2 px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors font-medium"
+                            >
+                                <HiCalendar className="w-4 h-4" />
+                                <span>View Calendar</span>
+                            </Link>
                         </div>
-                        <p className="text-gray-700 font-medium">
-                            {shipsLoading ? (
-                                <span className="text-[#069B93] animate-pulse">Loading...</span>
-                            ) : profile.currentShipId ? getShipName(profile.currentShipId) : 'Select Ship'}
-                        </p>
                     </div>
                 </div>
             )}

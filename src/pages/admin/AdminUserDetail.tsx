@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 
 import { useAuth } from '../../context/AuthContextFirebase';
 import { getProfilePhotoUrl } from '../../utils/images';
-import { getUserProfile, banUser, unbanUser, getRoles, getDepartments, getShips } from '../../firebase/firestore';
+import { getUserProfile, banUser, unbanUser, getRoles, getDepartments, getShips, getCruiseLines, getUserConnections, getChatRooms } from '../../firebase/firestore';
 import { doc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
@@ -23,6 +23,7 @@ interface UserDetails {
   department_name?: string;
   role_name?: string;
   ship_name?: string;
+  cruise_line_name?: string;
   is_admin: boolean;
   is_super_admin: boolean;
   is_email_verified: boolean;
@@ -35,6 +36,12 @@ interface UserDetails {
   deleted_at?: string;
   delete_reason?: string;
   last_login?: string;
+  // Additional comprehensive data
+  connections_count?: number;
+  chat_rooms_count?: number;
+  profile_completion?: number;
+  photos?: string[];
+  onboarding_completed?: boolean;
 }
 
 // Implement proper Firebase functions
@@ -46,15 +53,53 @@ const getUserDetails = async (userId: string): Promise<UserDetails> => {
     }
 
     // Get related data
-    const [roles, departments, ships] = await Promise.all([
+    const [roles, departments, ships, cruiseLines] = await Promise.all([
       getRoles(),
       getDepartments(), 
-      getShips()
+      getShips(),
+      getCruiseLines()
     ]);
 
     const role = roles.find(r => r.id === userProfile.roleId);
     const department = departments.find(d => d.id === userProfile.departmentId);
     const ship = ships.find(s => s.id === userProfile.currentShipId);
+    const cruiseLine = cruiseLines.find(cl => cl.id === ship?.cruiseLineId);
+
+    // Get additional data
+    let connectionsCount = 0;
+    let chatRoomsCount = 0;
+    
+    try {
+      const connections = await getUserConnections(userId);
+      connectionsCount = connections?.length || 0;
+    } catch (error) {
+      console.log('Could not fetch connections:', error);
+    }
+
+    try {
+      const chatRooms = await getChatRooms(userId);
+      chatRoomsCount = chatRooms?.length || 0;
+    } catch (error) {
+      console.log('Could not fetch chat rooms:', error);
+    }
+
+    // Calculate profile completion
+    const profileFields = [
+      userProfile.displayName,
+      userProfile.profilePhoto,
+      userProfile.bio,
+      userProfile.phone,
+      userProfile.departmentId,
+      userProfile.roleId,
+      userProfile.currentShipId,
+      userProfile.instagram,
+      userProfile.twitter,
+      userProfile.facebook,
+      userProfile.snapchat,
+      userProfile.website
+    ];
+    const completedFields = profileFields.filter(field => field && field.trim() !== '').length;
+    const profileCompletion = Math.round((completedFields / profileFields.length) * 100);
 
     return {
       id: userProfile.id,
@@ -71,6 +116,7 @@ const getUserDetails = async (userId: string): Promise<UserDetails> => {
       department_name: department?.name || 'Not specified',
       role_name: role?.name || 'Not specified',
       ship_name: ship?.name || 'Not specified',
+      cruise_line_name: cruiseLine?.name || 'Not specified',
       is_admin: userProfile.isAdmin || false,
       is_super_admin: false, // Not implemented yet
       is_email_verified: userProfile.isEmailVerified || false,
@@ -82,7 +128,13 @@ const getUserDetails = async (userId: string): Promise<UserDetails> => {
       updated_at: userProfile.updatedAt?.toDate?.()?.toISOString() || '',
       deleted_at: userProfile.deletedAt?.toDate?.()?.toISOString() || '',
       delete_reason: userProfile.deleteReason || '',
-      last_login: userProfile.lastLogin?.toDate?.()?.toISOString() || ''
+      last_login: userProfile.lastLogin?.toDate?.()?.toISOString() || '',
+      // Additional comprehensive data
+      connections_count: connectionsCount,
+      chat_rooms_count: chatRoomsCount,
+      profile_completion: profileCompletion,
+      photos: userProfile.photos || [],
+      onboarding_completed: userProfile.onboardingCompleted || false
     };
   } catch (error) {
     console.error('Error getting user details:', error);
@@ -428,6 +480,108 @@ export const AdminUserDetail = () => {
                 </div>
               </div>
             </div>
+
+            {/* Job Information */}
+            <div className="mt-6 bg-white rounded-lg shadow">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">Job Information</h3>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Position</h5>
+                    <div className="mt-2 space-y-2">
+                      <p className="text-sm text-gray-900">🏢 Department: {user.department_name}</p>
+                      <p className="text-sm text-gray-900">👤 Role: {user.role_name}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Assignment</h5>
+                    <div className="mt-2 space-y-2">
+                      <p className="text-sm text-gray-900">🚢 Ship: {user.ship_name}</p>
+                      <p className="text-sm text-gray-900">🏭 Cruise Line: {user.cruise_line_name}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Activity & Engagement */}
+            <div className="mt-6 bg-white rounded-lg shadow">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">Activity & Engagement</h3>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Connections</h5>
+                    <div className="mt-2">
+                      <p className="text-2xl font-bold text-blue-600">{user.connections_count || 0}</p>
+                      <p className="text-sm text-gray-600">Total connections</p>
+                    </div>
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Chat Rooms</h5>
+                    <div className="mt-2">
+                      <p className="text-2xl font-bold text-green-600">{user.chat_rooms_count || 0}</p>
+                      <p className="text-sm text-gray-600">Active conversations</p>
+                    </div>
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Profile Completion</h5>
+                    <div className="mt-2">
+                      <p className="text-2xl font-bold text-purple-600">{user.profile_completion || 0}%</p>
+                      <p className="text-sm text-gray-600">Profile completeness</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Profile Photos */}
+            {user.photos && user.photos.length > 0 && (
+              <div className="mt-6 bg-white rounded-lg shadow">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-900">Profile Photos</h3>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {user.photos.map((photo, index) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={getProfilePhotoUrl(photo)}
+                          alt={`Profile photo ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                        <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                          Photo {index + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Onboarding Status */}
+            <div className="mt-6 bg-white rounded-lg shadow">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">Onboarding Status</h3>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${user.onboarding_completed ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                  <span className={`text-sm font-medium ${user.onboarding_completed ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {user.onboarding_completed ? 'Onboarding Completed' : 'Onboarding Pending'}
+                  </span>
+                </div>
+                {!user.onboarding_completed && (
+                  <p className="text-sm text-gray-600 mt-2">
+                    User has not completed the onboarding process yet.
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Actions Sidebar */}
@@ -464,13 +618,6 @@ export const AdminUserDetail = () => {
                 </button>
 
                 <button
-                  onClick={() => navigate(`/profile/${user.id}`)}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  View Public Profile
-                </button>
-
-                <button
                   onClick={handleSendMessage}
                   disabled={messageLoading}
                   className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -503,6 +650,30 @@ export const AdminUserDetail = () => {
                     <span className="text-sm text-gray-500">Admin Status</span>
                     <span className={`text-sm font-medium ${user.is_admin ? 'text-blue-600' : 'text-gray-600'}`}>
                       {user.is_admin ? 'Admin' : 'Regular User'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Profile Completion</span>
+                    <span className={`text-sm font-medium ${user.profile_completion && user.profile_completion >= 80 ? 'text-green-600' : user.profile_completion && user.profile_completion >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
+                      {user.profile_completion || 0}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Connections</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {user.connections_count || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Chat Rooms</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {user.chat_rooms_count || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Onboarding</span>
+                    <span className={`text-sm font-medium ${user.onboarding_completed ? 'text-green-600' : 'text-yellow-600'}`}>
+                      {user.onboarding_completed ? 'Completed' : 'Pending'}
                     </span>
                   </div>
                 </div>

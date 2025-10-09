@@ -87,16 +87,23 @@ export const ChatRoom = memo(() => {
     useEffect(() => {
         if (roomId && currentUser) {
             console.log('🔍 ChatRoom: Marking messages as read for room:', roomId, 'user:', currentUser.uid);
-            markMessagesAsRead(roomId, currentUser.uid).then((hasUpdates) => {
-                console.log('🔍 ChatRoom: markMessagesAsRead result:', hasUpdates);
-                // Only invalidate the unread message count query if messages were actually marked as read
-                if (hasUpdates) {
-                    queryClient.invalidateQueries({
-                        queryKey: ['unreadMessageCount', currentUser.uid]
-                    });
-                    console.log('🔍 ChatRoom: Invalidated unread message count query');
+            
+            // Add a small delay to ensure the component is fully mounted
+            const timer = setTimeout(async () => {
+                try {
+                    const hasUpdates = await markMessagesAsRead(roomId, currentUser.uid);
+                    console.log('🔍 ChatRoom: markMessagesAsRead result:', hasUpdates);
+                    
+                    if (hasUpdates) {
+                        // The real-time subscription should automatically update the chat rooms list
+                        console.log('🔍 ChatRoom: Messages marked as read, real-time subscription should update UI');
+                    }
+                } catch (error) {
+                    console.error('🔍 ChatRoom: Error marking messages as read:', error);
                 }
-            });
+            }, 500); // 500ms delay to ensure component is ready
+            
+            return () => clearTimeout(timer);
         }
         // Reset auto-scroll state when room changes
         setShouldAutoScroll(true);

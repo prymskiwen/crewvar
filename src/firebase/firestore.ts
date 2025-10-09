@@ -881,6 +881,82 @@ export const cleanupStalePresence = async (): Promise<void> => {
 };
 
 // Get chat rooms for a user
+export const subscribeToChatRooms = (
+  userId: string,
+  callback: (rooms: any[]) => void
+) => {
+  try {
+    console.log("💬 Setting up chat rooms subscription for user:", userId);
+    const chatRoomsRef = collection(db, "chatRooms");
+    const q = query(
+      chatRoomsRef,
+      where("participants", "array-contains", userId),
+      orderBy("updatedAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      async (snapshot) => {
+        console.log("📥 Chat rooms snapshot received:", snapshot.docs.length, "rooms");
+        const rooms = [];
+
+        for (const doc of snapshot.docs) {
+          const roomData = doc.data();
+          const otherUserId = roomData.participants.find(
+            (id: string) => id !== userId
+          );
+
+          if (otherUserId) {
+            try {
+              const otherUserProfile = (await getUserProfile(otherUserId)) as any;
+              rooms.push({
+                id: doc.id,
+                ...roomData,
+                otherUserId,
+                unreadCount: roomData.unreadCounts?.[userId] || 0,
+                otherUserProfile: {
+                  displayName: otherUserProfile.displayName,
+                  profilePhoto: otherUserProfile.profilePhoto,
+                  currentShipId: otherUserProfile.currentShipId,
+                  departmentId: otherUserProfile.departmentId,
+                  roleId: otherUserProfile.roleId,
+                },
+              });
+            } catch (error) {
+              console.error(`Error fetching profile for user ${otherUserId}:`, error);
+              // Add room with minimal data if profile fetch fails
+              rooms.push({
+                id: doc.id,
+                ...roomData,
+                otherUserId,
+                unreadCount: roomData.unreadCounts?.[userId] || 0,
+                otherUserProfile: {
+                  displayName: "Unknown User",
+                  profilePhoto: null,
+                  currentShipId: null,
+                  departmentId: null,
+                  roleId: null,
+                },
+              });
+            }
+          }
+        }
+
+        console.log("📥 Calling chat rooms callback with", rooms.length, "rooms");
+        callback(rooms);
+      },
+      (error) => {
+        console.error("❌ Chat rooms subscription error:", error);
+      }
+    );
+
+    return unsubscribe;
+  } catch (error) {
+    console.error("Error setting up chat rooms subscription:", error);
+    return () => {};
+  }
+};
+
 export const getChatRooms = async (userId: string): Promise<any[]> => {
   try {
     const chatRoomsRef = collection(db, "chatRooms");
@@ -909,10 +985,17 @@ export const getChatRooms = async (userId: string): Promise<any[]> => {
             departmentId: otherUserProfile?.departmentId,
             roleId: otherUserProfile?.roleId,
           });
+          console.log("getChatRooms - roomData:", {
+            roomId: doc.id,
+            unreadCounts: roomData.unreadCounts,
+            userId,
+            extractedUnreadCount: roomData.unreadCounts?.[userId] || 0
+          });
           rooms.push({
             id: doc.id,
             ...roomData,
             otherUserId,
+            unreadCount: roomData.unreadCounts?.[userId] || 0,
             otherUserProfile: {
               displayName: otherUserProfile.displayName,
               profilePhoto: otherUserProfile.profilePhoto,
@@ -931,6 +1014,7 @@ export const getChatRooms = async (userId: string): Promise<any[]> => {
             id: doc.id,
             ...roomData,
             otherUserId,
+            unreadCount: roomData.unreadCounts?.[userId] || 0,
             otherUserProfile: {
               displayName: "Unknown User",
               profilePhoto: null,
@@ -991,14 +1075,23 @@ export const sendMessage = async (
       // Check each participant's chat page presence before incrementing unread count
       for (const participantId of otherParticipants) {
         const isInChatPage = await isUserInChatPage(participantId);
+        console.log("sendMessage - checking participant:", {
+          participantId,
+          isInChatPage,
+          willIncrement: !isInChatPage
+        });
         if (!isInChatPage) {
           // Only increment unread count if user is not currently on any chat page
-          unreadUpdates[`unreadCount.${participantId}`] = increment(1);
+          unreadUpdates[`unreadCounts.${participantId}`] = increment(1);
         }
       }
 
       if (Object.keys(unreadUpdates).length > 0) {
+        console.log("sendMessage - applying unread updates:", unreadUpdates);
         await updateDoc(roomRef, unreadUpdates);
+        console.log("sendMessage - unread updates applied successfully");
+      } else {
+        console.log("sendMessage - no unread updates needed");
       }
     }
 
@@ -1087,9 +1180,12 @@ export const markMessagesAsRead = async (
     // Reset unread count for the user
     const roomRef = doc(db, "chatRooms", roomId);
     await updateDoc(roomRef, {
-      [`unreadCount.${userId}`]: 0,
+      [`unreadCounts.${userId}`]: 0,
     });
-    console.log("✅ Reset unread count for user", userId);
+    console.log("✅ Reset unread count for user", userId, "in room", roomId);
+
+    // Clear live notifications for this room
+    await clearLiveNotificationsForRoom(roomId, userId);
 
     return hasUpdates;
   } catch (error) {
@@ -1114,7 +1210,7 @@ export const getUnreadMessageCount = async (
 
     snapshot.docs.forEach((doc) => {
       const data = doc.data();
-      totalUnread += data.unreadCount?.[userId] || 0;
+      totalUnread += data.unreadCounts?.[userId] || 0;
     });
 
     return totalUnread;
@@ -2678,6 +2774,38 @@ export const markLiveNotificationAsRead = async (notificationId: string) => {
     await updateDoc(notificationRef, { read: true });
   } catch (error) {
     console.error("Error marking live notification as read:", error);
+  }
+};
+
+// Clear all live notifications for a specific room and user
+export const clearLiveNotificationsForRoom = async (roomId: string, userId: string) => {
+  try {
+    console.log("🔔 Clearing live notifications for room:", roomId, "user:", userId);
+    
+    const notificationsRef = collection(db, "liveNotifications");
+    const q = query(
+      notificationsRef, 
+      where("userId", "==", userId),
+      where("roomId", "==", roomId),
+      where("read", "==", false)
+    );
+    
+    const snapshot = await getDocs(q);
+    console.log("🔔 Found", snapshot.docs.length, "unread live notifications for room", roomId);
+    
+    if (snapshot.docs.length > 0) {
+      const batch = writeBatch(db);
+      snapshot.docs.forEach((doc) => {
+        batch.update(doc.ref, { read: true });
+      });
+      
+      await batch.commit();
+      console.log("✅ Cleared", snapshot.docs.length, "live notifications for room", roomId);
+    } else {
+      console.log("ℹ️ No live notifications to clear for room", roomId);
+    }
+  } catch (error) {
+    console.error("❌ Error clearing live notifications for room:", error);
   }
 };
 

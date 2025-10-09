@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContextFirebase';
-import { getChatRooms, createOrGetChatRoom, getShips, getDepartments, getRoles } from '../../firebase/firestore';
+import { createOrGetChatRoom, getShips, getDepartments, getRoles, subscribeToChatRooms } from '../../firebase/firestore';
 import { LoadingPage } from '../../components/ui';
 import { DashboardLayout } from '../../layout/DashboardLayout';
 import { ChatRoomsSearchFilter } from './ChatRoomsSearchFilter';
@@ -27,12 +27,26 @@ export const Chat: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [sortBy, setSortBy] = useState<'recent' | 'name' | 'unread'>('recent');
 
-  // Fetch chat rooms using React Query
-  const { data: chatRooms = [], isLoading } = useQuery({
-    queryKey: ['chatRooms', currentUser?.uid],
-    queryFn: () => getChatRooms(currentUser!.uid),
-    enabled: !!currentUser?.uid
-  });
+  // Real-time chat rooms subscription
+  const [chatRooms, setChatRooms] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Subscribe to chat rooms in real-time
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+
+    console.log('💬 Chat: Setting up chat rooms subscription for user:', currentUser.uid);
+    const unsubscribe = subscribeToChatRooms(currentUser.uid, (rooms) => {
+      console.log('💬 Chat: Received chat rooms update:', rooms.length, 'rooms');
+      setChatRooms(rooms);
+      setIsLoading(false);
+    });
+
+    return () => {
+      console.log('💬 Chat: Cleaning up chat rooms subscription');
+      unsubscribe();
+    };
+  }, [currentUser?.uid]);
 
   // Fetch all ships, departments, and roles for filter options
   const { data: allShips = [] } = useQuery({
@@ -66,7 +80,7 @@ export const Chat: React.FC = () => {
         const roomId = await createOrGetChatRoom(currentUser.uid, userId);
         console.log('Created chat room with ID:', roomId);
         navigate(`/chat/room/${roomId}`);
-        await queryClient.invalidateQueries({ queryKey: ['chatRooms', currentUser.uid] });
+        // The real-time subscription will automatically update the chat rooms list
       } catch (error) {
         console.error('Error creating chat room:', error);
       } finally {

@@ -100,17 +100,17 @@ const AppBar = ({
     (currentUser.email === "admin@crewvar.com" ||
       (currentUser as any).isAdmin === true);
 
-    // Navigation items for desktop
-    const navItems = [
-        { name: 'Dashboard', path: '/dashboard' },
-        { name: 'Update where you are.', path: '/ship-location', isButton: true },
-        { name: 'Find your friends.', path: '/explore-ships' },
-        { name: 'Connection Requests', path: '/connections/pending' },
-        { name: 'Messages', path: '/chat' },
-        { name: 'Favorites', path: '/favorites' },
-        // Admin link (only visible to admins)
-        ...(isAdmin ? [{ name: 'Admin Panel', path: '/admin' }] : []),
-    ];
+  // Navigation items for desktop
+  const navItems = [
+    { name: "Dashboard", path: "/dashboard" },
+    { name: "Update where you are.", path: "/ship-location", isButton: true },
+    { name: "Find your friends.", path: "/explore-ships" },
+    { name: "Connection Requests", path: "/connections/pending" },
+    { name: "Messages", path: "/chat" },
+    { name: "Favorites", path: "/favorites" },
+    // Admin link (only visible to admins)
+    ...(isAdmin ? [{ name: "Admin Panel", path: "/admin" }] : []),
+  ];
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -213,33 +213,41 @@ const AppBar = ({
                 );
               }
 
-                            // Regular navigation items
-                            return (
-                                <Link
-                                    key={item.name}
-                                    to={item.path}
-                                    className={`relative px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 ${isActive
-                                        ? 'text-[#069B93] font-bold'
-                                        : 'text-gray-600 hover:text-gray-900'
-                                        }`}
-                                >
-                                    <span className={`${isActive ? 'text-base font-bold' : 'text-sm font-medium'}`}>{item.name}</span>
-                                    {/* Show badge for Connection Requests if there are pending requests */}
-                                    {item.name === 'Connection Requests' && connectionRequests.length > 0 && (
-                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                                            {connectionRequests.length}
-                                        </span>
-                                    )}
-                                    {/* Show badge for Messages if there are unread messages */}
-                                    {item.name === 'Messages' && unreadMessageCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
-                                            {unreadMessageCount > 99 ? '99+' : unreadMessageCount}
-                                        </span>
-                                    )}
-                                </Link>
-                            );
-                        })}
-                    </div>
+              // Regular navigation items
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={`relative px-3 py-2 rounded-lg transition-colors hover:bg-gray-100 ${
+                    isActive
+                      ? "text-[#069B93] font-bold"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <span
+                    className={`${
+                      isActive ? "text-base font-bold" : "text-sm font-medium"
+                    }`}
+                  >
+                    {item.name}
+                  </span>
+                  {/* Show badge for Connection Requests if there are pending requests */}
+                  {item.name === "Connection Requests" &&
+                    connectionRequests.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                        {connectionRequests.length}
+                      </span>
+                    )}
+                  {/* Show badge for Messages if there are unread messages */}
+                  {item.name === "Messages" && unreadMessageCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                      {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
 
           {/* Right side - User actions */}
           <div className="flex items-center space-x-3">

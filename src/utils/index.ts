@@ -4,7 +4,6 @@
  * Common utility functions used throughout the CrewVar application
  */
 
-
 // Browser utilities
 export * from "./browser";
 
@@ -275,4 +274,18 @@ export const retryWithBackoff = async <T>(
   }
 
   throw lastError!;
+};
+
+/**
+ * Function of convert long text to smaller
+ *
+ * @param text - Text that need to make smaller length
+ * @param length - Length is a number of how many letter needed
+ * @returns String of smaller text
+ */
+export const getShortText = (text: string, length: number) => {
+  if (text.length < length) {
+    return text;
+  }
+  return `${text.slice(0, length)}...`;
 };

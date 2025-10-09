@@ -107,7 +107,7 @@ const AppBar = ({
     { name: "Find your friends.", path: "/explore-ships" },
     { name: "Connection Requests", path: "/connections/pending" },
     { name: "Messages", path: "/chat" },
-    { name: "Favorites", path: "/favorites" },
+    { name: "Notifications", path: "/all-notifications" },
     // Admin link (only visible to admins)
     ...(isAdmin ? [{ name: "Admin Panel", path: "/admin" }] : []),
   ];
@@ -242,6 +242,12 @@ const AppBar = ({
                   {item.name === "Messages" && unreadMessageCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
                       {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                    </span>
+                  )}
+                  {/* Show badge for Notifications if there are unread notifications */}
+                  {item.name === "Notifications" && unreadNotifications > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-bold">
+                      {unreadNotifications > 99 ? "99+" : unreadNotifications}
                     </span>
                   )}
                 </Link>

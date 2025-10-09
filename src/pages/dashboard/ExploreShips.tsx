@@ -462,6 +462,7 @@ export const ExploreShips = () => {
       // For cruise line filtering, we need to check if the member's ship belongs to the selected cruise line
       let matchesCruiseLine = true;
       if (selectedCruiseLine) {
+        console.log("selectedCruiseLine", selectedCruiseLine);
         // Find the member's ship and check if it belongs to the selected cruise line
         const memberShip = allShips.find(
           (ship) => ship.id === member.currentShipId

@@ -36,7 +36,6 @@ export const ChatRoom = memo(() => {
   // Real-time features
   const {
     isTyping,
-    isOnline,
     handleStartTyping,
     handleStopTyping,
     sendNotification,
@@ -91,7 +90,6 @@ export const ChatRoom = memo(() => {
     refetchInterval: 2000, // Refetch every 2 seconds for real-time updates
   });
 
-<<<<<<< HEAD
   // Mark messages as read when component mounts or room changes
   useEffect(() => {
     if (roomId && currentUser) {
@@ -109,29 +107,6 @@ export const ChatRoom = memo(() => {
             queryKey: ["unreadMessageCount", currentUser.uid],
           });
           console.log("🔍 ChatRoom: Invalidated unread message count query");
-=======
-    // Mark messages as read when component mounts or room changes
-    useEffect(() => {
-        if (roomId && currentUser) {
-            console.log('🔍 ChatRoom: Marking messages as read for room:', roomId, 'user:', currentUser.uid);
-            
-            // Add a small delay to ensure the component is fully mounted
-            const timer = setTimeout(async () => {
-                try {
-                    const hasUpdates = await markMessagesAsRead(roomId, currentUser.uid);
-                    console.log('🔍 ChatRoom: markMessagesAsRead result:', hasUpdates);
-                    
-                    if (hasUpdates) {
-                        // The real-time subscription should automatically update the chat rooms list
-                        console.log('🔍 ChatRoom: Messages marked as read, real-time subscription should update UI');
-                    }
-                } catch (error) {
-                    console.error('🔍 ChatRoom: Error marking messages as read:', error);
-                }
-            }, 500); // 500ms delay to ensure component is ready
-            
-            return () => clearTimeout(timer);
->>>>>>> 16b23a43c214f581f662f1eed73dd2328ac36c11
         }
       });
     }

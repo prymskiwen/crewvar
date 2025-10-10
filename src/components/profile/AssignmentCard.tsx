@@ -22,6 +22,7 @@ interface AssignmentCardProps {
     updateUserProfileFunc: (data: any) => Promise<void>;
     shipsLoading: boolean;
     cruiseLinesLoading: boolean;
+    onMissingReportClick?: () => void;
 }
 
 export const AssignmentCard = ({
@@ -35,7 +36,8 @@ export const AssignmentCard = ({
     getShipName,
     updateUserProfileFunc,
     shipsLoading,
-    cruiseLinesLoading
+    cruiseLinesLoading,
+    onMissingReportClick
 }: AssignmentCardProps) => {
 
     const handleUpdate = async () => {
@@ -108,6 +110,17 @@ export const AssignmentCard = ({
                             disabled={!profile.currentCruiseLineId}
                             className="w-full"
                         />
+                        {onMissingReportClick && (
+                            <div className="mt-2 text-right">
+                                <button
+                                    type="button"
+                                    onClick={onMissingReportClick}
+                                    className="text-sm text-[#069B93] hover:text-[#058a7a] underline"
+                                >
+                                    What's missing?
+                                </button>
+                            </div>
+                        )}
                     </div>
                     <div className="flex space-x-3 pt-4 border-t border-gray-200">
                         <Button

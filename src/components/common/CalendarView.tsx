@@ -1,19 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { ICruiseAssignment } from "../../types/calendar";
 import { formatDateRange, getDaysDifference } from "../../data/utilities/calendar-data";
-import { HiPencil, HiCalendar } from "react-icons/hi";
+import { HiPencil, HiCalendar, HiTrash } from "react-icons/hi";
 import { useAuth } from "../../context/AuthContextFirebase";
 import { getUserAssignments, getCruiseLines, getShips } from "../../firebase/firestore";
 
 interface CalendarViewProps {
     onAddAssignment?: () => void;
     onEditAssignment?: (assignment: ICruiseAssignment) => void;
+    onDeleteAssignment?: (assignment: ICruiseAssignment) => void;
     className?: string;
 }
 
 export const CalendarView = ({
     onAddAssignment,
     onEditAssignment,
+    onDeleteAssignment,
     className = ""
 }: CalendarViewProps) => {
     const { currentUser } = useAuth();
@@ -162,7 +164,7 @@ export const CalendarView = ({
                                         )}
                                     </div>
 
-                                    {/* Edit Button */}
+                                    {/* Action Buttons */}
                                     <div className="flex items-center space-x-2">
                                         <button
                                             type="button"
@@ -171,6 +173,14 @@ export const CalendarView = ({
                                         >
                                             <HiPencil className="w-4 h-4" />
                                             <span className="text-sm font-medium">Edit</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => onDeleteAssignment?.(assignment)}
+                                            className="flex items-center space-x-2 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                                        >
+                                            <HiTrash className="w-4 h-4" />
+                                            <span className="text-sm font-medium">Delete</span>
                                         </button>
                                     </div>
                                 </div>

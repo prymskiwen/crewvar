@@ -7,6 +7,7 @@ export { SuccessNotification } from './SuccessNotification';
 export { BanNotification } from './BanNotification';
 export { Autocomplete } from './Autocomplete';
 export { EmojiPicker } from './EmojiPicker';
+export { ConfirmationDialog } from './ConfirmationDialog';
 
 // Form Components
 export { default as Input } from './Input';

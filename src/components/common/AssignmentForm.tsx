@@ -277,7 +277,7 @@ export const AssignmentForm = ({
                             <h4 className="font-medium text-green-900">Schedule Privacy</h4>
                             <p className="text-sm text-green-700 mt-1">
                                 Your cruise assignments help us suggest connections when you're on the same ship or in the same port.
-                                Only your ship assignment is visible to others.
+                                Only your ship assignment for today is visible to others.
                             </p>
                         </div>
                     </div>

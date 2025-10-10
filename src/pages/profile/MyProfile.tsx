@@ -19,6 +19,7 @@ import {
 } from "../../firebase/firestore";
 import { toast } from "react-toastify";
 import { DashboardLayout } from "../../layout/DashboardLayout";
+import { MissingReportModal } from "../../components/common/MissingReportModal";
 
 export const MyProfile = () => {
     const { currentUser, userProfile, updateUserProfile: updateUserProfileFromAuth } = useAuth();
@@ -264,6 +265,7 @@ export const MyProfile = () => {
     const [isEditingAboutMe, setIsEditingAboutMe] = useState(false);
     const [isEditingAssignment, setIsEditingAssignment] = useState(false);
     const [isEditingPhotos, setIsEditingPhotos] = useState(true);
+    const [showMissingReportModal, setShowMissingReportModal] = useState(false);
 
     const handleProfileEditSave = async (profileData: any) => {
         try {
@@ -387,6 +389,7 @@ export const MyProfile = () => {
                                         updateUserProfileFunc={updateUserProfileFunc}
                                         shipsLoading={shipsLoading}
                                         cruiseLinesLoading={cruiseLinesLoading}
+                                        onMissingReportClick={() => setShowMissingReportModal(true)}
                                     />
                                 )}
 
@@ -454,6 +457,12 @@ export const MyProfile = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Missing Report Modal */}
+            <MissingReportModal
+                isOpen={showMissingReportModal}
+                onClose={() => setShowMissingReportModal(false)}
+            />
         </DashboardLayout>
     );
 };

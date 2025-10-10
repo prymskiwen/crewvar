@@ -6,7 +6,7 @@
  */
 
 import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
+import { getAuth, Auth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getFunctions, Functions } from 'firebase/functions';
@@ -69,6 +69,17 @@ class FirebaseSingleton {
   public get auth(): Auth {
     if (!this._auth) {
       this._auth = getAuth(this.app);
+      
+      // Set up authentication persistence
+      try {
+        setPersistence(this._auth, browserLocalPersistence).then(() => {
+          console.log('✅ Firebase Auth persistence set to local storage');
+        }).catch((error) => {
+          console.warn('⚠️ Failed to set auth persistence:', error);
+        });
+      } catch (error) {
+        console.warn('⚠️ Auth persistence setup failed:', error);
+      }
     }
     return this._auth;
   }

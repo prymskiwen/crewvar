@@ -2847,35 +2847,55 @@ export const clearLiveNotificationsForRoom = async (
 
 export const clearAllNotifications = async (userId: string) => {
   try {
+    console.log("🗑️ Clearing all live notifications for user:", userId);
+    
     const notificationsRef = collection(db, "liveNotifications");
     const q = query(notificationsRef, where("userId", "==", userId));
     const snapshot = await getDocs(q);
 
+    if (snapshot.docs.length === 0) {
+      console.log("ℹ️ No live notifications to clear");
+      return;
+    }
+
+    // Use batch delete to avoid individual deletion notifications
     const batch = writeBatch(db);
-    snapshot.forEach((doc) => {
+    snapshot.docs.forEach((doc) => {
       batch.delete(doc.ref);
     });
 
     await batch.commit();
+    console.log("✅ Cleared", snapshot.docs.length, "live notifications");
   } catch (error) {
-    console.error("Error clearing notifications:", error);
+    console.error("❌ Error clearing live notifications:", error);
+    throw error;
   }
 };
 
 export const clearAllLegacyNotifications = async (userId: string) => {
   try {
+    console.log("🗑️ Clearing all legacy notifications for user:", userId);
+    
     const notificationsRef = collection(db, "notifications");
     const q = query(notificationsRef, where("userId", "==", userId));
     const snapshot = await getDocs(q);
 
+    if (snapshot.docs.length === 0) {
+      console.log("ℹ️ No legacy notifications to clear");
+      return;
+    }
+
+    // Use batch delete to avoid individual deletion notifications
     const batch = writeBatch(db);
-    snapshot.forEach((doc) => {
+    snapshot.docs.forEach((doc) => {
       batch.delete(doc.ref);
     });
 
     await batch.commit();
+    console.log("✅ Cleared", snapshot.docs.length, "legacy notifications");
   } catch (error) {
-    console.error("Error clearing legacy notifications:", error);
+    console.error("❌ Error clearing legacy notifications:", error);
+    throw error;
   }
 };
 

@@ -15,7 +15,7 @@ import {
   getCrewMembers,
   sendConnectionRequest,
   getDepartments,
-  getRolesByDepartment,
+  getRoles,
   getUserConnections,
   getPendingConnectionRequests,
   createOrGetChatRoom,
@@ -41,23 +41,8 @@ export const TodayOnBoardPage = () => {
 
   // Fetch all roles for role name mapping
   const { data: allRoles = [] } = useQuery({
-    queryKey: ["roles"],
-    queryFn: async () => {
-      const allRolesData = [];
-      for (const dept of departments) {
-        try {
-          const roles = await getRolesByDepartment(dept.id);
-          allRolesData.push(...roles);
-        } catch (error) {
-          console.error(
-            `Error fetching roles for department ${dept.id}:`,
-            error
-          );
-        }
-      }
-      return allRolesData;
-    },
-    enabled: departments.length > 0,
+    queryKey: ["allRoles"],
+    queryFn: getRoles,
   });
 
   // Fetch user's connections to check if already connected
@@ -76,15 +61,15 @@ export const TodayOnBoardPage = () => {
 
   // Helper functions to get names from IDs
   const getRoleName = (roleId: string) => {
-    if (!roleId) return "Crew Member";
+    if (!roleId) return "Not specified";
     const role = allRoles.find((r) => r.id === roleId);
-    return role ? role.name : "Crew Member";
+    return role ? role.name : "Not specified";
   };
 
   const getDepartmentName = (departmentId: string) => {
-    if (!departmentId) return "No Department";
+    if (!departmentId) return "Not specified";
     const department = departments.find((d) => d.id === departmentId);
-    return department ? department.name : departmentId;
+    return department ? department.name : "Not specified";
   };
 
   const getShipName = (shipId: string) => {

@@ -38,20 +38,29 @@ export const MyProfile = () => {
         queryFn: getDepartments
     });
     const { data: allRoles = [], isLoading: rolesLoading } = useQuery({
-        queryKey: ['roles'],
+        queryKey: ['allRoles'],
         queryFn: async () => {
-            // Only fetch roles for user's department to improve performance
-            if (userProfile?.departmentId) {
-                try {
-                    return await getRolesByDepartment(userProfile.departmentId);
-                } catch (error) {
-                    console.error(`Error fetching roles for department ${userProfile.departmentId}:`, error);
-                    return [];
+            // Fetch all roles so user can select any department/role combination
+            try {
+                const allDepartments = await getDepartments();
+                const allRolesData = [];
+                
+                // Fetch roles for each department
+                for (const dept of allDepartments) {
+                    try {
+                        const deptRoles = await getRolesByDepartment(dept.id);
+                        allRolesData.push(...deptRoles);
+                    } catch (error) {
+                        console.error(`Error fetching roles for department ${dept.id}:`, error);
+                    }
                 }
+                
+                return allRolesData;
+            } catch (error) {
+                console.error('Error fetching all roles:', error);
+                return [];
             }
-            return [];
-        },
-        enabled: !!userProfile?.departmentId
+        }
     });
 
     const updateUserProfileMutation = useMutation({

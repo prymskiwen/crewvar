@@ -181,7 +181,28 @@ export const AssignmentCard = ({
 
                     {/* Calendar Section */}
                     <div className="bg-gradient-to-r from-[#069B93]/10 to-[#00A59E]/10 rounded-xl p-4 border border-[#069B93]/20">
-                        <div className="flex items-center justify-between">
+                        {/* Mobile Layout */}
+                        <div className="block sm:hidden">
+                            <div className="flex items-center space-x-3 mb-3">
+                                <div className="w-10 h-10 bg-[#069B93] rounded-lg flex items-center justify-center">
+                                    <HiCalendar className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-800">My Calendar</h3>
+                                </div>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-3">Manage your assignments and schedule</p>
+                            <Link
+                                to="/calendar"
+                                className="flex items-center justify-center space-x-2 px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors font-medium w-full"
+                            >
+                                <HiCalendar className="w-4 h-4" />
+                                <span>View Calendar</span>
+                            </Link>
+                        </div>
+                        
+                        {/* Desktop Layout */}
+                        <div className="hidden sm:flex items-center justify-between">
                             <div className="flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-[#069B93] rounded-lg flex items-center justify-center">
                                     <HiCalendar className="w-5 h-5 text-white" />

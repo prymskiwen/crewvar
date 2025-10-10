@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { addShip, getCruiseLines, CruiseLine } from '../../../firebase/firestore';
+import { CustomDropdown } from '../../ui/CustomDropdown';
 
 interface AddShipModalProps {
   isOpen: boolean;
@@ -111,30 +112,16 @@ export const AddShipModal: React.FC<AddShipModalProps> = ({ isOpen, onClose }) =
               <label htmlFor="cruiseLine" className="block text-sm font-medium text-gray-700 mb-1">
                 Cruise Line *
               </label>
-              {isLoadingCruiseLines ? (
-                <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
-                  Loading cruise lines...
-                </div>
-              ) : (
-                <select
-                  id="cruiseLine"
-                  value={cruiseLineId}
-                  onChange={(e) => setCruiseLineId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                  disabled={cruiseLines.length === 0}
-                >
-                  <option value="">
-                    {cruiseLines.length === 0 ? 'No cruise lines available' : 'Select a cruise line'}
-                  </option>
-                  {cruiseLines.map((cruiseLine) => (
-                    <option key={cruiseLine.id} value={cruiseLine.id}>
-                      {cruiseLine.name}
-                    </option>
-                  ))}
-                </select>
-              )}
+              <CustomDropdown
+                options={cruiseLines.map(line => ({ id: line.id, name: line.name }))}
+                value={cruiseLineId}
+                onChange={setCruiseLineId}
+                placeholder="Select a cruise line"
+                disabled={cruiseLines.length === 0}
+                loading={isLoadingCruiseLines}
+                loadingText="Loading cruise lines..."
+                className="w-full"
+              />
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">

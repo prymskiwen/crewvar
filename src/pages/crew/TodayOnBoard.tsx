@@ -231,21 +231,21 @@ export const TodayOnBoardPage = () => {
     try {
       setLoadingStates((prev) => ({ ...prev, [memberId]: true }));
 
-      await sendConnectionRequestMutation.mutateAsync({
+            await sendConnectionRequestMutation.mutateAsync({
         requesterId: currentUser!.uid,
-        receiverId: memberId,
+                receiverId: memberId,
         message:
           "Hi! I'd love to connect with you and be friends. Please accept my connection request! 😊",
-      });
+            });
 
       toast.success("Connection request sent successfully!");
-    } catch (error: any) {
+        } catch (error: any) {
       console.error("Error sending connection request:", error);
       toast.error(
         error.response?.data?.error ||
           "Failed to send connection request. Please try again."
       );
-    } finally {
+        } finally {
       setLoadingStates((prev) => ({ ...prev, [memberId]: false }));
     }
   };
@@ -257,19 +257,19 @@ export const TodayOnBoardPage = () => {
         userId1: currentUser!.uid,
         userId2: memberId,
       });
-    } catch (error: any) {
+        } catch (error: any) {
       console.error("Error starting chat:", error);
       toast.error("Failed to start chat. Please try again.");
-    } finally {
+        } finally {
       setLoadingStates((prev) => ({ ...prev, [memberId]: false }));
-    }
-  };
+        }
+    };
 
   const handleViewProfile = (memberId: string) => {
     navigate(`/crew/${memberId}`);
   };
 
-  if (crewLoading) {
+    if (crewLoading) {
     return (
       <DashboardLayout>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -280,10 +280,10 @@ export const TodayOnBoardPage = () => {
         </div>
       </DashboardLayout>
     );
-  }
+    }
 
-  if (crewError) {
-    return (
+    if (crewError) {
+        return (
       <DashboardLayout>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
@@ -300,37 +300,37 @@ export const TodayOnBoardPage = () => {
                   strokeWidth={2}
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
                 />
-              </svg>
-            </div>
+                            </svg>
+                        </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Failed to Load Crew
             </h3>
             <p className="text-gray-600 mb-4">
               Unable to load crew members from your ship.
             </p>
-            <button
-              onClick={() => window.location.reload()}
+                        <button
+                            onClick={() => window.location.reload()}
               className="px-4 py-2 bg-[#069B93] text-white rounded-lg hover:bg-[#058a7a] transition-colors"
-            >
+                        >
               Try Again
-            </button>
-          </div>
-        </div>
+                        </button>
+                    </div>
+                </div>
       </DashboardLayout>
     );
   }
 
-  return (
+        return (
     <DashboardLayout>
       <div className="min-h-screen bg-gray-50">
         {/* Mobile Header */}
-        <div className="bg-teal-600 text-white p-3 sm:p-4 sticky top-0 z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <button
+            <div className="bg-teal-600 text-white p-3 sm:p-4 sticky top-0 z-10">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                        <button
                 onClick={() => navigate(-1)}
-                className="p-2 hover:bg-teal-700 rounded-lg transition-colors"
-              >
+                            className="p-2 hover:bg-teal-700 rounded-lg transition-colors"
+                        >
                 <svg
                   className="h-5 w-5"
                   fill="none"
@@ -343,30 +343,30 @@ export const TodayOnBoardPage = () => {
                     strokeWidth={2}
                     d="M15 19l-7-7 7-7"
                   />
-                </svg>
-              </button>
-              <div>
+                            </svg>
+                        </button>
+                        <div>
                 <h1 className="text-base sm:text-lg font-bold">
                   Today on Board
                 </h1>
-                <p className="text-xs text-teal-100">
+                            <p className="text-xs text-teal-100">
                   Crew members on your ship
-                </p>
-              </div>
-            </div>
+                            </p>
+                        </div>
+                    </div>
             <Link
               to="/dashboard"
               className="flex items-center hover:bg-teal-700 rounded-lg px-2 sm:px-3 py-2 transition-colors"
             >
-              <img
-                src={logo}
-                alt="Crewvar Logo"
-                className="h-5 sm:h-6 w-auto brightness-0 invert"
+                        <img
+                            src={logo}
+                            alt="Crewvar Logo"
+                            className="h-5 sm:h-6 w-auto brightness-0 invert"
                 style={{ filter: "brightness(0) invert(1)" }}
-              />
-            </Link>
-          </div>
-        </div>
+                        />
+                    </Link>
+                </div>
+            </div>
 
         <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
           {/* Search Section */}
@@ -381,8 +381,8 @@ export const TodayOnBoardPage = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Search by Name, Role, or Department
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg
                       className="h-4 w-4 text-gray-400"
                       fill="none"
@@ -395,12 +395,12 @@ export const TodayOnBoardPage = () => {
                         strokeWidth={2}
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                       />
-                    </svg>
-                  </div>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                                        </svg>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search crew members..."
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
                   />
@@ -433,8 +433,8 @@ export const TodayOnBoardPage = () => {
                         strokeWidth={2}
                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                       />
-                    </svg>
-                  </div>
+                                            </svg>
+                                </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     {searchQuery ? "No Results Found" : "No Crew Members Found"}
                   </h3>
@@ -443,7 +443,7 @@ export const TodayOnBoardPage = () => {
                       ? "Try adjusting your search terms."
                       : "No other crew members are currently on your ship."}
                   </p>
-                </div>
+                            </div>
               ) : (
                 <div className="space-y-3 sm:space-y-4">
                   {filteredCrew.map((member: any) => (
@@ -454,22 +454,22 @@ export const TodayOnBoardPage = () => {
                       <div className="flex items-start space-x-3 sm:space-x-4">
                         {/* Profile Photo */}
                         <div className="flex-shrink-0 relative">
-                          <img
-                            src={getProfilePhotoUrl(member.profilePhoto)}
-                            alt={member.displayName}
-                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-gray-100 shadow-sm"
-                          />
+                                                        <img
+                                                            src={getProfilePhotoUrl(member.profilePhoto)}
+                                                            alt={member.displayName}
+                                                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-gray-100 shadow-sm"
+                                                        />
                           <div
                             className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
                               member.isOnline ? "bg-green-500" : "bg-red-500"
                             }`}
                           ></div>
-                        </div>
+                                                    </div>
 
                         {/* Member Info */}
-                        <div className="flex-1 min-w-0">
+                                                    <div className="flex-1 min-w-0">
                           <h3 className="text-sm sm:text-base font-semibold text-gray-900 truncate">
-                            {member.displayName}
+                                                            {member.displayName}
                           </h3>
                           <p className="text-xs sm:text-sm text-gray-600 truncate">
                             {getRoleName(member.roleId) || "Crew Member"}
@@ -478,9 +478,9 @@ export const TodayOnBoardPage = () => {
                             {getDepartmentName(member.departmentId)} •{" "}
                             {getShipName(member.currentShipId)}
                           </p>
-                        </div>
+                                                </div>
 
-                        {/* Action Buttons */}
+                                                {/* Action Buttons */}
                         <div className="flex space-x-2 sm:flex-shrink-0">
                           {(() => {
                             const status = getConnectionStatus(member.id);
@@ -488,36 +488,36 @@ export const TodayOnBoardPage = () => {
                             if (status === "connected") {
                               return (
                                 <div className="flex space-x-2">
-                                  <button
+                                                    <button
                                     onClick={() =>
                                       handleStartChat(
                                         member.id,
                                         member.displayName
                                       )
                                     }
-                                    disabled={loadingStates[member.id]}
+                                                        disabled={loadingStates[member.id]}
                                     className="flex-1 sm:flex-none px-3 py-2 bg-blue-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                  >
+                                                    >
                                     {loadingStates[member.id]
                                       ? "Starting..."
                                       : "Start Chat"}
-                                  </button>
-                                  <button
+                                                    </button>
+                                                    <button
                                     disabled
                                     className="flex-1 sm:flex-none px-3 py-2 bg-gray-400 text-white text-xs sm:text-sm font-medium rounded-lg cursor-not-allowed transition-colors"
                                   >
                                     Connected
-                                  </button>
+                                                    </button>
                                 </div>
                               );
                             } else if (status === "pending") {
                               return (
-                                <button
+                                    <button
                                   disabled
                                   className="flex-1 sm:flex-none px-3 py-2 bg-yellow-500 text-white text-xs sm:text-sm font-medium rounded-lg cursor-not-allowed transition-colors"
-                                >
+                                    >
                                   Pending
-                                </button>
+                                    </button>
                               );
                             } else {
                               return (
@@ -555,17 +555,17 @@ export const TodayOnBoardPage = () => {
                           Loading more crew members...
                         </span>
                       </div>
-                    </div>
-                  )}
+                        </div>
+                    )}
 
                   {/* Infinite scroll trigger */}
                   <div ref={observerRef} className="h-4"></div>
                 </div>
               )}
+                </div>
             </div>
-          </div>
         </div>
       </div>
     </DashboardLayout>
-  );
+    );
 };

@@ -30,7 +30,6 @@ export const DataManagementTab: React.FC = () => {
         </div>
       </div>
 
-
       {/* Management Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Departments Section */}
@@ -53,6 +52,28 @@ export const DataManagementTab: React.FC = () => {
             </div>
           </div>
           <p className="text-sm text-gray-500">Manage department categories for user roles</p>
+        </div>
+
+        {/* Roles Section */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-lg font-medium text-gray-900">Roles</h4>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setShowAddRole(true)}
+                className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors"
+              >
+                Add
+              </button>
+              <button
+                onClick={() => setShowDeleteRole(true)}
+                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+          <p className="text-sm text-gray-500">Manage job roles and positions within departments</p>
         </div>
 
         {/* Cruise Lines Section */}
@@ -97,28 +118,6 @@ export const DataManagementTab: React.FC = () => {
             </div>
           </div>
           <p className="text-sm text-gray-500">Manage ship information and specifications</p>
-        </div>
-
-        {/* Roles Section */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-lg font-medium text-gray-900">Roles</h4>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setShowAddRole(true)}
-                className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => setShowDeleteRole(true)}
-                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-          <p className="text-sm text-gray-500">Manage job roles and positions within departments</p>
         </div>
       </div>
 

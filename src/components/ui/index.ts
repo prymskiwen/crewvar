@@ -8,6 +8,7 @@ export { BanNotification } from './BanNotification';
 export { Autocomplete } from './Autocomplete';
 export { EmojiPicker } from './EmojiPicker';
 export { ConfirmationDialog } from './ConfirmationDialog';
+export { CustomDropdown } from './CustomDropdown';
 
 // Form Components
 export { default as Input } from './Input';

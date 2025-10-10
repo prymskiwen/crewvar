@@ -3519,8 +3519,77 @@ export const cleanupExpiredPortLinks = async (): Promise<void> => {
     });
 
     await batch.commit();
-    console.log(`🧹 Cleaned up ${expiredLinks.size} expired port links`);
+    console.log(`🧹 Cleaned up ${expiredLinks.size} expired port links`);     
   } catch (error) {
     console.error("Error cleaning up expired port links:", error);
+  }
+};
+
+// Database cleanup functions for admin use
+export const cleanupAllDepartments = async (): Promise<number> => {
+  try {
+    console.log('🧹 Starting cleanup of all departments...');
+    const departmentsRef = collection(db, 'departments');
+    const snapshot = await getDocs(departmentsRef);
+    
+    if (snapshot.docs.length === 0) {
+      console.log('ℹ️ No departments to clean up');
+      return 0;
+    }
+
+    const batch = writeBatch(db);
+    snapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+    console.log(`✅ Cleaned up ${snapshot.docs.length} departments`);
+    return snapshot.docs.length;
+  } catch (error) {
+    console.error('❌ Error cleaning up departments:', error);
+    throw error;
+  }
+};
+
+export const cleanupAllRoles = async (): Promise<number> => {
+  try {
+    console.log('🧹 Starting cleanup of all roles...');
+    const rolesRef = collection(db, 'roles');
+    const snapshot = await getDocs(rolesRef);
+    
+    if (snapshot.docs.length === 0) {
+      console.log('ℹ️ No roles to clean up');
+      return 0;
+    }
+
+    const batch = writeBatch(db);
+    snapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+    console.log(`✅ Cleaned up ${snapshot.docs.length} roles`);
+    return snapshot.docs.length;
+  } catch (error) {
+    console.error('❌ Error cleaning up roles:', error);
+    throw error;
+  }
+};
+
+export const cleanupDepartmentsAndRoles = async (): Promise<{ departments: number; roles: number }> => {
+  try {
+    console.log('🧹 Starting complete cleanup of departments and roles...');
+    
+    // Clean up roles first (they reference departments)
+    const rolesCount = await cleanupAllRoles();
+    
+    // Then clean up departments
+    const departmentsCount = await cleanupAllDepartments();
+    
+    console.log(`✅ Complete cleanup finished: ${departmentsCount} departments, ${rolesCount} roles`);
+    return { departments: departmentsCount, roles: rolesCount };
+  } catch (error) {
+    console.error('❌ Error during complete cleanup:', error);
+    throw error;
   }
 };

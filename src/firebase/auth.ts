@@ -16,10 +16,13 @@ import {
   updateProfile,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithCredential,
   // UserCredential type available but not used in current implementation
 } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "./config";
+import { Capacitor } from "@capacitor/core";
+import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 // UserProfile is defined locally in this file
 
 // Re-export auth for convenience
@@ -193,13 +196,26 @@ export const signUpWithEmail = async (
  */
 export const signInWithGoogle = async (): Promise<User> => {
   try {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+    let credential;
+    if (Capacitor.isNativePlatform()) {
+      // ✅ Native Google sign-in (for Android/iOS)
+      const googleUser = await GoogleAuth.signIn();
+      const idToken = googleUser.authentication.idToken;
+      credential = GoogleAuthProvider.credential(idToken);
+    } else {
+      // ✅ Fallback for Web Browser
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      credential = GoogleAuthProvider.credentialFromResult(result);
+    }
 
-    // Check if user document exists
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    console.log("userDoc", userDoc);
+    // Sign in with Firebase
+    const userCredential = await signInWithCredential(auth, credential!);
+    const user = userCredential.user;
+
+    // ✅ Save or update user in Firestore
+    const userRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userRef);
 
     if (!userDoc.exists()) {
       // Create user document for new Google user
@@ -230,7 +246,6 @@ export const signInWithGoogle = async (): Promise<User> => {
       await setDoc(doc(db, "users", user.uid), cleanUserData);
     }
 
-    const userRef = doc(db, "users", user.uid);
     await updateDoc(userRef, {
       isOnline: true,
       updatedAt: new Date(),

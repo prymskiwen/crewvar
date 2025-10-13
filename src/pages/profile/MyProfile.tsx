@@ -15,7 +15,7 @@ import {
     getShips,
     getCruiseLines,
     getDepartments,
-    getRolesByDepartment
+    getRoles
 } from "../../firebase/firestore";
 import { toast } from "react-toastify";
 import { DashboardLayout } from "../../layout/DashboardLayout";
@@ -39,28 +39,7 @@ export const MyProfile = () => {
     });
     const { data: allRoles = [], isLoading: rolesLoading } = useQuery({
         queryKey: ['allRoles'],
-        queryFn: async () => {
-            // Fetch all roles so user can select any department/role combination
-            try {
-                const allDepartments = await getDepartments();
-                const allRolesData = [];
-                
-                // Fetch roles for each department
-                for (const dept of allDepartments) {
-                    try {
-                        const deptRoles = await getRolesByDepartment(dept.id);
-                        allRolesData.push(...deptRoles);
-                    } catch (error) {
-                        console.error(`Error fetching roles for department ${dept.id}:`, error);
-                    }
-                }
-                
-                return allRolesData;
-            } catch (error) {
-                console.error('Error fetching all roles:', error);
-                return [];
-            }
-        }
+        queryFn: getRoles
     });
 
     const updateUserProfileMutation = useMutation({

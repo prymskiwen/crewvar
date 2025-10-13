@@ -17,7 +17,7 @@ import {
   getCrewMembers,
   sendConnectionRequest,
   getDepartments,
-  getRolesByDepartment,
+  getRoles,
   getUserConnections,
   getPendingConnectionRequests,
   createOrGetChatRoom,
@@ -235,23 +235,8 @@ export const ExploreShips = () => {
 
   // Fetch all roles for role name mapping
   const { data: allRoles = [] } = useQuery({
-    queryKey: ["roles"],
-    queryFn: async () => {
-      const allRolesData = [];
-      for (const dept of departments) {
-        try {
-          const roles = await getRolesByDepartment(dept.id);
-          allRolesData.push(...roles);
-        } catch (error) {
-          console.error(
-            `Error fetching roles for department ${dept.id}:`,
-            error
-          );
-        }
-      }
-      return allRolesData;
-    },
-    enabled: departments.length > 0,
+    queryKey: ["allRoles"],
+    queryFn: getRoles,
   });
 
   // Fetch user's connections to check if already connected
@@ -274,15 +259,15 @@ export const ExploreShips = () => {
 
   // Helper functions to get names from IDs
   const getRoleName = (roleId: string) => {
-    if (!roleId) return "Crew Member";
+    if (!roleId) return "Not specified";
     const role = allRoles.find((r) => r.id === roleId);
-    return role ? role.name : "Crew Member";
+    return role ? role.name : "Not specified";
   };
 
   const getDepartmentName = (departmentId: string) => {
-    if (!departmentId) return "No Department";
+    if (!departmentId) return "Not specified";
     const department = departments.find((d) => d.id === departmentId);
-    return department ? department.name : departmentId;
+    return department ? department.name : "Not specified";
   };
 
   const getShipName = (shipId: string) => {
@@ -423,7 +408,7 @@ export const ExploreShips = () => {
 
   // Get the ship ID from the selected ship name
   const selectedShipId =
-    availableShips?.find((ship) => ship.name === selectedShip)?.id || "";
+    availableShips?.find((ship) => ship.name === selectedShip)?.id || null;
 
   // Fetch crew members with infinite scroll - only when user has applied search or filters
   const {
@@ -436,7 +421,7 @@ export const ExploreShips = () => {
     queryKey: ["crewMembers", selectedShipId, searchQuery], // Include searchQuery in key
     queryFn: ({ pageParam = 0 }) =>
       getCrewMembers({
-        shipId: selectedShipId,
+        shipId: selectedShipId || undefined,
         page: pageParam,
         limit: 20,
         currentUserId: currentUser?.uid,
@@ -445,7 +430,7 @@ export const ExploreShips = () => {
       lastPage.hasNextPage ? lastPage.nextPage : undefined,
     enabled:
       !!currentUser &&
-      (!!searchQuery || !!selectedShipId || !!selectedCruiseLine),
+      (!!searchQuery?.trim() || !!selectedShipId || !!selectedCruiseLine),
   });
 
   // Flatten all crew data from all pages
@@ -640,7 +625,7 @@ export const ExploreShips = () => {
           </div>
 
           {/* Loading State */}
-          {(cruiseLinesLoading || shipsLoading || crewLoading) && (
+          {(cruiseLinesLoading || shipsLoading || (crewLoading && (!!searchQuery?.trim() || !!selectedShipId || !!selectedCruiseLine))) && (
             <div className="bg-white rounded-lg shadow-sm border p-4">
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
@@ -651,8 +636,8 @@ export const ExploreShips = () => {
             </div>
           )}
 
-          {/* Crew Results */}
-          {!crewLoading && (
+          {/* Crew Results - Only show when not loading initial data and when filters are applied */}
+          {!cruiseLinesLoading && !shipsLoading && (!!searchQuery?.trim() || !!selectedShipId || !!selectedCruiseLine) && (
             <div className="bg-white rounded-lg shadow-sm border p-4">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold text-teal-600">
@@ -822,6 +807,38 @@ export const ExploreShips = () => {
                   <div ref={observerRef} className="h-4"></div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Message when no filters are applied */}
+          {!cruiseLinesLoading && !shipsLoading && !(!!searchQuery?.trim() || !!selectedShipId || !!selectedCruiseLine) && (
+            <div className="bg-white rounded-lg shadow-sm border p-4">
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="h-8 w-8 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Ready to find your friends?
+                </h3>
+                <p className="text-gray-500 text-base mb-1">
+                  Start by searching for a name or selecting a filter above
+                </p>
+                <p className="text-gray-400 text-sm">
+                  Use the search bar, cruise line, or ship dropdown to discover crew members
+                </p>
+              </div>
             </div>
           )}
         </div>

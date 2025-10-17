@@ -1542,6 +1542,33 @@ export const getShips = async (): Promise<Ship[]> => {
   }
 };
 
+// Get ships by cruise line
+export const getShipsByCruiseLine = async (cruiseLineId: string): Promise<Ship[]> => {
+  try {
+    const shipsRef = collection(db, "ships");
+    const q = query(
+      shipsRef, 
+      where("cruiseLineId", "==", cruiseLineId)
+      // Removed orderBy to avoid composite index requirement
+    );
+    const querySnapshot = await getDocs(q);
+
+    const ships = querySnapshot.docs.map(
+      (doc) =>
+        ({
+          id: doc.id,
+          ...doc.data(),
+        } as Ship)
+    );
+
+    // Sort client-side instead
+    return ships.sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    console.error("Error fetching ships by cruise line:", error);
+    throw error;
+  }
+};
+
 // Add new ship
 export const addShip = async (shipData: {
   name: string;
@@ -2343,6 +2370,7 @@ export const getCrewMembers = async (
   params: {
     cruiseLineId?: string;
     shipId?: string;
+    roleId?: string;
     page?: number;
     limit?: number;
     currentUserId?: string;
@@ -2395,6 +2423,11 @@ export const getCrewMembers = async (
     // Apply client-side filtering for ship
     if (shipId) {
       crew = crew.filter((member) => (member as any).currentShipId === shipId);
+    }
+
+    // Apply client-side filtering for role
+    if (params.roleId) {
+      crew = crew.filter((member) => (member as any).roleId === params.roleId);
     }
 
     crew = crew.filter((member) => !(member as any).isAdmin);

@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Link, useNavigate } from "react-router-dom";
-import { FcGoogle } from "react-icons/fc";
+// import { FcGoogle } from "react-icons/fc"; // Unused - Google auth hidden
 import { useAuth } from "../../context/AuthContextFirebase";
 import { Spinner } from "../Elements/Spinner";
 import { useState } from "react";
@@ -78,35 +78,36 @@ const SignupForm = () => {
         }
     };
 
-    const handleGoogleLogin = async () => {
-        try {
-            setIsLoading(true);
-            const { signInWithGoogle } = await import('../../firebase/auth');
-            await signInWithGoogle();
-            toast.success('🎉 Google login successful!', {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: false,
-                draggable: false,
-            });
-            // Navigate to dashboard, OnboardingGuard will redirect to onboarding if needed
-            navigate('/dashboard');
-        } catch (error: any) {
-            console.error('Google login error:', error);
-            toast.error('Google login failed. Please try again.', {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: false,
-                draggable: false,
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    // Google login handler - commented out since Google auth is hidden
+    // const handleGoogleLogin = async () => {
+    //     try {
+    //         setIsLoading(true);
+    //         const { signInWithGoogle } = await import('../../firebase/auth');
+    //         await signInWithGoogle();
+    //         toast.success('🎉 Google login successful!', {
+    //             position: "top-right",
+    //             autoClose: 3000,
+    //             hideProgressBar: false,
+    //             closeOnClick: true,
+    //             pauseOnHover: false,
+    //             draggable: false,
+    //         });
+    //         // Navigate to dashboard, OnboardingGuard will redirect to onboarding if needed
+    //         navigate('/dashboard');
+    //     } catch (error: any) {
+    //         console.error('Google login error:', error);
+    //         toast.error('Google login failed. Please try again.', {
+    //             position: "top-right",
+    //             autoClose: 5000,
+    //             hideProgressBar: false,
+    //             closeOnClick: true,
+    //             pauseOnHover: false,
+    //             draggable: false,
+    //         });
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
 
     return (
         <>
@@ -174,14 +175,15 @@ const SignupForm = () => {
                     Sign up
                 </button>
             </form>
-            <hr className="my-6 border-gray-300 w-full" />
+            {/* Google Authentication Button - Hidden */}
+            {/* <hr className="my-6 border-gray-300 w-full" />
             <button
                 onClick={handleGoogleLogin}
                 className="flex w-full items-center justify-center font-semibold text-sm bg-gray-100 text-dark transition-colors hover:bg-gray-200 rounded-xl py-3 px-4 mb-4"
             >
                 <FcGoogle className="mr-2 w-6 h-6" />
                 Sign in with Google
-            </button>
+            </button> */}
             <p className="text-sm">
                 Already have an account?{" "}
                 <Link
